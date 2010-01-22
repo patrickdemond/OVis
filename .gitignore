@@ -1,0 +1,7 @@
+*.cxx
+ui_*
+*.cmake
+CMakeFiles
+Makefile
+CMakeCache.txt
+tst

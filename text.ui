@@ -1,0 +1,74 @@
+<ui version="4.0" >
+ <class>TextDialog</class>
+ <widget class="QDialog" name="TextDialog" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>589</width>
+    <height>557</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Entry Text</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" >
+   <item row="0" column="0" >
+    <widget class="QLabel" name="label_2" >
+     <property name="text" >
+      <string>Name of Entry:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" >
+    <widget class="QComboBox" name="comboBox" />
+   </item>
+   <item row="2" column="0" >
+    <widget class="QLabel" name="label_3" >
+     <property name="text" >
+      <string>Name in Entry:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" >
+    <widget class="QComboBox" name="comboBox_2" />
+   </item>
+   <item row="4" column="0" >
+    <widget class="QLabel" name="label_4" >
+     <property name="text" >
+      <string>Tag:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" >
+    <widget class="QComboBox" name="comboBox_3" />
+   </item>
+   <item row="6" column="0" >
+    <widget class="QPushButton" name="pushButton" >
+     <property name="text" >
+      <string>Show Text</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" >
+    <widget class="QLabel" name="label" >
+     <property name="text" >
+      <string>XML Text</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" >
+    <widget class="QTextBrowser" name="textBrowser" />
+   </item>
+   <item row="9" column="0" >
+    <widget class="QPushButton" name="pushButton_2" >
+     <property name="text" >
+      <string>Done</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
