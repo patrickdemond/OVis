@@ -3421,7 +3421,7 @@ void Graph::drawGraph()
   //draw the keys for the tags
   drawKeys();
   //draw edges
-  drawEdges();
+  //drawEdges();
 }
 
 //turn on or off the tag corresponding to tagNum
