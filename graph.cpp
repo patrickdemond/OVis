@@ -55,7 +55,6 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   //create a sphere
   sphere1 = vtkSphereSource::New();
   sphere1->SetRadius(2.5);
-  //vtkSphere->SetCenter(x,y,z);
   
   //create the mapper
   mapper1 = vtkPolyDataMapper::New();
@@ -1823,18 +1822,10 @@ void Graph::printPath(list<int> path)
       //set toggle connected to true
       toggleConnected[*it] = true;
 
-      //create a sphere
-      vtkSphereSource *sphere = vtkSphereSource::New();
-      sphere->SetRadius(2);
-      sphere->SetCenter(x,y,z);
-
-      //create a mapper
-      vtkPolyDataMapper *mapper = vtkPolyDataMapper::New();
-      mapper->SetInput(sphere->GetOutput());
-      
       //create an actor
       vtkActor *actor = vtkActor::New(); 
-      actor->SetMapper(mapper);
+      actor->SetMapper(mapper1);
+      actor->SetPosition(x,y,z);
 
       //if it is either the first or last node in the path
       if(cnt==1 || cnt == path.size())
@@ -1853,8 +1844,6 @@ void Graph::printPath(list<int> path)
       
       //delete vtk objects
       actor->Delete();
-      mapper->Delete();
-      sphere->Delete();
 
       //initialize variables
       bool connected = false;      
@@ -3026,24 +3015,14 @@ void Graph::drawGraph()
       //set connected to true
       connected[*it] = true;
 
-      //create a sphere
-      vtkSphereSource *sphere = vtkSphereSource::New();
-      sphere->SetRadius(2);
-      sphere->SetCenter(x,y,z);
-      //sphere->SetThetaResolution(RESOLUTION_X);
-      //sphere->SetPhiResolution(RESOLUTION_Y);
-
       //set the center of the node
       graph1[*it]->setCenter(x,y,z);
-   
-      //create mapper for sphere
-      vtkPolyDataMapper *mapper = vtkPolyDataMapper::New();
-      mapper->SetInput(sphere->GetOutput());
       
       //create actor for sphere
       vtkActor *actor = vtkActor::New();
-      actor->SetMapper(mapper);
+      actor->SetMapper(mapper1);
       actor->GetProperty()->SetColor(0,95.0/255.0,1);
+      actor->SetPosition(x,y,z);
 
       //add actor to renderer
       rend->AddActor(actor);
@@ -3389,39 +3368,14 @@ void Graph::drawGraph()
 
 	      //set connected to true
 	      connected[q] = true;
-
-	      //create sphere
-	      //vtkSphereSource *sphere = vtkSphereSource::New();
-	      //sphere->SetRadius(2);
-	      //sphere->SetCenter(x,y,z);
 	      
 	      //set center of node
 	      graph1[q]->setCenter(x,y,z);
-	      
-	      //create mapper for sphere
-	      //vtkPolyDataMapper *mapper = vtkPolyDataMapper::New();
-	      //mapper->SetInput(sphere->GetOutput());
-	      
-	      //create actor for sphere
-	      //vtkActor *actor = vtkActor::New();
-	      //actor->SetMapper(mapper);
-	      //actor->GetProperty()->SetColor(0,95.0/255.0,1);
-
-	      //add actor for renderer
-	      //rend->AddActor(actor);
-	      //graph1[q]->setSphereActor(actor);
-
-	      //delete vtk actors
-	      //actor->Delete();
-	      //mapper->Delete();
-	      //sphere->Delete();
 	    }
 	}
     }
   //draw the keys for the tags
   drawKeys();
-  //draw edges
-  //drawEdges();
 }
 
 //turn on or off the tag corresponding to tagNum
