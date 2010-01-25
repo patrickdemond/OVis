@@ -1985,7 +1985,7 @@ void Graph::allNamesOn(bool all)
       nameOn[i] = false;  //if names are allowed on
             
       //if a node was at the mouse position
-      if(all && i >= 0)
+      if(all)
 	{
 	  if(nameText[i] != NULL)
 	    {
@@ -2352,6 +2352,8 @@ void Graph::highlightOn()
     }
 
   setToggle(false);
+
+  toggleTrue = true;
 
   highlight(0,0);
 
