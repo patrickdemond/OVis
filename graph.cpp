@@ -1228,8 +1228,27 @@ void Graph::tagTouched(int x, int y)
   window2->Render();
       
   //set the mode to graph mode to redraw the graph with the tag off/on
-  Orlando* orlan = (Orlando*) orland;
-  orlan->graphMode(true);
+  //Orlando* orlan = (Orlando*) orland;
+  //orlan->graphMode(true);
+
+  if(mode == 'p')
+    {
+
+    }
+  else if(mode == 't')
+    {
+      drawToggled();
+    }
+  else if(mode == 'h')
+    {
+      drawHighlighted();
+    }
+  else
+    {
+      redrawGraph();
+    }
+
+  select();
 
   //render the main window
   renderWin();
@@ -2317,9 +2336,6 @@ void Graph::changeToPos(int a, int b)
 //turn highlight on
 void Graph::highlightOn()
 {
-  //set mode to highlight
-  mode = 'h';
-
   //for the number of names
   for(int i=0; i<NUM_OF_NAMES; i++)
     {
@@ -2352,6 +2368,9 @@ void Graph::highlightOn()
   setToggle(false);
 
   toggleTrue = true;
+
+  //set mode to highlight
+  mode = 'h';
 
   highlight(0,0);
 
@@ -2476,7 +2495,118 @@ void Graph::highlight(int a, int b)
 //draw the highlighted graph
 void Graph::drawHighlighted()
 {
+  //for the number of names
+  for(int i=0; i<NUM_OF_NAMES; i++)
+    {
+      //set toggleConnected to false
+      toggleConnected[i] = false;
+      ndCon[i] = false;      
+      toggedOn[i] = false;
 
+      //for the number of edges
+      for(int j=0;j<NUM_OF_NAMES;j++)
+	{
+	  //initialize con to false
+	  con[i][j] = false;
+	}
+    }
+ 
+  //turn off names
+  allNamesOff(false);
+
+  rendSetUp();
+  
+  list<int>::iterator it;
+  for(it=toggledOn.begin(); it!=toggledOn.end(); it++)
+    {
+       //get the window size
+      int* x = window->GetSize();
+      int i = *it;
+
+      toggleConnected[i] = true;
+
+      //get the name of the node
+      char* nam; 
+      nam = (char*) calloc(1000*sizeof(char),1000*sizeof(char));
+      sprintf(nam,"%s",names[i]);
+      
+      //set up the renderer
+      textSetUp();
+
+      //show the labels
+      label1->setText("Selected Node:");
+      labelSelected->setText(nam);
+      label2->setText("Connected  With:");
+      free(nam);
+      
+      //get the children of the node
+      list<Edge> ch = graph1[i]->getChildren();
+
+      //for the number of children
+      list<Edge>::iterator j;
+      for(j=ch.begin(); j!=ch.end(); j++)
+	{
+	  //initialize variables
+	  bool connected = false;
+
+	  int q = j->GetNode1();
+	  if(q == i)
+	    {
+	      q= j->GetNode2();
+	    }
+
+	  //for the number of tags
+	  list<int>::iterator k;
+	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
+	    {
+	      //if the tag is on and the edge is connected
+	      if(j->HasTag(*k) && tagOn[*k] && !connected)
+		{
+		  //set connected to true
+		  connected = true; 
+		  toggleConnected[q] = true;
+		  drawNode(i, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
+		  drawNode(q, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
+		  drawEdge(i, q, false, *k);
+		}
+	    }
+
+	  //if the node is connected
+	  if(connected)
+	    {	  
+	      int q = j->GetNode1();
+
+	      if(q == i)
+		{
+		  q = j->GetNode2();
+		}
+
+	      //put the connected name in a string
+	      char* nam1 = (char*) calloc(1000*sizeof(char),1000*sizeof(char));
+	      sprintf(nam1,"%s", names[q]);
+	      strcat(nam1,"  : ");
+
+	      //for the number of tags
+	      list<int>::iterator s;
+	      for(s=tagsUsed.begin(); s!=tagsUsed.end(); s++)
+		{
+		  //if the tag is connected and is on
+		  if(j->HasTag(*s) && tagOn[*s] && *s!=NUM_OF_TAGS)
+		    {
+		      //attach the tag name to the string
+		      strcat(nam1, " ");
+		      strcat(nam1, tags[*s]);
+		    }
+		}
+	  
+	      //draw the text
+	      drawText(0,nam1,0,false);
+	      free(nam1);
+	    }
+	}
+    }
+
+  drawFadedEdges();
 }
 
 //draw the highlighted edges
@@ -2552,6 +2682,8 @@ void Graph::toggle(int a, int b)
       //set toggle connected to true
       toggleConnected[i] = true;
       
+      toggledOn.push_back(i);
+
       //get window size
       int* x = window->GetSize();
 
@@ -2632,109 +2764,125 @@ void Graph::toggle(int a, int b)
 	    }
 	}    
     }
-
-  //draw toggled graph
-  //drawToggled();
 }
 
 //draw the toggled graph
 void Graph::drawToggled()
 {
-  //initialize variables
-  int x=0;
-  int y=0;
-  int z=0;
-  bool connected = false;
 
-  //for the toggled on nodes
-  list<int>::iterator it;
-  for(it=toggledOn.begin(); it!=toggledOn.end();it++)
+  //for the number of names
+  for(int i=0; i<NUM_OF_NAMES; i++)
     {
-      drawNode(*it, false, vtkActor::New(), 0.0,95.0/255.0, 1.0);
-	      
-      //for the number of names
-      for(int j=0; j<NUM_OF_NAMES; j++)
-	{	  
-	  //initialize connected to false
-	  connected = false;
+      //set toggleConnected to false
+      toggleConnected[i] = false;
+      ndCon[i] = false;      
+      toggedOn[i] = false;
 
-	  //if toggle connected
-	  if(toggleConnected[j])
-	    {
-	      //for the number of tags
-	      list<int>::iterator k;
-	      for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
-		{
-		  //if the tag is on and edge is connected
-		  if(tagOn[*k] && hasEdgeBetween(*it,j,*k))
-		    {
-		      //set connected to true
-		      connected = true;
-		    }
-		}   
-	    }
-		  
-	  //if connected
-	  if(connected)
-	    {	  
-	      drawNode(j, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
-	    }
+      //for the number of edges
+      for(int j=0;j<NUM_OF_NAMES;j++)
+	{
+	  //initialize con to false
+	  con[i][j] = false;
 	}
     }
-  //draw toggled edges
-  drawToggledEdges();
+ 
+  //turn off names
+  allNamesOff(false);
+
+  rendSetUp();
+
+  list<int>::iterator it;
+  for(it=toggledOn.begin(); it!= toggledOn.end(); it++)
+    {
+      int i = *it;
+
+      toggleConnected[i] = true;
+      
+      //get window size
+      int* x = window->GetSize();
+  
+      //get the name of the node
+      char* nam; 
+      nam = (char*) calloc(1000*sizeof(char),1000*sizeof(char));
+      sprintf(nam,"%s",names[i]);
+      
+      //set up the renderer
+      textSetUp();
+      
+      //set the labels 
+      label1->setText("Selected Node:");
+      labelSelected->setText(nam);
+      label2->setText("Connected  With:");
+      free(nam);
+      
+      //get the children and parents of the node
+      list<Edge> ch = graph1[i]->getChildren();
+      
+      //for the number of children and parents
+      list<Edge>::iterator j;
+      for(j=ch.begin(); j!=ch.end(); j++)
+	{
+	  //initialize variables
+	  bool connected = false;
+	  
+	  int q = (*j).GetNode1();
+	  if(q == i)
+	    {
+	      q = (*j).GetNode2();
+	    }
+
+	  //for the number of tags
+	  list<int>::iterator k;
+	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
+	    {
+	      //if the tag is on and the edge is connected and not already drawn
+	      if(tagOn[*k] && (*j).HasTag(*k) && !connected)
+		{
+		  //set connected to true
+		  connected = true;
+		  toggleConnected[q] = true;
+		  drawNode(i, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
+		  drawNode(q, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
+		  drawEdge(i, q, false, *k);
+		}
+	    }	 
+
+	  //if the node is connected
+	  if(connected)
+	    {
+	      //get the ints
+	      int a = i;
+	      int b = q;
+	  
+	      //put the connected name in a string
+	      char* nam1 = (char*) calloc(1000*sizeof(char),1000*sizeof(char));
+	      sprintf(nam1,"%s", names[b]);
+	      strcat(nam1,"  : ");
+
+	      //for the number of tags
+	      list<int>::iterator s;
+	      for(s=tagsUsed.begin(); s!=tagsUsed.end(); s++)
+		{
+		  //if the tag is connected and is on
+		  if(hasEdgeBetween(a,b,*s) && tagOn[*s] && *s!=NUM_OF_TAGS)
+		    {
+		      //attach the tag name to the string
+		      strcat(nam1, " ");
+		      strcat(nam1, tags[*s]);
+		    }
+		}
+	  
+	      //draw the text
+	      drawText(0,nam1,0,false);
+	      free(nam1);
+	    }
+	}    
+    }
 }
 
 //draw the toggled edges
 void Graph::drawToggledEdges()
 {
-  //for all edges
-  for(int i=0;i<NUM_OF_NAMES;i++)
-    {
-      for(int j=0;j<NUM_OF_NAMES;j++)
-	{
-	  //initialize connected to false
-	  con[i][j] = false;
-	}
-    }
-
-  //for all the toggled on nodes
-  list<int>::iterator it;
-  for(it=toggledOn.begin(); it!=toggledOn.end(); it++)
-    {	  
-      //get the children of the toggled on node
-      list<Edge> ch = graph1[*it]->getChildren();
-      
-      list<Edge>::iterator j;
-      //for the children of the toggled node
-      for(j=ch.begin(); j!=ch.end(); j++)
-	{   
-	  int q = (*j).GetNode1();
-	  if(q == *it)
-	    {
-	      q = (*j).GetNode2();
-	    }
-	  
-	  //if both vertices of the edge are toggle connected
-	  if(toggleConnected[*it] && toggleConnected[q])
-	    {	      
-	      list<int>::iterator k;
-	      //for all the tags
-	      for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
-		{
-		  //if the tag is on
-		  if(tagOn[*k])
-		    {
-		      //if the edge is connected and has not already been done
-		      if((*j).HasTag(*k) && !con[*it][q] && !con[q][*it] )
-			{
-			  drawEdge(*it,q, false, *k);
-			}	
-		    }
-		}
-	    }	
-	}      
-    }
 }
 
 //redraw the graph based on current node positions
