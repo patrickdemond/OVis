@@ -62,7 +62,7 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   mapper1->SetInput(sphere1->GetOutput());
   //initialize the tag names
 
-  //sphere1->Delete();
+  sphere1->Delete();
 
   //initialize the tag names
   tags[0] = "PRODUCTION";
@@ -979,45 +979,54 @@ void Graph::removeNode(int nd)
 }
 
 vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, double colG, double colB)
-{
+{ 
   //get the selected node
   Node* nd = graph1[ind];
-  
-  //get the coordinates of the node
-  x = nd->getX();
-  y = nd->getY();
-  z = nd->getZ();
-      
-  if(actor != highlightActor && !alpha)
+    
+  if(!ndCon[ind] || actor == highlightActor || ind == selected || ind == oldSelected || ind == lastHighlighted)
     {
-      printf("not highlighted");
-      fflush(stdout);
-      ndCon[ind] = true;
+      //get the coordinates of the node
+      x = nd->getX();
+      y = nd->getY();
+      z = nd->getZ();
+      
+      if(actor != highlightActor && !alpha)
+	{
+	  printf("not highlighted");
+	  fflush(stdout);
+	  ndCon[ind] = true;
+	}
+      
+      //create a new actor
+      actor = vtkActor::New();
+      actor->SetMapper(mapper1);
+      actor->GetProperty()->SetColor(colR,colG,colB);
+      actor->SetPosition(x,y,z);
+  
+      if(alpha)
+	{
+	  //set the opacity low so the edge is faded
+	  actor->GetProperty()->SetOpacity(0.1);
+	}
+      
+      //if the index is not the selected node
+      if(ind != selected)
+	{
+	  //remove the node and set the actor to the new one
+	  removeNode(ind); 
+	  nd->setSphereActor(actor);
+	}
+      
+      //add the actor to the renderer
+      rend->AddActor(actor);
+      
     }
 
-  //create a new actor
-  actor = vtkActor::New();
-  actor->SetMapper(mapper1);
-  actor->GetProperty()->SetColor(colR,colG,colB);
-  actor->SetPosition(x,y,z);
-  
-  if(alpha)
-    {
-      //set the opacity low so the edge is faded
-      actor->GetProperty()->SetOpacity(0.1);
-    }
-  
-  //if the index is not the selected node
   if(ind != selected)
     {
-      //remove the node and set the actor to the new one
-      removeNode(ind); 
-      nd->setSphereActor(actor);
+      actor = nd->getSphereActor();
     }
 
-  //add the actor to the renderer
-  rend->AddActor(actor);
-  
   //return the actor
   return actor;
 }
@@ -2375,24 +2384,6 @@ void Graph::highlight(int a, int b)
       
       //put the node in the toggled on list
       toggledOn.push_back(i);
-      
-      //get the children of the selected node
-      list<Edge> lst = graph1[i]->getChildren();
-      
-      //for the children of the node
-      list<Edge>::iterator it;      
-      for(it=lst.begin(); it!=lst.end(); it++)
-	{
-	  int q = it->GetNode1();
-	  if(q == i)
-	    {
-	      q = it->GetNode2();
-	    }
-
-	  //set toggle connected of the child to true
-	  toggleConnected[q] = true;
-	  drawNode(q, false, vtkActor::New(),0.0, 95.0/255.0, 1.0);
-	}
 
       //get the window size
       int* x = window->GetSize();
@@ -2475,148 +2466,23 @@ void Graph::highlight(int a, int b)
 	      drawText(0,nam1,0,false);
 	      free(nam1);
 	    }
-	}    
-    }
-  
-  //draw the highlighted entries
-  //drawHighlighted();
-  
+	}
+
+      printf("done drawing highlighted first");
+      fflush(stdout);
+    }  
 }
 
 //draw the highlighted graph
 void Graph::drawHighlighted()
 {
-  bool connected = false;
 
-  //for the toggled objects
-  list<int>::iterator it;
-  for(it=toggledOn.begin(); it!=toggledOn.end();it++)
-    {
-      drawNode(*it, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
-	      
-      //get the children of the selected node
-      list<Edge> lst = graph1[*it]->getChildren();
-      
-      //for the children of the node
-      list<Edge>::iterator j;      
-      for(j=lst.begin(); j!=lst.end(); j++)
-	{
-	  
-	  //initialize connected to false
-	  connected = false;
-
-	  int q = (*j).GetNode1();
-
-	  if(q == *it)
-	    {
-	      q = (*j).GetNode2();
-	    }
-
-	  //if toggle connected
-	  if(toggleConnected[*it])
-	    {
-	      //for the number of tags
-	      list<int>::iterator k;
-	      for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
-		{
-		  //if the tag is on and is connected
-		  if(tagOn[*k] && (*j).HasTag(*k))
-		    {
-		      //set connected to true
-		      connected = true;
-		    }
-		}   
-	    }
-		  
-	  //if connected
-	  if(connected)
-	    {	  
-	      drawNode(q, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
-	    }
-	}
-    }
-  
-  //for the number of names
-  for(int i=0; i<NUM_OF_NAMES;i++)
-    {
-      //if not toggle connected
-      if(!toggleConnected[i])
-	{
-	  drawNode(i, true, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
-	}
-    }
-
-  //draw the highlighted edges
-  drawHighlightedEdges();
 }
 
 //draw the highlighted edges
 void Graph::drawHighlightedEdges()
 {
 
-  //for the number of names
-  for(int i=0;i<NUM_OF_NAMES;i++)
-    {
-      //for the number of edges
-      for(int j=0;j<NUM_OF_NAMES;j++)
-	{
-	  //initialize con to false
-	  con[i][j] = false;
-	}
-      //set togged on to false
-      toggedOn[i] = false;
-    }
-
-  //create iterators
-  list<int>::iterator it;
-  //list<int>::iterator k;
-
-  //for all of the toggled on nodes
-  for(it=toggledOn.begin(); it!=toggledOn.end(); it++)
-    {	  
-      //set togged on to true
-      toggedOn[*it] = true;
-
-      drawEdgesForNode(*it, false);
-
-      //get the children of the node
-      list<Edge> ch = graph1[*it]->getChildren();
-
-      //for all the children
-      list<Edge>::iterator j;
-      for(j=ch.begin(); j!=ch.end(); j++)
-	{   
-	  int q = (*j).GetNode1();
-	  if(q == *it)
-	    {
-	      q = (*j).GetNode2();
-	    }
-
-	  //if both vertices of the edge are connected
-	  if(toggleConnected[*it] && toggleConnected[q])
-	    {	      
-	      list<int>::iterator k;
-	      //for all of the tags
-	      for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
-		{
-		  //if the tag is on
-		  if(tagOn[*k])
-		    {
-		      //if the edge is connected and it has not already been drawn
-		      if(hasEdgeBetween(*it,q,*k) && !con[*it][q])
-			{
-			  drawEdge(*it, q, false, *k);
-			}		
-		      //else if edge is connected and has not already been drawn
-		      else if(hasEdgeBetween(*it,q,*k) && !con[q][*it])
-			{
-			  drawEdge(q, *it, false, *k);
-			}
-		    }
-		}
-	    }	
-	}
-    }
 }
 
 void Graph::drawFadedEdges()
@@ -2624,25 +2490,7 @@ void Graph::drawFadedEdges()
   //for all the edges
   for(int i =0; i<NUM_OF_NAMES; i++)
     {
-      drawNode(i, true, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
-
-      for(int j=0; j<NUM_OF_NAMES; j++)
-	{    
-	  list<int>::iterator k;
-	  //for all the tags
-	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
-	    {
-	      //if tag is on
-	      if(tagOn[*k])
-		{
-		  //if edge is connected and has not already been drawn
-		  if((hasEdgeBetween(j,i,*k) && !con[j][i]) || (hasEdgeBetween(i,j,*k) && !con[i][j]))
-		    {
-		      drawEdge(j, i, true, *k);
-		    }
-		}
-	    }	    
-	}
+      drawEdgesForNode(i, true);
     }
 }
 
@@ -3688,9 +3536,13 @@ void Graph::select()
   //if a node is selected
   if(selected >=0 && ndCon[selected])
     {
+
+      printf("selected");
+      fflush(stdout);
+
       //remove the selected actor and delete it
-      //rend->RemoveActor(selActor);
-      //selActor->Delete();
+      rend->RemoveActor(selActor);
+      selActor->Delete();
 
       if(oldSelected >= 0 && (mode == 'g' || toggleConnected[oldSelected]))
 	{
@@ -3698,6 +3550,7 @@ void Graph::select()
 	}
 
       selActor = drawNode(selected, false, selActor, 1,1,1);
+      rend->AddActor(selActor);
     }
 }
 

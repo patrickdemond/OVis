@@ -137,19 +137,10 @@ void userStyle::setGraph(bool nw)
     {
       //redraw the graph
       gra->redrawGraph();  
-
-      if(gra->getMode() != 'p')
-	{
-	  //render window
-	  gra->renderWin();
-	}
     }
 
   //display nd info with no real coordinates
   gra->displayNdInfo(0,0);
-
-  //draw selected node
-  gra->select();
  
   //set toggle to false
   gra->setToggle(false);
@@ -159,6 +150,15 @@ void userStyle::setGraph(bool nw)
   highlight = false;
   act = true;
   path = false;
+
+ //draw selected node
+  gra->select();
+     
+  if(gra->getMode() != 'p')
+    {
+      //render window
+      gra->renderWin();
+    }
 
   inter->Enable();
 }
