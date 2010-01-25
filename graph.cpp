@@ -1350,7 +1350,7 @@ void Graph::drawText(float dt, char* nam, int offset, bool col)
 bool Graph::findAllPaths(int startNode, int nodeToFind, list<int> pth, int cutOff, bool display)
 {
   //if the size cutOff has been reached or the path is empty return
-  if(pth.size() > cutOff || pth.size() <= 0)
+  if(pth.size() == cutOff || pth.size() <= 0)
     {
       return found;
     }
@@ -1448,14 +1448,10 @@ bool Graph::findIfPath(int startNode, int nodeToFind, int cutOff)
 
 //finds the path between nodes passed in 
 void Graph::findPathBtw(char* x, char* y)
-{	
-  
+{	 
   int c = -1;
   int d = -1;
 
-  printf("in findPathBTW");
-  fflush(stdout);
-    
   //for the number of names
   for(int i=0; i<NUM_OF_NAMES; i++)
     {	  
@@ -1530,6 +1526,9 @@ void Graph::findPathBtw(char* x, char* y)
 	  
 	  //initialize found to false
 	  found = false;
+
+	  printf("size = %i", sz);
+	  fflush(stdout);
 	  
 	  //find all paths with the cutoff of the shortest path's size
 	  findAllPaths(c, d, path, sz, true);
@@ -1560,7 +1559,6 @@ void Graph::findPathBtw(char* x, char* y)
 //finds the path from the old selected node to the node at position passed in
 void Graph::findPath(int a, int b)
 {
-  
   //set the mode to path
   mode = 'p';
 
