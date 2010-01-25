@@ -52,6 +52,18 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   lastHighlighted = -1;
   highlighted = false;
 
+  //create a sphere
+  sphere1 = vtkSphereSource::New();
+  sphere1->SetRadius(2.5);
+  //vtkSphere->SetCenter(x,y,z);
+  
+  //create the mapper
+  mapper1 = vtkPolyDataMapper::New();
+  mapper1->SetInput(sphere1->GetOutput());
+  //initialize the tag names
+
+  sphere1->Delete();
+
   //initialize the tag names
   tags[0] = "PRODUCTION";
   tags[1] = "RECEPTION";

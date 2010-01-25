@@ -252,6 +252,8 @@ private:
   bool highlighted;
   bool toggedOn[NUM_OF_NAMES_C];
   int lastHighlighted;
+  vtkSphereSource* sphere1;
+  vtkPolyDataMapper* mapper1;
 };
 
 #endif
