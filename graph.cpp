@@ -4364,8 +4364,27 @@ void Graph::setTags(list<char*> lst)
   numOfTags = tagsUsed.size();
   
   drawKeys();
-  //redrawGraph();
-  //select();
+
+  if(mode == 'p')
+    {
+      
+    }
+  else if(mode == 't')
+    {
+      drawToggled();
+    }
+  else if(mode == 'h')
+    {
+      drawHighlighted();
+    }
+  else
+    {
+      redrawGraph();
+    }
+
+  select();
+
+  renderWin();
 }
 
 void Graph::initialize(char* filename)
@@ -4405,9 +4424,7 @@ void Graph::tagWindowOn()
   inter->Disable();
 
   //show the tag window
-  tagWin->exec();
-
-  
+  tagWin->exec();  
 
   inter->Enable();
 }

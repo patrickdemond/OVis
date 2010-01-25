@@ -267,8 +267,6 @@ void Orlando::fileExit()
 void Orlando::popUpTags()
 {
   graph->tagWindowOn();
-
-  graphMode(true);
 }
 
 void Orlando::popUpText()
