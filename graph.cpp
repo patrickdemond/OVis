@@ -62,7 +62,7 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   mapper1->SetInput(sphere1->GetOutput());
   //initialize the tag names
 
-  sphere1->Delete();
+  //sphere1->Delete();
 
   //initialize the tag names
   tags[0] = "PRODUCTION";
@@ -988,15 +988,6 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
   y = nd->getY();
   z = nd->getZ();
       
-  //create a sphere
-  vtkSphereSource* vtkSphere = vtkSphereSource::New();
-  vtkSphere->SetRadius(2.5);
-  vtkSphere->SetCenter(x,y,z);
-  
-  //create the mapper
-  vtkPolyDataMapper* vtkMapper = vtkPolyDataMapper::New();
-  vtkMapper->SetInput(vtkSphere->GetOutput());
-
   if(actor != highlightActor && !alpha)
     {
       printf("not highlighted");
@@ -1006,8 +997,9 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
 
   //create a new actor
   actor = vtkActor::New();
-  actor->SetMapper(vtkMapper);
+  actor->SetMapper(mapper1);
   actor->GetProperty()->SetColor(colR,colG,colB);
+  actor->SetPosition(x,y,z);
   
   if(alpha)
     {
