@@ -1929,7 +1929,7 @@ void Graph::highlightNode(int a, int b)
     {
       int foundName = nodeAtPos(a,b,false);
 
-      if(foundName >= 0 && (!toggleTrue || (toggleTrue && ndCon[foundName])))
+      if(foundName >= 0 && ndCon[foundName] && (!toggleTrue || (toggleTrue && ndCon[foundName])))
 	{
 	  highlightActor = drawNode(foundName, false, highlightActor,100.0/255.0, 200.0/255.0, 1.0);
 	}     
@@ -2134,7 +2134,7 @@ void Graph::showName(int a,int b)
   destroyName();
 
   //if the name found is not NULL and the name is not already on
-  if(foundName >=0 && !nameOn[foundName] &&((!toggleTrue && !pathTrue) || ((toggleTrue || pathTrue) && toggleConnected[foundName]))) 
+  if(foundName >=0 && ndCon[foundName] && !nameOn[foundName] &&((!toggleTrue && !pathTrue) || ((toggleTrue || pathTrue) && toggleConnected[foundName]))) 
     {      
       //create a new text actor and set the position to the mouse position
       txtAct = vtkCaptionActor2D::New();
@@ -2877,14 +2877,25 @@ void Graph::drawToggledEdges()
 //redraw the graph based on current node positions
 void Graph::redrawGraph()
 {
+  //for the number of names
+  for(int i=0; i<NUM_OF_NAMES; i++)
+    {
+      //set toggleConnected to false
+      toggleConnected[i] = false;
+      ndCon[i] = false;      
+      toggedOn[i] = false;
+
+      //for the number of edges
+      for(int j=0;j<NUM_OF_NAMES;j++)
+	{
+	  //initialize con to false
+	  con[i][j] = false;
+	}
+    }
+
   rendSetUp();
 
   setToggle(false);
-
-  for(int a=0; a<NUM_OF_NAMES; a++)
-    {
-      ndCon[a] = false;
-    }
 
   if(!load || (mode != 'p' && load))
     {
@@ -2895,16 +2906,84 @@ void Graph::redrawGraph()
   //set pathTrue to false
   pathTrue = false;
 
-  //for the number of names
-  //for(int i=0; i<NUM_OF_NAMES; i++)
-    {
-      //set the progress
-      //float fl = ((float)i)/((float)NUM_OF_NAMES)*40;
-      //progBar->setValue(fl);
+  int i = selected;
 
-      //drawNode(i,false,vtkActor::New(),0.0,95.0/255.0,1.0);
-    }      
-  
+  if(i >= 0)
+    {
+      //get the name of the node
+      char* nam; 
+      nam = (char*) calloc(1000*sizeof(char),1000*sizeof(char));
+      sprintf(nam,"%s",names[i]);
+      
+      //set up the renderer
+      textSetUp();
+      
+      //set the labels 
+      label1->setText("Selected Node:");
+      labelSelected->setText(nam);
+      label2->setText("Connected  With:");
+      free(nam);
+      
+      //get the children and parents of the node
+      list<Edge> ch = graph1[i]->getChildren();
+      
+      //for the number of children and parents
+      list<Edge>::iterator j;
+      for(j=ch.begin(); j!=ch.end(); j++)
+	{
+	  //initialize variables
+	  bool connected = false;
+	  
+	  int q = (*j).GetNode1();
+	  if(q == i)
+	    {
+	      q = (*j).GetNode2();
+	    }
+	  
+	  //for the number of tags
+	  list<int>::iterator k;
+	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
+	    {
+	      //if the tag is on and the edge is connected and not already drawn
+	      if(tagOn[*k] && (*j).HasTag(*k) && !connected)
+		{
+		  //set connected to true
+		  connected = true;
+		}
+	    }	 
+	  
+	  //if the node is connected
+	  if(connected)
+	    {
+	      //get the ints
+	      int a = i;
+	      int b = q;
+	      
+	      //put the connected name in a string
+	      char* nam1 = (char*) calloc(1000*sizeof(char),1000*sizeof(char));
+	      sprintf(nam1,"%s", names[b]);
+	      strcat(nam1,"  : ");
+	      
+	      //for the number of tags
+	      list<int>::iterator s;
+	      for(s=tagsUsed.begin(); s!=tagsUsed.end(); s++)
+		{
+		  //if the tag is connected and is on
+		  if(hasEdgeBetween(a,b,*s) && tagOn[*s] && *s!=NUM_OF_TAGS)
+		    {
+		      //attach the tag name to the string
+		      strcat(nam1, " ");
+		      strcat(nam1, tags[*s]);
+		    }
+		}
+	      
+	      //draw the text
+	      drawText(0,nam1,0,false);
+	      free(nam1);
+	    }
+	}
+    }
+
   drawEdges();
 }
 
@@ -3618,13 +3697,9 @@ void Graph::setSelected(char* sel)
   //for the number of names
   for(int i =0; i<NUM_OF_NAMES; i++)
     {
-      printf(sel);
-      fflush(stdout);
-      //find the correct name from the text
-      if(strstr(sel, names[i]) != NULL)
+       //find the correct name from the text
+      if(strstr(sel, names[i]) != NULL) 
 	{
-	  printf(sel);
-	  fflush(stdout);
 	  oldSelected = selected;
 	  //set selected to the correct index
 	  selected = i;
@@ -3810,7 +3885,8 @@ void Graph::search(char* key)
       //if there was only one result then make it the selected node
       if(count == 1)
 	{
-	  selected = target;
+	  oldSelected = selected;
+	  selected = target;	  
 	  select();
 	}
     }
