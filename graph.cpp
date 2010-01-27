@@ -2134,7 +2134,7 @@ void Graph::showName(int a,int b)
   destroyName();
 
   //if the name found is not NULL and the name is not already on
-  if(foundName >=0 && ndCon[foundName] && !nameOn[foundName] &&((!toggleTrue && !pathTrue) || ((toggleTrue || pathTrue) && toggleConnected[foundName]))) 
+  if(foundName >=0 && ndCon[foundName]  && !nameOn[foundName] &&((!toggleTrue && !pathTrue) || ((toggleTrue || pathTrue) && toggleConnected[foundName]))) 
     {      
       //create a new text actor and set the position to the mouse position
       txtAct = vtkCaptionActor2D::New();
@@ -4601,11 +4601,11 @@ void Graph::showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb)
 	      else
 		{
 		  char* nm1 = strdup(nm);
-		  char* str = strtok(nm, "., ");
+		  char* str = strtok(nm, ",");
 		  
 		  if(str != NULL)
 		    {
-		      char* str2 = strtok(NULL, " .,");
+		      char* str2 = strtok(NULL, ",/0");
 		      char* str3 = (char*) alloca(1000* sizeof(char));
 		      char* str4 = (char*) alloca(1000* sizeof(char));
 
@@ -4619,7 +4619,7 @@ void Graph::showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb)
 			{
 			  str2 = strtok(str2, " ");
 			  str2 = strtok(NULL, " \n");
-			  tb->find(str2);
+			  tb->find(str);
 			}
 		    }
 		}	      
