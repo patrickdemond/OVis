@@ -123,6 +123,7 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
 
   renderWin();
   window2->Render();
+  rend2->Delete();
 
   Orlando* orl = (Orlando*) orland;
   orl->setGraph(this);
@@ -1066,12 +1067,6 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   vtkActor *linAct = vtkActor::New();
   linAct->SetMapper(mapper2);
 
-  //vtkLinearTransform* trans = vtkLinearTransform::New();
-
-  //trans->TransformFloatVector((float)(x1+x2)/2.0,(float)(y1+y2)/2.0,(float)(z1+z2)/2.0);
-
-  //linAct->SetUserTransform(trans);
-
   vtkMatrix4x4* matrix1 = vtkMatrix4x4::New();
   matrix1->Element[0][0]=x2-x1;
   matrix1->Element[1][0]=y2-y1;
@@ -1085,9 +1080,9 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   matrix1->Element[1][2]=0.0;
   matrix1->Element[2][2]=1.0;
   matrix1->Element[3][2]=0.0;
-  matrix1->Element[0][3]=0.0;
-  matrix1->Element[1][3]=0.0;
-  matrix1->Element[2][3]=0.0;
+  matrix1->Element[0][3]=(x1+x2)/2.0;
+  matrix1->Element[1][3]=(y1+y2)/2.0;
+  matrix1->Element[2][3]=(z1+z2)/2.0;
   matrix1->Element[3][3]=1.0;
 
 
@@ -1310,23 +1305,9 @@ void Graph::rendSetUp()
   
   //if the renderer is not NULL
   if(rend !=NULL)
-    { 
-      
+    {
       //remove the renderer from the window
       window->RemoveRenderer(rend);
-      //get the actors from the renderers
-      actors = rend->GetActors();
-      // get the next actor
-      vtkActor* actor = actors->GetNextActor();
-      //while the actor is not NULL
-      while(actor != NULL)
-	{
-	  //remove the actor and delete
-	  rend->RemoveActor(actor);
-	  actor->Delete();
-	  //get next actor
-	  actor = actors->GetNextActor();
-	}
     }
   
   //delete the renderer and create a new one
