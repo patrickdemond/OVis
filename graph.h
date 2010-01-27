@@ -55,7 +55,9 @@
 #include "vtkFollower.h"
 #include "vtkPolyDataMapper.h"
 #include "vtkVectorText.h"
+#include "vtkMatrix4x4.h"
 #include "vtkCaptionActor2D.h"
+#include "vtkLinearTransform.h"
 #include "node.h"
 #include "name.h"
 #include "edge.h"
@@ -254,6 +256,8 @@ private:
   int lastHighlighted;
   vtkSphereSource* sphere1;
   vtkPolyDataMapper* mapper1;
+  vtkLineSource* line1;
+  vtkPolyDataMapper* mapper2;
 };
 
 #endif

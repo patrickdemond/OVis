@@ -63,6 +63,16 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
 
   sphere1->Delete();
 
+  //create line
+  line1 = vtkLineSource::New();			  
+  line1->SetPoint1(0.5,0,0);
+  line1->SetPoint2(-0.5,0,0);
+
+  mapper2 = vtkPolyDataMapper::New();
+  mapper2->SetInput(line1->GetOutput());
+
+  line1->Delete();
+
   //initialize the tag names
   tags[0] = "PRODUCTION";
   tags[1] = "RECEPTION";
@@ -1051,20 +1061,38 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   //get the z coordinates
   int z1 = graph1[a]->getZ();
   int z2 = graph1[b]->getZ();
-				  
-  //create line
-  vtkLineSource *line = vtkLineSource::New();			  
-  line->SetPoint1(x1,y1,z1);
-  line->SetPoint2(x2,y2,z2);
-			      
-  //create mapper for line
-  vtkPolyDataMapper *mapp = vtkPolyDataMapper::New();
-  mapp->SetInput(line->GetOutput());
   
   //create actor for line
   vtkActor *linAct = vtkActor::New();
-  linAct->SetMapper(mapp);
-  
+  linAct->SetMapper(mapper2);
+
+  //vtkLinearTransform* trans = vtkLinearTransform::New();
+
+  //trans->TransformFloatVector((float)(x1+x2)/2.0,(float)(y1+y2)/2.0,(float)(z1+z2)/2.0);
+
+  //linAct->SetUserTransform(trans);
+
+  vtkMatrix4x4* matrix1 = vtkMatrix4x4::New();
+  matrix1->Element[0][0]=x2-x1;
+  matrix1->Element[1][0]=y2-y1;
+  matrix1->Element[2][0]=z2-z1;
+  matrix1->Element[3][0]=0.0;
+  matrix1->Element[0][1]=0.0;
+  matrix1->Element[1][1]=1.0;
+  matrix1->Element[2][1]=0.0;
+  matrix1->Element[3][1]=0.0;
+  matrix1->Element[0][2]=0.0;
+  matrix1->Element[1][2]=0.0;
+  matrix1->Element[2][2]=1.0;
+  matrix1->Element[3][2]=0.0;
+  matrix1->Element[0][3]=0.0;
+  matrix1->Element[1][3]=0.0;
+  matrix1->Element[2][3]=0.0;
+  matrix1->Element[3][3]=1.0;
+
+
+  linAct->SetUserMatrix(matrix1);
+
   //set the colour for the actors
   linAct->GetProperty()->SetColor(getColor(tag));
 
@@ -1083,9 +1111,8 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   
    
   //delete vtk objects	  
-  line->Delete();
-  mapp->Delete();
   linAct->Delete();
+  matrix1->Delete();
 }
 
 void Graph::drawEdgesForNode(int ind, bool alpha)
