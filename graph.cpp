@@ -442,7 +442,7 @@ void Graph::loadXML(char* filename)
 
 void Graph::renderWin()
 {
-  progBar->setValue(80);
+  //progBar->setValue(80);
 
   window->Render();
 
@@ -989,10 +989,10 @@ void Graph::removeNode(int nd)
 }
 
 vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, double colG, double colB)
-{ 
+{
   //get the selected node
   Node* nd = graph1[ind];
-    
+
   if(!ndCon[ind] || actor == highlightActor || ind == selected || ind == oldSelected || ind == lastHighlighted)
     {
       //get the coordinates of the node
@@ -1006,7 +1006,9 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
 	  fflush(stdout);
 	  ndCon[ind] = true;
 	}
-      
+
+      ndCon[ind] = true;
+
       //create a new actor
       actor = vtkActor::New();
       actor->SetMapper(mapper1);
@@ -1016,7 +1018,7 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
       if(alpha)
 	{
 	  //set the opacity low so the edge is faded
-	  actor->GetProperty()->SetOpacity(0.1);
+	  actor->GetProperty()->SetOpacity(0.25);
 	}
       
       //if the index is not the selected node
@@ -1028,11 +1030,10 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
 	}
       
       //add the actor to the renderer
-      rend->AddActor(actor);
-      
+      rend->AddActor(actor);      
     }
 
-  if(ind != selected)
+  if(ind != selected && actor != highlightActor)
     {
       actor = nd->getSphereActor();
     }
@@ -1263,6 +1264,21 @@ void Graph::tagTouched(int x, int y)
   else if(mode == 'h')
     {
       drawHighlighted();
+    }
+  else if(mode == 'c')
+    {
+      if(prevMode == 't')
+	{
+	  drawToggled();
+	}
+      else if(prevMode == 'h')
+	{
+	  drawHighlighted();
+	}
+      else
+	{
+	  redrawGraph();
+	}
     }
   else
     {
@@ -3015,11 +3031,14 @@ void Graph::changeInteractorToGraph()
 
   //set interactGraph to true
   interactGraph = true;
+
+  mode = prevMode;
 }
 
 //change the interactor to camera
 void Graph::changeInteractorToCamera()
 {
+  prevMode = mode;
   //set the mode to camera
   mode = 'c';
 
@@ -3079,6 +3098,8 @@ void Graph::drawGraph()
   int y=0;
   int z=0;
 
+  int counter = 8;
+  
   //draw entries... all 150 apart
 
   //initialize variables
@@ -3445,9 +3466,44 @@ void Graph::drawGraph()
 		}
 	      else
 		{
-		  //if there were too many children for the node then give error message
-		  printf("\n\n\n\nTOO MANY CHILDREN::: %i!!!!\n\n\n\n", counter);
-		  fflush(stdout);
+		  if(counter < 132)
+		    {
+		      xVal = 7;
+		      zVal = 7;
+		    }
+		  else if(counter < 136)
+		    {
+		      xVal = 8;
+		      xVal = 8;
+		    }
+		  else
+		    {
+		  
+		      //if there were too many children for the node then give error message
+		      printf("\n\n\n\nTOO MANY CHILDREN::: %i!!!!\n\n\n\n", counter);
+		      fflush(stdout);
+
+		    }
+
+		  switch(counter%4)
+		    {
+		    case 0:
+		      x = numX + xVal*8;
+		      z = numZ + zVal*8;
+		      break;
+		    case 1:
+		      x = numX + xVal*8;
+		      z = numZ - zVal*8;
+		      break;
+		    case 2:
+		      x = numX - xVal*8;
+		      z = numZ + zVal*8;
+		      break;
+		    case 3:
+		      x = numX - xVal*8;
+		      z = numZ - zVal*8;
+		      break;
+		    }
 		}
 
 	      //increment counter

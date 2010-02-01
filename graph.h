@@ -183,6 +183,7 @@ private:
   int pathS;
   int pathF;
   char mode;
+  char prevMode;
   char* orlandoDataName;
   int NUM_OF_NAMES;
   bool found;
