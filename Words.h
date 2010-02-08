@@ -18,13 +18,12 @@ public:
   
   //constructor
   
-  Words(QWidget* parent = 0);
+  Words(Graph* g,QWidget* parent = 0);
   //destructor
   ~Words(){};
 
   //functions
   QWidget* getParent();
-  void setGraph(Graph* g);
   void checkDates(Date* dt1, Date* dt2);
   void setUpCombo1();
   void setUpCombo2();

@@ -12,12 +12,14 @@ class Date
 {
 
 public:
-  //constructor
+  //constructors
+  Date(int yr, int mnth, int dy);
   Date(char* dt, bool start);
+  //Date(int yr, int mnth, int dy);
   //destructor
   ~Date();
-  bool operator<(Date* dt);
-  bool operator>(Date* dt);
+  bool lessThan(Date* dt);
+  bool greaterThan(Date* dt);
   int GetYear();
   int GetMonth();
   int GetDay();

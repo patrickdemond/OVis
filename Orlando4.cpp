@@ -249,7 +249,8 @@ void Orlando::fileLoad()
 
   if(str != "")
     {
-      Words wd;
+      Words wd(graph);
+      //      wd.setGraph(graph);
       wd.exec();
 
       char* fname = (char*) calloc(1000, sizeof(char));

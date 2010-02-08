@@ -2,6 +2,13 @@
 
 //using namespace std;
 
+Date::Date(int yr, int mnth, int dy)
+{
+  year = yr;
+  month = mnth;
+  day = dy;
+}
+
 //constructor
 Date::Date(char* dt, bool start)
 {
@@ -94,7 +101,7 @@ Date::~Date()
   
 }
 
-bool Date::operator<(Date* dt)
+bool Date::lessThan(Date* dt)
 {
   if(year<dt->GetYear())
     {
@@ -118,7 +125,7 @@ bool Date::operator<(Date* dt)
   return false;
 }
 
-bool Date::operator>(Date* dt)
+bool Date::greaterThan(Date* dt)
 {
   if(year>dt->GetYear())
     {

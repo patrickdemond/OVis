@@ -175,10 +175,18 @@ public:
   void removeEdgesForNode(int nd);
   void removeNode(int nd);
   bool hasEdgeBetween(int nd1, int nd2, int tag);
+  void includeDatesBtw(int bY, int bM, int bD, int dY, int dM, int dD);
+  bool includeByTime(char* stdName);
 
-private:
+private:  
   int lineNum[NUM_OF_NAMES_C];
   QWidget* tagWindow;  
+  int deathYear;
+  int deathMonth;
+  int deathDay;
+  int birthYear;
+  int birthMonth;
+  int birthDay;
   bool load;
   int pathS;
   int pathF;
@@ -205,11 +213,6 @@ private:
   int length;
   bool con[NUM_OF_NAMES_C][NUM_OF_NAMES_C];
   bool ndCon[NUM_OF_NAMES_C];
- 
-
-  //bool dataN[NUM_OF_NAMES_C][NUM_OF_NAMES_C][NUM_OF_TAGS+1];
-
-
   char* tags [NUM_OF_TAGS+1];
   bool toggleConnected[NUM_OF_NAMES_C];
   list<int> toggledOn;
@@ -257,8 +260,9 @@ private:
   int lastHighlighted;
   vtkSphereSource* sphere1;
   vtkPolyDataMapper* mapper1;
-  vtkLineSource* line1;
+  vtkLineSource* line1;  
   vtkPolyDataMapper* mapper2;
+  
 };
 
 #endif

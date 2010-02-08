@@ -12,11 +12,19 @@
 #include "userStyle.h"
 #include "userStyleTags.h"
 #include "Text.h"
+#include "date.h"
 
 //constructor for the graph
 //passed in all objects necessary from GUI
 Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label,QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind)
 {
+  birthYear = 0;
+  birthMonth = 0;
+  birthDay = 0;
+  deathYear = 0;
+  deathMonth = 0;
+  deathDay = 0;
+
   //initialize global variables
   length = 0;
   cutoff = 0;
@@ -431,8 +439,7 @@ void Graph::loadXML(char* filename)
  
   printf("before initialize");
   fflush(stdout);
-//set the progress bar to 0
-  progBar->setValue(0);
+
   initialize(filename);
 
   drawGraph(); 
@@ -1006,8 +1013,6 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
 	  fflush(stdout);
 	  ndCon[ind] = true;
 	}
-
-      ndCon[ind] = true;
 
       //create a new actor
       actor = vtkActor::New();
@@ -3474,11 +3479,13 @@ void Graph::drawGraph()
 		  else if(counter < 136)
 		    {
 		      xVal = 8;
-		      xVal = 8;
+		      zVal = 8;
 		    }
 		  else
 		    {
-		  
+		      xVal++;
+		      zVal++;
+		      
 		      //if there were too many children for the node then give error message
 		      printf("\n\n\n\nTOO MANY CHILDREN::: %i!!!!\n\n\n\n", counter);
 		      fflush(stdout);
@@ -3967,6 +3974,9 @@ void Graph::resetSearch()
 //Parse the file with filename to get all names in the file
 void Graph::GetEntry(char* filename)
 {
+  printf("\n\nSTARTING GET ENTRY\n\n");
+  fflush(stdout);
+
   progBar->setValue(0);
 
   stInd = (int*) calloc(NUM_OF_NAMES_C+NUM_OF_NAMES_C+NUM_OF_TAGS+100, sizeof(int));
@@ -4082,11 +4092,7 @@ void Graph::GetEntry(char* filename)
 
       int lineN = 0;
 
-      //for the number of entries    
-      //for(int i=0;i<numOfEntries;i++)  
-      
-      //{
-	while(restOfFile != NULL)
+      while(restOfFile != NULL)
 	{      
 	  lineN++;
 
@@ -4099,6 +4105,8 @@ void Graph::GetEntry(char* filename)
 	  int lineLen = strlen(line);
 	  int nameSpot = 0;
 
+	  bool includeLn = true;
+
 	  //if the line should be included
 	  if(includeLine(line))
 	  {
@@ -4110,11 +4118,16 @@ void Graph::GetEntry(char* filename)
 		//find entryID
 		strtok(ptr,"\"");	
 		//get entry id
-		entryID = strtok(NULL,"\"");
+		entryID = strtok(NULL,"\"");		    
+		//get the rest of the line
+		char* ptr3 = strtok(NULL,"\n"); 
 		
-		if(entryID == NULL)
+		if(entryID == NULL || !includeByTime(strdup(entryID)))
 		  {
-		    restOfFile == NULL;
+		    //restOfFile == NULL;
+		    includeLn = false;
+		    printf("\n\nNOT INCLUDING LINE\n");
+		    fflush(stdout);
 		  }
 
 		else
@@ -4142,7 +4155,7 @@ void Graph::GetEntry(char* filename)
 			    keyInt = m;			
 			  }
 		      }
-		    
+
 		    //if unique
 		    if(unique)
 		      {
@@ -4164,9 +4177,14 @@ void Graph::GetEntry(char* filename)
 		    entries.push_back(entryIDNum);
 		    
 		    lineNum[entryIDNum] = lineN;
-		    
+
 		    //get the rest of the line
-		    char* ptr3 = strtok(NULL,"\n"); 
+		    //char* ptr3 = strtok(NULL,"\n"); 
+
+		    printf("ptr3");
+		    fflush(stdout);
+		    printf(ptr3);
+		    fflush(stdout);
 
 		    //find names
 		    do
@@ -4176,6 +4194,11 @@ void Graph::GetEntry(char* filename)
 			strtok(ptr3,"\"");
 			name2 = strtok(NULL,"\"");
 			
+			printf("\n\nName 2:");
+			printf(name2);
+			printf("\n\n");
+			fflush(stdout);
+
 			//get the rest of the line
 			ptr3 = strtok(NULL,"\n");
 			
@@ -4322,57 +4345,64 @@ void Graph::GetEntry(char* filename)
 		      }
 		  }
 	      }
-	  }
-	
+	  }	
 	    
-	  //for all the names 
-	  list<Name>::iterator it;
-	  for(it=nms.begin(); it!=nms.end(); it++)
+	  if(includeLn)
 	    {
-	      //bool to hold tags
-	      bool *tgs = it->getTags();
-
-	      list<int> tagList;
-
-	      //for the number of tags
-	      for(int j=0; j<NUM_OF_TAGS; j++)
+	  
+	      //for all the names 
+	      list<Name>::iterator it;
+	      for(it=nms.begin(); it!=nms.end(); it++)
 		{
-		  //if the name was nested between the tag push the tag on a list
-		  if(tgs[j])
+		  //bool to hold tags
+		  bool *tgs = it->getTags();
+		  
+		  list<int> tagList;
+		  
+		  //for the number of tags
+		  for(int j=0; j<NUM_OF_TAGS; j++)
 		    {
-		      tagList.push_back(j);
+		      //if the name was nested between the tag push the tag on a list
+		      if(tgs[j])
+			{
+			  tagList.push_back(j);
+			}
 		    }
+		  
+		  tagList.push_back(NUM_OF_TAGS);
+		  
+		  Edge* e = new Edge(entryIDNum, (*it).getKeyNum(), tagList);
+		  
+		  graph1[entryIDNum]->addChild(*e);
+		  graph1[(*it).getKeyNum()]->addChild(*e);
+		  
+		  //clear the file spots from the names
+		  it->clearFileSpots();
 		}
-
-	      tagList.push_back(NUM_OF_TAGS);
-
-	      Edge* e = new Edge(entryIDNum, (*it).getKeyNum(), tagList);
-
-	      graph1[entryIDNum]->addChild(*e);
-	      graph1[(*it).getKeyNum()]->addChild(*e);
-
-	      //clear the file spots from the names
-	      it->clearFileSpots();
-	    }
+	    }	      
 
 	  //clear the names
 	  nms.clear();
-
+	  
 	  //free the pointer
 	  free(ptr);
 	  ptr = 0;	      
-	    
+	  
+	  printf("before rest of file check");
+	  fflush(stdout);
+
+	  
 	  //if there is still lines left in the file
 	  if(restOfFile != NULL)
 	    {
 	      //get the next line in the file
 	      line = strtok(restOfFile,"\n");
-
+	      
 	      //store the rest of the file
 	      restOfFile = strtok(NULL, "^");
 	    }
 	}
-
+	
       NUM_OF_NAMES = numNames;
 
       //free the buffer
@@ -4707,6 +4737,116 @@ int Graph::findIndexFromName(char* nm)
 	}
     }
   return -1;
+}
+
+void Graph::includeDatesBtw(int bY, int bM, int bD, int dY, int dM, int dD)
+{
+  birthYear = bY;
+  birthMonth = bM;
+  birthDay = bD;
+    
+  deathYear = dY;
+  deathMonth = dM;
+  deathDay = dD;
+}
+
+bool Graph::includeByTime(char* stdName)
+{
+  
+  bool inclu = true;
+  bool fnd = false;
+  
+  Date* b1 = NULL;
+  Date* d1 = NULL;
+  Date* b2 = new Date(birthYear,birthMonth,birthDay);
+  Date* d2 = new Date(deathYear,deathMonth,deathDay);
+  
+  if(birthYear != 0 && deathYear != 0)
+    {
+      ifstream file;
+      
+      file.open("Resources/catalog.txt", ios::in);
+  
+      if(file.is_open())
+	{
+	  char* line = (char*) calloc(1000,sizeof(char));
+	  file.getline(line, 1000);
+	  while(!file.eof() && line!=NULL)
+	    {	  
+	      strtok(line, "\"");
+	      char* str1 = strtok(NULL, "\""); 
+	      strtok(NULL, "\"");
+	      
+	      printf("Name: ");
+	      printf(str1);
+	      fflush(stdout);
+	      
+	      printf("STANDARD NAME: ");
+	      printf(stdName);
+	      fflush(stdout);
+	      
+	      if(strcmp(str1, stdName) == 0)
+		{
+		  fnd = true;
+		  
+		  char* str2 = strtok(NULL, "\"");
+		  char* strBDay = strdup(str2);
+
+		  strtok(NULL, "\"");
+		  char* str3 = strtok(NULL, "\"");
+
+		  b1 = new Date(str2, true);
+		  d1 = new Date(str3, false);
+
+		  line = NULL; 		  
+		}
+	      else
+		{	      
+		  free(line);
+		  line = (char*) calloc(1000,sizeof(char));
+		  file.getline(line, 1000);
+		}
+	    }
+	  
+	  file.close();
+	}
+      
+      if(fnd)
+	{
+	  printf("\n\n CHECKING DATES \n\n");
+	  fflush(stdout);
+	  
+	  inclu = false;
+	  
+	  printf("Year of b1: %i", b1->GetYear());
+	  printf("Year of b2: %i", b2->GetYear());
+	  printf("Year of d1: %i", d1->GetYear());
+	  printf("Year of d2: %i", d2->GetYear());
+	  fflush(stdout);
+
+	  if(b1->lessThan(b2))
+	    {
+	      printf("b1 < b2");
+	      fflush(stdout);
+
+	      if(d1->greaterThan(b2))
+		{
+
+		  printf("include");
+		  fflush(stdout);
+		  inclu = true;
+		}
+	    }
+	  else if(b1->lessThan(d2))
+	    {	
+	      printf("include");
+	      fflush(stdout);
+	      inclu = true;
+	    }
+	}
+    }
+  
+  return inclu;
 }
 
 bool Graph::includeLine(char* line)

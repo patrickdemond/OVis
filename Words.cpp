@@ -4,7 +4,7 @@
 #include "graph.h"
 
 //tag constructor
-Words::Words(QWidget* parent)
+Words::Words(Graph* g,QWidget* parent)
   : QDialog(parent)
 {
   //set up the user interface
@@ -23,13 +23,9 @@ Words::Words(QWidget* parent)
 
   setUpCombo1();
   setUpCombo2();
-};
 
-//set the graph
-void Words::setGraph(Graph* g)
-{
   graph = g;
-}
+};
 
 //if cancel is pressed
 void Words::wordsCancel()
@@ -93,6 +89,9 @@ void Words::wordsOk()
       free(str3);
     }
 
+  printf("after radio buttons");
+  fflush(stdout);
+
   //get text from the line edit boxes
   char* str1 = (char*) calloc(1000, sizeof(char));
   sprintf(str1, lineEdit->text());
@@ -100,8 +99,14 @@ void Words::wordsOk()
   char* str2 = (char*) calloc(1000, sizeof(char));
   sprintf(str2, lineEdit_2->text());
 
+  printf("checking if include/exclude");
+  fflush(stdout);
+
   if(str1 != NULL || str2 != NULL)
     {
+      printf("including and excluding stuff");
+      fflush(stdout);
+
       graph->include(str1);
       graph->exclude(str2);
     }
@@ -144,7 +149,10 @@ void Words::setUpCombo2()
 
 void Words::checkDates(Date* dt1, Date* dt2)
 {
-
+  printf("CHECKING DATES");
+  fflush(stdout);
+  
+  graph->includeDatesBtw(dt1->GetYear(), dt1->GetMonth(), dt1->GetDay(), dt2->GetYear(), dt2->GetMonth(), dt2->GetDay());
 }
 
 void Words::getHistorical(char* filename)
@@ -165,6 +173,7 @@ void Words::getHistorical(char* filename)
 	  line = (char*) calloc(1000,sizeof(char));
 	  file.getline(line, 1000);
 	}
+      file.close();
     }
 }
 
@@ -186,6 +195,7 @@ void Words::getMonarch(char* filename)
 	  line = (char*) calloc(1000,sizeof(char));
 	  file.getline(line, 1000);
 	}
+      file.close();
     }
 }
 
