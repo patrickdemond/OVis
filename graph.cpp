@@ -24,6 +24,8 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   deathYear = 0;
   deathMonth = 0;
   deathDay = 0;
+  
+  setDefaultColors("Resources/default.tagCols");
 
   //initialize global variables
   length = 0;
@@ -3481,15 +3483,10 @@ void Graph::drawGraph()
 		      xVal = 8;
 		      zVal = 8;
 		    }
-		  else
+		  else if(counter%4 == 0)
 		    {
 		      xVal++;
 		      zVal++;
-		      
-		      //if there were too many children for the node then give error message
-		      printf("\n\n\n\nTOO MANY CHILDREN::: %i!!!!\n\n\n\n", counter);
-		      fflush(stdout);
-
 		    }
 
 		  switch(counter%4)
@@ -3595,169 +3592,53 @@ void Graph::popUpPath()
   inter->Enable();
 }
 
+void Graph::setDefaultColors(char* filename)
+{    
+  fstream file;
+    
+  file.open(filename);
+
+  if(file.is_open())
+    {
+      for(int i=0; i<NUM_OF_TAGS+1; i++)
+	{
+	  for(int j=0; j<3; j++)
+	    {
+	      char* line = (char*) calloc(1000, sizeof(char));
+	      file.getline(line, 1000);
+
+	      tagCols[i][j] = atof(line);
+	    }
+	}
+      file.close();
+    }
+  //else give error message
+  else cerr << "Unable to open file: " << filename << endl;
+}
+
+void Graph::saveTagColors(char* filename)
+{
+  ofstream oFile(filename);
+
+  for(int i=0; i<NUM_OF_TAGS+1; i++)
+    {
+      oFile << tagCols[i][0] << "\n";
+      oFile << tagCols[i][1] << "\n";
+      oFile << tagCols[i][2] << "\n";
+    }
+
+  oFile.close();
+}
+
 //return the color based on the tag number
 //the colours are set by RGB values
 double *Graph::getColor(int dt)
 {
   double *colour = (double*) calloc(3*sizeof(double),3*sizeof(double));
 
-  if(dt == 0)
-    {
-      colour[0]=120.0/255.0;
-      colour[1]=120.0/255.0;
-      colour[2]=1;
-    }
-  else if(dt == 1) 
-    {
-      colour[0]=0;
-      colour[1]=170.0/255.0;
-      colour[2]=0;
-    }
-  else if(dt == 2)
-    {
-      colour[0]=200.0/255.0;
-      colour[1]=0;
-      colour[2]=1;
-    }
-  else if(dt == 3)
-    {
-      colour[0]=1;
-      colour[1]=0;
-      colour[2]=0;
-    } 
-  else if(dt == 4)
-    {
-      colour[0]=1;
-      colour[1]=204.0/255.0;
-      colour[2]=50.0/255.0;
-    } 
-  else if(dt == 5)
-    {
-      colour[0]=0;
-      colour[1]=50.0/255.0;
-      colour[2]=1;
-    } 
-  else if(dt == 6)
-    {
-      colour[0]=200.0/255.0;
-      colour[1]=150.0/255.0;
-      colour[2]=55.0/255.0;
-    } 
-  else if(dt == 7)
-    {
-      colour[0]=51.0/255.0;
-      colour[1]=1;
-      colour[2]=0;
-    } 
-  else if(dt == 8)
-    {
-      colour[0]=1;
-      colour[1]=200.0/255.0;
-      colour[2]=200.0/255.0;
-    }   
-  else if(dt == 9)
-    {
-      colour[0]=100.0/255.0;
-      colour[1]=0;
-      colour[2]=205.0/255.0;
-    } 
-
-  else if(dt == 10)
-    {
-      colour[0]=204.0/255.0;
-      colour[1]=0;
-      colour[2]=150.0/255.0;
-    } 
-  else if(dt == 11)
-    {
-      colour[0]=1;
-      colour[1]=1;
-      colour[2]=0;
-    } 
-  else if(dt == 12)
-    {
-      colour[0]=0;
-      colour[1]=100.0/255.0;
-      colour[2]=0;
-    } 
-  else if(dt == 13)
-    {
-      colour[0]=1;
-      colour[1]=100.0/255.0;
-      colour[2]=0;
-    } 
-  else if(dt == 14)
-    {
-      colour[0]=150.0/255.0;
-      colour[1]=0;
-      colour[2]=0;
-    } 
-  else if(dt == 15)
-    {
-      colour[0]=200.0/255.0;
-      colour[1]=200.0/255.0;
-      colour[2]=1;
-    } 
-  else if(dt == 16)
-    {
-      colour[0]=100.0/255.0;
-      colour[1]=0;
-      colour[2]=150.0/255.0;
-    } 
-  else if(dt == 17)
-    {
-      colour[0]=0;
-      colour[1]=150.0/255.0;
-      colour[2]=100.0/255.0;
-    } 
-  else if(dt == 18)
-    {
-      colour[0]=200.0/255.0;
-      colour[1]=1;
-      colour[2]=200.0/255.0;
-    } 
-  else if(dt == 19)
-    {
-      colour[0]=200.0/255.0;
-      colour[1]=50.0/255.0;
-      colour[2]=0;
-    } 
-  else if(dt == 20)
-    {
-      colour[0]=100.0/255.0;
-      colour[1]=1;
-      colour[2]=1;
-    } 
-  else if(dt == 21)
-    {
-      colour[0]=1;
-      colour[1]=50.0/255.0;
-      colour[2]=150.0/255.0;
-    } 
-  else if(dt == 22)
-    {
-      colour[0]=200.0/255.0;
-      colour[1]=1;
-      colour[2]=0;
-    } 
-    else if(dt == 23)
-    {
-      colour[0]=1;
-      colour[1]=100.0/255.0;
-      colour[2]=100.0/255.0;
-    } 
-    else if(dt == 24)
-    {
-      colour[0]=222.0/255.0;
-      colour[1]=222.0/255.0;
-      colour[2]=222.0/255.0;
-    } 
-    else
-    {
-      colour[0]=200.0/255.0;
-      colour[1]=200.0/255.0;
-      colour[2]=150.0/255.0;
-    } 
+  colour[0] = tagCols[dt][0];
+  colour[1] = tagCols[dt][1];
+  colour[2] = tagCols[dt][2];
 
   return colour;
 }
@@ -4437,15 +4318,28 @@ vtkRenderWindowInteractor* Graph::getInteractor()
   return inter;
 }
 
+void Graph::setNewTagCol(int ind, int r, int g, int b)
+{
+  tagCols[ind][0] = r/255.0;
+  tagCols[ind][1] = g/255.0;
+  tagCols[ind][2] = b/255.0;
+}
+
 //Place the tag choices in the list for the tag window
 void Graph::tagChoices()
 {
   tagList->clear();
   
   //for the number of tags add the name of the tag to the list
-  for(int i=0; i<NUM_OF_TAGS; i++)
+  for(int i=0; i<NUM_OF_TAGS+1; i++)
     {
-      new QListWidgetItem(tags[i], tagList);
+      QListWidgetItem* tagItem = new QListWidgetItem(tags[i], tagList);
+      double* rgbCol = getColor(i);
+      QColor* tagCol = new QColor();
+      tagCol->setRed((int)(rgbCol[0]*255));
+      tagCol->setGreen((int)(rgbCol[1]*255));
+      tagCol->setBlue((int)(rgbCol[2]*255));
+      tagItem->setBackgroundColor(*tagCol);      
     }
 }
 

@@ -177,6 +177,9 @@ public:
   bool hasEdgeBetween(int nd1, int nd2, int tag);
   void includeDatesBtw(int bY, int bM, int bD, int dY, int dM, int dD);
   bool includeByTime(char* stdName);
+  void saveTagColors(char* filename);
+  void setDefaultColors(char* filename);
+  void setNewTagCol(int ind, int r, int g, int b);
 
 private:  
   int lineNum[NUM_OF_NAMES_C];
@@ -262,7 +265,7 @@ private:
   vtkPolyDataMapper* mapper1;
   vtkLineSource* line1;  
   vtkPolyDataMapper* mapper2;
-  
+  double tagCols[NUM_OF_TAGS+1][3];
 };
 
 #endif

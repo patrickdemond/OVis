@@ -24,7 +24,10 @@ public:
   
 
 public slots:
-
+  
+  virtual void loadCols();
+  virtual void saveCols();
+  virtual void changeTagCol(QListWidgetItem* tagToChange);
   //slots for ok and cancel
   virtual void tagCancel();
   virtual void tagOk();
