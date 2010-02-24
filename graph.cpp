@@ -241,6 +241,7 @@ void Graph::loadFile(char* filename)
   allNamesOn(false);
   
   windowSetup();
+  rendSetUp();
 
   //create a file
   fstream file;
@@ -351,6 +352,7 @@ void Graph::loadFile(char* filename)
       if(mode == 'g')
 	{
 	  redrawGraph();
+	  rend->ResetCamera();
 	  displayNdInfo(0,0);
 	  orl->setUserStyle(style);
 	  orl->graphMode(false);
@@ -359,6 +361,7 @@ void Graph::loadFile(char* filename)
       else if(mode == 'c')
 	{
 	  redrawGraph();
+	  rend->ResetCamera();
 	  displayNdInfo(0,0);
 	  orl->cameraMode();
 	}
@@ -367,6 +370,7 @@ void Graph::loadFile(char* filename)
 	{
 	  toggle(0,0);
 	  drawToggled();
+	  rend->ResetCamera();
 	  orl->setUserStyle(style);
 	  orl->toggleMode();
 	}
@@ -374,7 +378,8 @@ void Graph::loadFile(char* filename)
       else if(mode == 'h')
 	{
 	  highlight(0,0);
-	  drawHighlighted();    
+	  drawHighlighted();  
+	  rend->ResetCamera();  
 	  orl->setUserStyle(style);
 	  orl->highlightMode();
 	}
@@ -415,12 +420,8 @@ void Graph::loadFile(char* filename)
 		}	      
 	    }
 	}
-      
       drawKeys(); 
-      load = false;
-
-      //rend->ResetCamera();
-      renderWin();
+      load = false;      
     }
   //else give error message
   else cerr << "Unable to open file: " << filename << endl;
@@ -1340,8 +1341,11 @@ void Graph::rendSetUp()
   //for the number of names
   for(int i=0; i<NUM_OF_NAMES; i++)
     {
-      //add the text actors
-      rend->AddActor(nameText[i]);
+      if(nameOn[i])
+	{
+	  //add the text actors
+	  rend->AddActor(nameText[i]);
+	}
     }
 
   //set up the renderer
@@ -1999,8 +2003,6 @@ void Graph::allNamesOff(bool nw)
 	{      
 	  //remove the text actor
 	  rend->RemoveActor(nameText[i]);
-	  nameText[i]->Delete();
-	  nameText[i] = NULL;
 	}
 
       //turn off the name tag
@@ -2028,25 +2030,14 @@ void Graph::allNamesOn(bool all)
 	    {
 	      //remove actor from renderer
 	      rend->RemoveActor(nameText[i]);
-	      nameText[i]->Delete();
-	      nameText[i] = NULL;
 	    }
 	  
 	  //if the name is not on and the mode is either not toggle or the node is toggle connected
 	  if(!nameOn[i] && ((!toggleTrue) || toggleConnected[i]))
-	    {
-	      //create a new text actor
-	      nameText[i] = vtkCaptionActor2D::New();
-
+	    {     
 	      //set the position and input for the name
 	      nameText[i]->SetAttachmentPoint(graph1[i]->getX(),graph1[i]->getY(),graph1[i]->getZ());
-	      nameText[i]->SetPadding(0);
-	      nameText[i]->GetCaptionTextProperty()->BoldOff();
-	      nameText[i]->GetCaptionTextProperty()->ShadowOff();
-	      nameText[i]->SetHeight(0.015);
-	      nameText[i]->SetCaption(names[i]);
-	      nameText[i]->BorderOff();
-
+	      
 	      //add the actor to the renderer
 	      rend->AddActor(nameText[i]); 
 	      
@@ -2063,6 +2054,24 @@ void Graph::allNamesOn(bool all)
 
   //allow names to be on
   namesAllowedOn = true;
+}
+
+void Graph::initNames()
+{
+  for(int i=0; i<NUM_OF_NAMES; i++)
+    {      
+      //create a new text actor
+      nameText[i] = vtkCaptionActor2D::New();
+  
+      //set the position and input for the name
+      nameText[i]->SetAttachmentPoint(graph1[i]->getX(),graph1[i]->getY(),graph1[i]->getZ());
+      nameText[i]->SetPadding(0);
+      nameText[i]->GetCaptionTextProperty()->BoldOff();
+      nameText[i]->GetCaptionTextProperty()->ShadowOff();
+      nameText[i]->SetHeight(0.015);
+      nameText[i]->SetCaption(names[i]);
+      nameText[i]->BorderOff();
+    }
 }
 
 //turn the name at the position on or off
@@ -2111,24 +2120,14 @@ void Graph::nameOnOff(int a, int b)
 	    {
 	      //remove actor from renderer
 	      rend->RemoveActor(nameText[foundName]);
-	      nameText[foundName]->Delete();
-	      nameText[foundName] = NULL;
 	    }
 	  
 	  //if the name is not on and the mode is either not toggle or the node is toggle connected
 	  if(!nameOn[foundName] && ((!toggleTrue) || toggleConnected[foundName]))
-	    {
-	      //create a new text actor
-	      nameText[foundName] = vtkCaptionActor2D::New();
+	    {    
 
 	      //set the position and input for the name
 	      nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
-	      nameText[foundName]->SetPadding(0);
-	      nameText[foundName]->GetCaptionTextProperty()->BoldOff();
-	      nameText[foundName]->GetCaptionTextProperty()->ShadowOff();
-	      nameText[foundName]->SetHeight(0.015);
-	      nameText[foundName]->SetCaption(names[foundName]);
-	      nameText[foundName]->BorderOff();
 
 	      //add the actor to the renderer
 	      rend->AddActor(nameText[foundName]); 
@@ -2145,6 +2144,51 @@ void Graph::nameOnOff(int a, int b)
     }
 }
 
+void Graph::nameOnOff(char* nm)
+{  
+  //if names are allowed on
+  if(namesAllowedOn)
+    {
+      int foundName = -1;
+      
+      for(int i=0; i<NUM_OF_NAMES; i++)
+	{
+	  if(strstr(nm,names[i]) != NULL)
+	    {
+	      foundName = i;
+	    }
+	}
+      
+      //if a node was at the mouse position
+      if(foundName >= 0)
+	{
+	  if(nameText[foundName] != NULL)
+	    {
+	      //remove actor from renderer
+	      rend->RemoveActor(nameText[foundName]);
+	    }
+	  
+	  //if the name is not on and the mode is either not toggle or the node is toggle connected
+	  if(!nameOn[foundName] && ((!toggleTrue) || toggleConnected[foundName]))
+	    {	      
+	      //set the position and input for the name
+	      nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
+
+	      //add the actor to the renderer
+	      rend->AddActor(nameText[foundName]); 
+	      
+	      //turn on the name
+	      nameOn[foundName] = true;
+	    }
+	  else
+	    {	  	  
+	      //turn off the name
+	      nameOn[foundName] = false;
+	    }     
+	} 
+    }
+}
+  
 //destroy the pop-up name tag
 void Graph::destroyName()
 {
@@ -3752,6 +3796,9 @@ char* Graph::stristr(char* strToSearch, char* searchStr)
 //search the names for the string key
 void Graph::search(char* key)
 {
+  printf("NUMBER OF NODES: %i", NUM_OF_NAMES);
+  fflush(stdout);
+
   //reset the search strings
   resetSearch();
   
@@ -4295,6 +4342,8 @@ void Graph::GetEntry(char* filename)
       
       //close the file
       fclose(file);
+
+      initNames();
     }
   //else the file open failed
   else

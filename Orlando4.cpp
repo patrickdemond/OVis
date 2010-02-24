@@ -126,9 +126,11 @@ void Orlando::doubleClick(QListWidgetItem* item)
   //char* to hold item's string
   char* str = (char*) calloc(1000, sizeof(char));
   //get item's string
-  sprintf(str, item->text());
+  sprintf(str, item->text()); 
   //set selected to string
   graph->setSelected(str);
+  //determine what name tag to show
+  graph->nameOnOff(str);
   //free string
   free(str);
   

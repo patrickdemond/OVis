@@ -146,6 +146,8 @@ public:
   void allNamesOn(bool all);
   void allNamesOff(bool nw);
   void nameOnOff(int a, int b);
+  void nameOnOff(char* nm);
+  void initNames();
   void changeInteractorToGraph();
   void changeInteractorToCamera();
   bool isInteractGraph();
