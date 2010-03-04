@@ -89,9 +89,6 @@ void Words::wordsOk()
       free(str3);
     }
 
-  printf("after radio buttons");
-  fflush(stdout);
-
   //get text from the line edit boxes
   char* str1 = (char*) calloc(1000, sizeof(char));
   sprintf(str1, lineEdit->text());
@@ -99,20 +96,19 @@ void Words::wordsOk()
   char* str2 = (char*) calloc(1000, sizeof(char));
   sprintf(str2, lineEdit_2->text());
 
-  printf("checking if include/exclude");
-  fflush(stdout);
-
   if(str1 != NULL || str2 != NULL)
     {
-      printf("including and excluding stuff");
-      fflush(stdout);
-
       graph->include(str1);
       graph->exclude(str2);
     }
 
   free(str1);
   free(str2);
+
+  if(checkBox->isChecked())
+    {
+      graph->setEntriesOnly(true);
+    }
 
   //hide this widget
   this->hide();

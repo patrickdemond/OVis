@@ -146,6 +146,8 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
 
   mode = 'g'; 
 
+  onlyEntries = false;;
+
   progBar->setValue(100);
 }
 
@@ -3987,7 +3989,7 @@ void Graph::GetEntry(char* filename)
   int entryIDNum;
 
   int numNames = 0;
-  int numOfEntries = 8;
+  //int numOfEntries = 8;
   
   //create a list for the names
   list<Name> nms;
@@ -4333,6 +4335,15 @@ void Graph::GetEntry(char* filename)
 	
       NUM_OF_NAMES = numNames;
 
+      if(onlyEntries)
+	{
+	  includeOnlyEntries();
+	}
+
+      mergeEdges();
+
+      initNames();
+
       //free the buffer
       free(buffer);
 
@@ -4343,7 +4354,6 @@ void Graph::GetEntry(char* filename)
       //close the file
       fclose(file);
 
-      initNames();
     }
   //else the file open failed
   else
@@ -4353,6 +4363,135 @@ void Graph::GetEntry(char* filename)
       printf("\n");
       fflush(stdout);
       }
+}
+
+void Graph::mergeEdges()
+{
+  for(int i=0; i<NUM_OF_NAMES; i++)
+    {
+      list<Edge> edg = graph1[i]->getChildren();
+
+      list<int> inds;
+      
+      Edge newEdges[NUM_OF_NAMES];
+
+      list<Edge>::iterator it;
+      for(it=edg.begin(); it!=edg.end(); it++)
+	{
+	  int q = it->GetNode1();
+	  if(q == i)
+	    {
+	      q = it->GetNode2();
+	    }
+
+	  if(newEdges[q].GetNode1() != -1)
+	    {
+	      newEdges[q].AddTags(it->GetTags());
+	    }
+	  else
+	    {
+	      newEdges[q].AddTags(it->GetTags());
+	      newEdges[q].SetNode1(i);
+	      newEdges[q].SetNode2(q);
+	    }
+	}
+
+      graph1[i]->resetChildren();
+      
+      for(int k=0; k<NUM_OF_NAMES; k++)
+	{
+	  if(newEdges[k].GetNode1() != -1)
+	    {
+	      graph1[i]->addChild(newEdges[k]);
+	    }
+	}
+    }
+}
+
+void Graph::includeOnlyEntries()
+{
+  printf("including only entries");
+  fflush(stdout);
+  
+  entries.unique();
+
+  int tmp[entries.size()];
+  list<Edge> chldrn[entries.size()];
+  char* nms[entries.size()];
+  int i=0;  
+
+  list<int>::iterator it;
+  for(it=entries.begin(); it!=entries.end(); it++)
+    {      
+      tmp[i]= *it;
+      nms[i]= strdup(names[*it]);
+      i++;
+    }
+
+  i=0;
+  for(it=entries.begin(); it!=entries.end(); it++)
+    {
+      list<Edge> edgs;
+      edgs = graph1[*it]->getChildren();
+
+      list<Edge>::iterator it2;
+      for(it2=edgs.begin(); it2!=edgs.end(); it2++)
+	{
+	  int nd1 = isEntry(it2->GetNode1());
+	  int nd2 = isEntry(it2->GetNode2());
+	    
+	  if(nd1 >=0 && nd2 >=0)
+	    {	      
+	      Edge* nwEdge = new Edge(nd1, nd2, it2->GetTags());
+	      chldrn[i].push_back(*nwEdge);
+	    }
+	}
+      i++;
+    }
+  
+  for(int j=0; j<NUM_OF_NAMES; j++)
+    {
+      graph1[j]->resetChildren();
+      names[j] = NULL;
+    }
+   
+  for(int k=0; k<entries.size(); k++)
+    {
+      names[k] = nms[k];
+
+      list<Edge>::iterator it3;
+      for(it3=chldrn[k].begin(); it3!=chldrn[k].end(); it3++)
+	{
+	  graph1[k]->addChild(*it3);
+	}
+    }
+
+    NUM_OF_NAMES = entries.size();
+
+    entries.clear();
+    
+    for(int l=0; l<NUM_OF_NAMES; l++)
+      {
+	entries.push_back(l);
+      }
+}
+
+int Graph::isEntry(int n)
+{
+  int ent=-1;
+  int i=0;
+
+  list<int>::iterator it;
+  for(it=entries.begin(); it!=entries.end(); it++)
+    {
+      if(n == *it)
+	{
+	  ent=i;
+	}
+      i++;
+    }
+
+  return ent;
 }
 
 //return the window
@@ -5041,6 +5180,11 @@ void Graph::exclude(char* s)
 
 	} while(str != NULL);
     }
+}
+
+void Graph::setEntriesOnly(bool b)
+{
+  onlyEntries = b;
 }
 
 list<char*> Graph::wordCases(char* s)

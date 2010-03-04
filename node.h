@@ -30,6 +30,7 @@ public:
   bool visited();
   void setVisited(bool b);
   list<Edge> getChildren();
+  void resetChildren();
   int connectivity();
   void resetConnectivity();
   vtkActor* getSphereActor();

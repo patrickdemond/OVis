@@ -110,6 +110,11 @@ list<Edge> Node::getChildren()
   return children;
 }
 
+//reset the children
+void Node::resetChildren()
+{
+  children.clear();
+}
 
 //return the number of nodes connected to the node 
 int Node::connectivity()

@@ -119,6 +119,8 @@ public:
   void displayNdInfo(int a, int b);
   bool empty(int graph2[]);
   void GetEntry(char* filename);
+  void includeOnlyEntries();
+  int isEntry(int n);
   void printPath(list<int> path);
   void windowSetup();
   void drawEdges();
@@ -167,6 +169,7 @@ public:
   bool includeLine(char* ln);
   void include(char* s);
   void exclude(char* s);
+  void setEntriesOnly(bool b);
   void removeHighlightAct();
   list<char*> wordCases(char* s);
   void drawEdge(int stInd, int endInd, bool alpha, int tag);
@@ -182,6 +185,7 @@ public:
   void saveTagColors(char* filename);
   void setDefaultColors(char* filename);
   void setNewTagCol(int ind, int r, int g, int b);
+  void mergeEdges();
 
 private:  
   int lineNum[NUM_OF_NAMES_C];
@@ -268,6 +272,7 @@ private:
   vtkLineSource* line1;  
   vtkPolyDataMapper* mapper2;
   double tagCols[NUM_OF_TAGS+1][3];
+  bool onlyEntries;
 };
 
 #endif

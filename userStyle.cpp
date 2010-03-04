@@ -80,7 +80,7 @@ void userStyle::setHighlight(bool nw)
     }      
 
   //highlight with no real coordinates
-  //gra->highlight(0,0);
+  gra->highlight(0,0);
   //gra->drawHighlighted();
 
   //draw selected node
