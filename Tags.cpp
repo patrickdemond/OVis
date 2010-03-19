@@ -16,10 +16,36 @@ Tags::Tags(QWidget* parent)
   connect(listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(changeTagCol(QListWidgetItem*)));
   connect(toolButton, SIGNAL(pressed()), this, SLOT(loadCols()));
   connect(toolButton_2, SIGNAL(pressed()), this, SLOT(saveCols()));
+  connect(listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(changeSelPal(QListWidgetItem*)));
 
   //turn on extended selection for the list
   listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+  /*  QPalette pal = listWidget->palette();
+  pal.setBrush(QPalette::Highlight, Qt::gray);
+  //pal.setAlpha(10);
+  listWidget->setPalette(pal);*/
 };
+
+void Tags::changeSelPal(QListWidgetItem* tagToChange)
+{
+  /*QPalette pal = listWidget->palette();
+  
+  int index = listWidget->row(tagToChange);
+			      
+  double* oldCol = graph->getColor(index);
+  
+  QColor* col = new QColor();
+  col->setRed((int)(oldCol[0]*255));
+  col->setGreen((int)(oldCol[1]*255));
+  col->setBlue((int)(oldCol[2]*255));
+  //col->setAlpha();
+  pal.setBrush(QPalette::HighlightedText, *col);
+  listWidget->setPalette(pal);*/
+
+  
+
+}
 
 void Tags::changeTagCol(QListWidgetItem* tagToChange)
 {
@@ -37,7 +63,9 @@ void Tags::changeTagCol(QListWidgetItem* tagToChange)
   if(col.red() != col.blue() != col.green() != 0)
     {
       graph->setNewTagCol(index, col.red(), col.green(), col.blue());
-      tagToChange->setBackground(col);
+      tagToChange->setBackgroundColor(col);
+
+      
     }
 }
 

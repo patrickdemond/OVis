@@ -61,12 +61,17 @@ Orlando::Orlando(QWidget* parent)
   a_names4->setStatusTip(tr("Turns On All Name Tags"));
   connect(a_names4, SIGNAL(triggered()), this, SLOT(allNameTagsOn()));
 
+  QAction* a_names5 = new QAction(tr("Label Properties"), this);
+  a_names5->setStatusTip(tr("Set Label Text Size, Color, etc."));
+  connect(a_names5, SIGNAL(triggered()), this, SLOT(setLabelProperties()));
+
   //create file menu for name tags
   QMenu* file_menu2 = this->menuBar()->addMenu(tr("&Labels"));
   file_menu2->addAction(a_names);
   file_menu2->addAction(a_names2);
   file_menu2->addAction(a_names3);
   file_menu2->addAction(a_names4);
+  file_menu2->addAction(a_names5);
 
   //create path menu item
   QAction* a_path = new QAction(tr("&Path Search"), this);
@@ -111,6 +116,17 @@ Orlando::Orlando(QWidget* parent)
   //set selection mode to an extended selection
   listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 };
+
+void Orlando::setLabelProperties()
+{      
+  Font* fntWin = new Font(this, graph);
+      
+  (getInteractor())->Disable();
+  
+  fntWin->exec();
+  
+  (getInteractor())->Enable();
+}
 
 void Orlando::graphButton()
 {

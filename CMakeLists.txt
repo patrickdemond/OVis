@@ -32,9 +32,9 @@ INCLUDE_DIRECTORIES(
 
 IF(DESIRED_QT_VERSION MATCHES 4)
 
-SET(OrlandoSrcs ${OrlandoSrcs} Orlando4.cpp Tags.cpp Path.cpp Words.cpp WordHelp.cpp Text.cpp)
-SET(UIS uiOrlando4.ui tags.ui path.ui words.ui wordHelp.ui text.ui)
-SET (OrlandoHeaders Orlando4.h Tags.h Path.h Words.h WordHelp.h Text.h)
+SET(OrlandoSrcs ${OrlandoSrcs} Orlando4.cpp Tags.cpp Path.cpp Words.cpp WordHelp.cpp Text.cpp Font.cpp)
+SET(UIS uiOrlando4.ui tags.ui path.ui words.ui wordHelp.ui text.ui font.ui)
+SET (OrlandoHeaders Orlando4.h Tags.h Path.h Words.h WordHelp.h Text.h Font.h)
 QT4_WRAP_UI(UIHeaders ${UIS})
 QT4_WRAP_CPP(MOCSrcs ${OrlandoHeaders} )
 ADD_DEFINITIONS(-DQT_GUI_LIBS -DQT_CORE_LIB -DQT3_SUPPORT)

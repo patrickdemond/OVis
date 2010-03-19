@@ -3,6 +3,9 @@
 
 #define NUM_OF_NAMES_C 30000
 #define NUM_OF_TAGS 25
+#define ARIAL 0
+#define COURIER 1
+#define TIMES 2
 
 #include <qapplication.h>
 #include "ui_uiOrlando4.h"
@@ -186,6 +189,19 @@ public:
   void setDefaultColors(char* filename);
   void setNewTagCol(int ind, int r, int g, int b);
   void mergeEdges();
+  void setCaptionItalic(bool b);
+  void setCaptionBold(bool b);
+  void setCaptionSize(int sz);
+  void setCaptionFont(int fnt);
+  void setCaptionColour(int r, int g, int b);
+  bool getCaptionItalic();
+  bool getCaptionBold();
+  int getCaptionSize();
+  int getCaptionFont();
+  int getCaptionRed();
+  int getCaptionGreen();
+  int getCaptionBlue(); 
+  void redrawNameTags();
 
 private:  
   int lineNum[NUM_OF_NAMES_C];
@@ -273,6 +289,13 @@ private:
   vtkPolyDataMapper* mapper2;
   double tagCols[NUM_OF_TAGS+1][3];
   bool onlyEntries;
+  bool captionBold;
+  bool captionItalic;
+  int captionFont; //0-ARIAL, 1-COURIER, 2-TIMES
+  int captionSize; 
+  int captionRed;
+  int captionGreen;
+  int captionBlue;
 };
 
 #endif

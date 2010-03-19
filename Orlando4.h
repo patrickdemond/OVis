@@ -6,6 +6,7 @@
 #include "QVTKWidget.h"
 #include "graph.h"
 #include "userStyle.h"
+#include "Font.h"
 
 class Orlando : public QMainWindow, private Ui_MainWindow
 {
@@ -56,6 +57,7 @@ public slots:
   virtual void nameTagsOff();
   virtual void nameTagsClear();
   virtual void findPath();
+  virtual void setLabelProperties();
 
 protected:
 
@@ -67,8 +69,7 @@ private:
   QAction* a_names;
   QAction* a_names2;
   Graph* graph;
-  userStyle* style;
-  
+  userStyle* style;  
 };
 
 #endif

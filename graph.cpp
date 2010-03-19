@@ -18,6 +18,14 @@
 //passed in all objects necessary from GUI
 Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label,QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind)
 {
+  captionBold = false;
+  captionItalic = false;
+  captionFont = ARIAL; //0-ARIAL, 1-COURIER, 2-TIMES
+  captionSize = 12;
+  captionRed = 255;
+  captionGreen = 255;
+  captionBlue = 255;
+
   birthYear = 0;
   birthMonth = 0;
   birthDay = 0;
@@ -2068,9 +2076,45 @@ void Graph::initNames()
       //set the position and input for the name
       nameText[i]->SetAttachmentPoint(graph1[i]->getX(),graph1[i]->getY(),graph1[i]->getZ());
       nameText[i]->SetPadding(0);
-      nameText[i]->GetCaptionTextProperty()->BoldOff();
+
+      nameText[i]->GetTextActor()->SetTextScaleMode(vtkTextActor::TEXT_SCALE_MODE_NONE);
+
+      if(captionItalic)
+	{
+	  nameText[i]->GetCaptionTextProperty()->ItalicOn();
+	}
+      else
+	{
+	  nameText[i]->GetCaptionTextProperty()->ItalicOff();
+	}
+
+      if(captionBold)
+	{
+	  nameText[i]->GetCaptionTextProperty()->BoldOn();
+	}
+      else
+	{
+	  nameText[i]->GetCaptionTextProperty()->BoldOff();
+	}
+
+      switch(captionFont)
+	{
+	case ARIAL:
+	  nameText[i]->GetCaptionTextProperty()->SetFontFamilyToArial();
+	  break;
+	case COURIER:
+	  nameText[i]->GetCaptionTextProperty()->SetFontFamilyToCourier();
+	  break;
+	case TIMES:
+	  nameText[i]->GetCaptionTextProperty()->SetFontFamilyToTimes();
+	  break;
+	}
+
+      nameText[i]->GetCaptionTextProperty()->SetFontSize(captionSize);
+
+      nameText[i]->GetCaptionTextProperty()->SetColor(captionRed/255.0, captionGreen/255.0, captionBlue/255.0);
+
       nameText[i]->GetCaptionTextProperty()->ShadowOff();
-      nameText[i]->SetHeight(0.015);
       nameText[i]->SetCaption(names[i]);
       nameText[i]->BorderOff();
     }
@@ -2131,6 +2175,48 @@ void Graph::nameOnOff(int a, int b)
 	      //set the position and input for the name
 	      nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
 
+	      nameText[foundName]->SetPadding(0);
+
+	      nameText[foundName]->GetTextActor()->SetTextScaleMode(vtkTextActor::TEXT_SCALE_MODE_NONE);
+	      
+	      if(captionItalic)
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->ItalicOn();
+		}
+	      else
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->ItalicOff();
+		}
+	      
+	      if(captionBold)
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->BoldOn();
+		}
+	      else
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->BoldOff();
+		}
+	      
+	      switch(captionFont)
+		{
+		case ARIAL:
+		  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToArial();
+		  break;
+		case COURIER:
+		  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToCourier();
+		  break;
+		case TIMES:
+		  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToTimes();
+		  break;
+		}
+
+	      nameText[foundName]->GetCaptionTextProperty()->SetFontSize(captionSize);
+	      
+	      nameText[foundName]->GetCaptionTextProperty()->SetColor(captionRed/255.0, captionGreen/255.0, captionBlue/255.0);
+	      
+	      nameText[foundName]->GetCaptionTextProperty()->ShadowOff();
+	      nameText[foundName]->BorderOff();
+
 	      //add the actor to the renderer
 	      rend->AddActor(nameText[foundName]); 
 	      
@@ -2175,6 +2261,48 @@ void Graph::nameOnOff(char* nm)
 	    {	      
 	      //set the position and input for the name
 	      nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
+	    
+	      nameText[foundName]->SetPadding(0);
+
+	      nameText[foundName]->GetTextActor()->SetTextScaleMode(vtkTextActor::TEXT_SCALE_MODE_NONE);
+	      
+	      if(captionItalic)
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->ItalicOn();
+		}
+	      else
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->ItalicOff();
+		}
+	      
+	      if(captionBold)
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->BoldOn();
+		}
+	      else
+		{
+		  nameText[foundName]->GetCaptionTextProperty()->BoldOff();
+		}
+	      
+	      switch(captionFont)
+		{
+		case ARIAL:
+		  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToArial();
+		  break;
+		case COURIER:
+		  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToCourier();
+		  break;
+		case TIMES:
+		  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToTimes();
+		  break;
+		}
+
+	      nameText[foundName]->GetCaptionTextProperty()->SetFontSize(captionSize);
+	      
+	      nameText[foundName]->GetCaptionTextProperty()->SetColor(captionRed/255.0, captionGreen/255.0, captionBlue/255.0);
+	      
+	      nameText[foundName]->GetCaptionTextProperty()->ShadowOff();
+	      nameText[foundName]->BorderOff();
 
 	      //add the actor to the renderer
 	      rend->AddActor(nameText[foundName]); 
@@ -2215,18 +2343,173 @@ void Graph::showName(int a,int b)
     {      
       //create a new text actor and set the position to the mouse position
       txtAct = vtkCaptionActor2D::New();
+
+      txtAct->GetTextActor()->SetTextScaleMode(vtkTextActor::TEXT_SCALE_MODE_NONE);
+
       txtAct->SetCaption(names[foundName]);//add the text actor to the renderer and render the window
       txtAct->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
       txtAct->SetPadding(0);
-      txtAct->GetCaptionTextProperty()->BoldOff();
+      txtAct->GetCaptionTextProperty()->SetColor(captionRed/255.0,captionGreen/255.0,captionBlue/255.0);
+
+      if(captionItalic)
+	{
+	  txtAct->GetCaptionTextProperty()->ItalicOn();
+	}
+      else
+	{
+	  txtAct->GetCaptionTextProperty()->ItalicOff();
+	}
+
+      if(captionBold)
+	{
+	  txtAct->GetCaptionTextProperty()->BoldOn();
+	}
+      else
+	{
+	  txtAct->GetCaptionTextProperty()->BoldOff();
+	}
+
+      switch(captionFont)
+	{
+	case ARIAL:
+	  txtAct->GetCaptionTextProperty()->SetFontFamilyToArial();
+	  break;
+	case COURIER:
+	  txtAct->GetCaptionTextProperty()->SetFontFamilyToCourier();
+	  break;
+	case TIMES:
+	  txtAct->GetCaptionTextProperty()->SetFontFamilyToTimes();
+	  break;
+	}
+
+      txtAct->GetCaptionTextProperty()->SetFontSize(captionSize);
+
       txtAct->GetCaptionTextProperty()->ShadowOff();
-      txtAct->SetHeight(0.015);
       txtAct->SetCaption(names[foundName]);
       txtAct->BorderOff();
       
       rend->AddActor(txtAct);
       renderWin();
     }
+}
+
+void Graph::redrawNameTags()
+{
+  for(int foundName=0; foundName<NUM_OF_NAMES; foundName++)
+    {
+      //set the position and input for the name
+      nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
+      
+      nameText[foundName]->SetPadding(0);
+      
+      nameText[foundName]->GetTextActor()->SetTextScaleMode(vtkTextActor::TEXT_SCALE_MODE_NONE);
+      
+      if(captionItalic)
+	{
+	  nameText[foundName]->GetCaptionTextProperty()->ItalicOn();
+	}
+      else
+	{
+	  nameText[foundName]->GetCaptionTextProperty()->ItalicOff();
+	}
+      
+      if(captionBold)
+	{
+	  nameText[foundName]->GetCaptionTextProperty()->BoldOn();
+	}
+      else
+	{
+	  nameText[foundName]->GetCaptionTextProperty()->BoldOff();
+	}
+      
+      switch(captionFont)
+	{
+	case ARIAL:
+	  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToArial();
+	  break;
+	case COURIER:
+	  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToCourier();
+	  break;
+	case TIMES:
+	  nameText[foundName]->GetCaptionTextProperty()->SetFontFamilyToTimes();
+	  break;
+	}
+      
+      nameText[foundName]->GetCaptionTextProperty()->SetFontSize(captionSize);
+      
+      nameText[foundName]->GetCaptionTextProperty()->SetColor(captionRed/255.0, captionGreen/255.0, captionBlue/255.0);
+      
+      nameText[foundName]->GetCaptionTextProperty()->ShadowOff();
+      nameText[foundName]->BorderOff();
+      
+      if(nameOn[foundName])
+	{
+	  //add the actor to the renderer
+	  rend->AddActor(nameText[foundName]); 
+	}
+    }
+}
+
+void Graph::setCaptionItalic(bool b)
+{
+  captionItalic = b;
+}
+
+void Graph::setCaptionBold(bool b)
+{
+  captionBold = b;
+}
+
+void Graph::setCaptionSize(int sz)
+{
+  captionSize = sz;
+}
+
+void Graph::setCaptionFont(int fnt)
+{
+  captionFont = fnt;
+}
+
+void Graph::setCaptionColour(int r, int g, int b)
+{
+  captionRed = r;
+  captionGreen = g;
+  captionBlue = b;
+}
+
+bool Graph::getCaptionItalic()
+{
+  return captionItalic;
+}
+
+bool Graph::getCaptionBold()
+{
+  return captionBold;
+}
+
+int Graph::getCaptionFont()
+{
+  return captionFont;
+}
+
+int Graph::getCaptionSize()
+{
+  return captionSize;
+}
+
+int Graph::getCaptionRed()
+{
+  return captionRed;
+}
+
+int Graph::getCaptionGreen()
+{
+  return captionGreen;
+}
+
+int Graph::getCaptionBlue()
+{
+  return captionBlue;
 }
 
 //returns the index of the node at the position passed in
@@ -2396,6 +2679,7 @@ void Graph::changeToPos(int a, int b)
       
       //move the node to the new position
       graph1[ndToMove]->setCenter((int)coords[0],(int)coords[1],(int)coords[2]);
+      nameText[ndToMove]->SetAttachmentPoint((int)coords[0],(int)coords[1],(int)coords[2]);
     }
 }
 
@@ -3022,7 +3306,7 @@ void Graph::redrawGraph()
 	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
 	    {
 	      //if the tag is on and the edge is connected and not already drawn
-	      if(tagOn[*k] && (*j).HasTag(*k) && !connected)
+	      if(tagOn[*k] && j->HasTag(*k) && !connected)
 		{
 		  //set connected to true
 		  connected = true;
@@ -4384,16 +4668,10 @@ void Graph::mergeEdges()
 	      q = it->GetNode2();
 	    }
 
-	  if(newEdges[q].GetNode1() != -1)
-	    {
-	      newEdges[q].AddTags(it->GetTags());
-	    }
-	  else
-	    {
-	      newEdges[q].AddTags(it->GetTags());
-	      newEdges[q].SetNode1(i);
-	      newEdges[q].SetNode2(q);
-	    }
+	  newEdges[q].AddTags(it->GetTags());
+	  newEdges[q].SetNode1(i);
+	  newEdges[q].SetNode2(q);
+	    
 	}
 
       graph1[i]->resetChildren();
