@@ -18,10 +18,10 @@ Period::Period(char* p)
 
   title = strdup(str3);
 
-  printf("title: ");
+  /*printf("title: ");
   printf(str3);
   printf(title);
-  fflush(stdout);
+  fflush(stdout);*/
 
   startDate = new Date(str1, true);
   endDate = new Date(str2, false);

@@ -18,6 +18,8 @@
 //passed in all objects necessary from GUI
 Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label,QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind)
 {
+  edgeCount = 0;
+
   captionBold = false;
   captionItalic = false;
   captionFont = ARIAL; //0-ARIAL, 1-COURIER, 2-TIMES
@@ -157,6 +159,9 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   onlyEntries = false;;
 
   progBar->setValue(100);
+
+  tagOn[NUM_OF_TAGS] = true;
+  tagsUsed.push_back(NUM_OF_TAGS);
 }
 
 //saves the graph in its current state for next time
@@ -443,18 +448,20 @@ void Graph::loadXML(char* filename)
   Orlando* orl = (Orlando*) orland;
   orl->setGraph(this);
 
+  progBar = orl->getProgressBar();
+
   //set the progress bar to 0
   progBar->setValue(0);
+  
+  //printf("before initialize");
+  //fflush(stdout);
 
+  initialize(filename);
+  
   //create new user style
   userStyle* style = new userStyle(inter,window,this);
   orl->setUserStyle(style);
- 
-  printf("before initialize");
-  fflush(stdout);
-
-  initialize(filename);
-
+  
   drawGraph(); 
   display();
   orl->graphMode(true); 
@@ -462,8 +469,6 @@ void Graph::loadXML(char* filename)
 
 void Graph::renderWin()
 {
-  //progBar->setValue(80);
-
   window->Render();
 
   //set the progress bar to 100
@@ -969,23 +974,6 @@ void Graph::resetGraphCons()
     }
 }
 
-void Graph::removeHighlightAct()
-{
-  //if the highlight actor is not NULL
-  if(highlightActor != NULL)
-    {  
-      //remove the actor from the renderer and delete it
-      rend->RemoveActor(highlightActor);
-      highlightActor->Delete();
-      highlightActor = NULL;
-      //render the window
-      renderWin();
-    }
-  
-  //reset highlighted variable
-  highlighted = false; 
-}
-
 void Graph::removeEdgesForNode(int nd)
 {
   //get the list of edge actors
@@ -1022,8 +1010,8 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
       
       if(actor != highlightActor && !alpha)
 	{
-	  printf("not highlighted");
-	  fflush(stdout);
+	  //printf("not highlighted");
+	  //fflush(stdout);
 	  ndCon[ind] = true;
 	}
 
@@ -1063,9 +1051,9 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
 void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
 {
   //set connected to true
-  con[stInd][endInd] = true;
-  con[endInd][stInd] = true;
-  
+  //con[stInd][endInd] = true;
+  //con[endInd][stInd] = true;
+
   //initialize variables
   int a = stInd;
   int b = endInd;
@@ -1086,10 +1074,19 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   vtkActor *linAct = vtkActor::New();
   linAct->SetMapper(mapper2);
 
+  int flip = 1;
+  int tagNum = tag;
+
+  if(tag > NUM_OF_TAGS/2)
+    {
+      flip = -1;
+      tagNum = tag-(NUM_OF_TAGS/2);
+    }  
+
   vtkMatrix4x4* matrix1 = vtkMatrix4x4::New();
-  matrix1->Element[0][0]=x2-x1;
+  matrix1->Element[0][0]=(x2+(0.1*tagNum*flip))-(x1+(0.1*tagNum*flip));
   matrix1->Element[1][0]=y2-y1;
-  matrix1->Element[2][0]=z2-z1;
+  matrix1->Element[2][0]=(z2+(0.1*tagNum*flip))-(z1+(0.1*tagNum*flip));
   matrix1->Element[3][0]=0.0;
   matrix1->Element[0][1]=0.0;
   matrix1->Element[1][1]=1.0;
@@ -1099,9 +1096,9 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   matrix1->Element[1][2]=0.0;
   matrix1->Element[2][2]=1.0;
   matrix1->Element[3][2]=0.0;
-  matrix1->Element[0][3]=(x1+x2)/2.0;
+  matrix1->Element[0][3]=(x1+(0.1*tagNum*flip)+x2+(0.1*tagNum*flip))/2.0;
   matrix1->Element[1][3]=(y1+y2)/2.0;
-  matrix1->Element[2][3]=(z1+z2)/2.0;
+  matrix1->Element[2][3]=(z1+(0.1*tagNum*flip)+z2+(0.1*tagNum*flip))/2.0;
   matrix1->Element[3][3]=1.0;
 
 
@@ -1149,16 +1146,16 @@ void Graph::drawEdgesForNode(int ind, bool alpha)
       for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
 	{
 	  //if the tag is on and the edge has not already beeen connected
-	  if(tagOn[*k] && !con[j->GetNode1()][j->GetNode2()] && !con[j->GetNode2()][j->GetNode1()]  && !connected)
+	  if(tagOn[*k])// && !con[j->GetNode1()][j->GetNode2()] && !con[j->GetNode2()][j->GetNode1()])//  && !connected)
 	    {
 	      //if the names are connected with this tag
 	      if(j->HasTag(*k))
 		{
 		  //draw the edge
 		  drawEdge(j->GetNode1(), j->GetNode2(), alpha, (*k));
-		  connected = true;
-		  
-		  if(!nodeConnected)
+		  //connected = true;
+
+		  //if(!nodeConnected)
 		    {
 		      //draw the node if it has not already been drawn
 		      drawNode(ind, alpha, vtkActor::New(),0.0, 95.0/255.0, 1.0);
@@ -1501,11 +1498,11 @@ bool Graph::findIfPath(int startNode, int nodeToFind, int cutOff)
 	}
       done[currentVertex] = true;
     }
-
+  /*
   if(found)
     printf("FOUND!");
   
-  fflush(stdout);
+  fflush(stdout);*/
   return found;
 }
 
@@ -1535,8 +1532,8 @@ void Graph::findPathBtw(char* x, char* y)
   rendSetUp();
   textSetUp();
 
-  printf("after set up");
-  fflush(stdout);
+  //printf("after set up");
+  //fflush(stdout);
 
   //clear the inPath list
   inPath.clear();
@@ -1590,16 +1587,16 @@ void Graph::findPathBtw(char* x, char* y)
 	  //initialize found to false
 	  found = false;
 
-	  printf("size = %i", sz);
-	  fflush(stdout);
+	  //printf("size = %i", sz);
+	  //fflush(stdout);
 	  
 	  //find all paths with the cutoff of the shortest path's size
 	  findAllPaths(c, d, path, sz, true);
 	}
     }
   
-    printf("before print path");
-    fflush(stdout);
+  //printf("before print path");
+  //fflush(stdout);
 
   //show the path information for the two nodes
   list<int> empty;	  
@@ -1607,13 +1604,13 @@ void Graph::findPathBtw(char* x, char* y)
   empty.push_back(c);
   empty.push_back(d);
 
-  printf("right before");
-  fflush(stdout);
+  //printf("right before");
+  //fflush(stdout);
 
   printPath(empty);
 
-  printf("after print path");
-  fflush(stdout);
+  //printf("after print path");
+  //fflush(stdout);
 
   //set mode to path
   mode = 'p';
@@ -1844,14 +1841,14 @@ void Graph::printPath(list<int> path)
   int prev = -1;
   int cnt = 0;
   
-  printf("in print path");
-  fflush(stdout);
+  //printf("in print path");
+  //fflush(stdout);
 
   //for each node in the path
   for(list<int>::iterator it = path.begin(); it != path.end(); it++)
     {
-      printf("NODE: %i", *it);
-      fflush(stdout);
+      //printf("NODE: %i", *it);
+      //fflush(stdout);
 
       //get the node
       ndP = graph1[*it];
@@ -1970,35 +1967,43 @@ bool Graph::hasEdgeBetween(int nd1, int nd2, int tag)
 
 void Graph::highlightNode(int a, int b)
 {  
-  if(!highlighted)
+   
+  int foundName = nodeAtPos(a,b,false);
+
+  //if the highlight actor is not NULL
+  if(highlightActor != NULL && lastHighlighted != foundName)
+    {  
+      //remove the actor from the renderer and delete it
+      rend->RemoveActor(highlightActor);
+      highlightActor->Delete();
+      highlightActor = NULL;
+    }     
+  
+  
+  if(foundName != selected && foundName >= 0 && ndCon[foundName] && (!toggleTrue || (toggleTrue && ndCon[foundName])))
     {
-      int foundName = nodeAtPos(a,b,false);
-
-      if(foundName >= 0 && ndCon[foundName] && (!toggleTrue || (toggleTrue && ndCon[foundName])))
+      highlightActor = drawNode(foundName, false, highlightActor,100.0/255.0, 200.0/255.0, 1.0);
+    }
+  
+  if(lastHighlighted != -1 && lastHighlighted != selected && lastHighlighted != foundName)
+    {
+      if(ndCon[lastHighlighted])
 	{
-	  highlightActor = drawNode(foundName, false, highlightActor,100.0/255.0, 200.0/255.0, 1.0);
-	}     
-
-      if(lastHighlighted != -1 && lastHighlighted != selected && lastHighlighted != foundName)
-	{
-	  if(ndCon[lastHighlighted])
-	    {
-	      drawNode(lastHighlighted, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0); 
-	    }
-	  else if(mode == 'h') 
-	    {
-	      drawNode(lastHighlighted, true, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
-	    }
+	  drawNode(lastHighlighted, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0); 
 	}
-
-      if(foundName >= 0 && (!toggleTrue || (toggleTrue && ndCon[foundName])))
+      else if(mode == 'h') 
 	{
-	  highlighted = true;
-	  lastHighlighted = foundName;
+	  drawNode(lastHighlighted, true, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
 	}
-
-      renderWin();
-      }
+    }
+  
+  if(foundName >= 0 && (!toggleTrue || (toggleTrue && ndCon[foundName])))
+    {
+      highlighted = true;
+      lastHighlighted = foundName;
+    }
+  
+  renderWin();
 }
 
 //turn all name tags off
@@ -2059,7 +2064,18 @@ void Graph::allNamesOn(bool all)
 	      //turn off the name
 	      nameOn[i] = false;
 	    }     
-	} 
+	}
+      else
+	{
+	  //set the position and input for the name
+	  nameText[selected]->SetAttachmentPoint(graph1[selected]->getX(),graph1[selected]->getY(),graph1[selected]->getZ());
+	      
+	  //add the actor to the renderer
+	  rend->AddActor(nameText[selected]); 
+	  
+	  //turn on the name
+	  nameOn[selected] = true;
+	}
     }
 
   //allow names to be on
@@ -2121,7 +2137,7 @@ void Graph::initNames()
 }
 
 //turn the name at the position on or off
-void Graph::nameOnOff(int a, int b)
+void Graph::nameOnOff(bool on, int a, int b)
 {
   //if names are allowed on
   if(namesAllowedOn)
@@ -2169,11 +2185,12 @@ void Graph::nameOnOff(int a, int b)
 	    }
 	  
 	  //if the name is not on and the mode is either not toggle or the node is toggle connected
-	  if(!nameOn[foundName] && ((!toggleTrue) || toggleConnected[foundName]))
+	  if(on && ((!toggleTrue) || toggleConnected[foundName]))
 	    {    
 
 	      //set the position and input for the name
-	      nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
+	      //nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
+	      nameText[foundName]->SetAttachmentPoint(coords[0],coords[1],coords[2]);
 
 	      nameText[foundName]->SetPadding(0);
 
@@ -2223,7 +2240,7 @@ void Graph::nameOnOff(int a, int b)
 	      //turn on the name
 	      nameOn[foundName] = true;
 	    }
-	  else
+	  else if(!on)
 	    {	  	  
 	      //turn off the name
 	      nameOn[foundName] = false;
@@ -2232,7 +2249,7 @@ void Graph::nameOnOff(int a, int b)
     }
 }
 
-void Graph::nameOnOff(char* nm)
+void Graph::nameOnOff(bool on, char* nm)
 {  
   //if names are allowed on
   if(namesAllowedOn)
@@ -2257,7 +2274,7 @@ void Graph::nameOnOff(char* nm)
 	    }
 	  
 	  //if the name is not on and the mode is either not toggle or the node is toggle connected
-	  if(!nameOn[foundName] && ((!toggleTrue) || toggleConnected[foundName]))
+	  if(on && ((!toggleTrue) || toggleConnected[foundName]))
 	    {	      
 	      //set the position and input for the name
 	      nameText[foundName]->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
@@ -2310,7 +2327,7 @@ void Graph::nameOnOff(char* nm)
 	      //turn on the name
 	      nameOn[foundName] = true;
 	    }
-	  else
+	  else if(!on)
 	    {	  	  
 	      //turn off the name
 	      nameOn[foundName] = false;
@@ -2336,10 +2353,18 @@ void Graph::showName(int a,int b)
 {  
   int foundName = nodeAtPos(a,b, false);
 
+  double coords[3];
+      
+  //find the 3D coordinates 
+  vtkWorldPointPicker *picker = vtkWorldPointPicker::New();
+  picker->Pick(a,b,0.0,rend);
+  picker->GetPickPosition(coords);
+  picker->Delete();
+
   destroyName();
 
   //if the name found is not NULL and the name is not already on
-  if(foundName >=0 && ndCon[foundName]  && !nameOn[foundName] &&((!toggleTrue && !pathTrue) || ((toggleTrue || pathTrue) && toggleConnected[foundName]))) 
+  if(foundName >=0 && ndCon[foundName]  && ((!toggleTrue && !pathTrue) || ((toggleTrue || pathTrue) && toggleConnected[foundName])))//!nameOn[foundName] &&((!toggleTrue && !pathTrue) || ((toggleTrue || pathTrue) && toggleConnected[foundName]))) 
     {      
       //create a new text actor and set the position to the mouse position
       txtAct = vtkCaptionActor2D::New();
@@ -2347,7 +2372,9 @@ void Graph::showName(int a,int b)
       txtAct->GetTextActor()->SetTextScaleMode(vtkTextActor::TEXT_SCALE_MODE_NONE);
 
       txtAct->SetCaption(names[foundName]);//add the text actor to the renderer and render the window
-      txtAct->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
+      //txtAct->SetAttachmentPoint(graph1[foundName]->getX(),graph1[foundName]->getY(),graph1[foundName]->getZ());
+      txtAct->SetAttachmentPoint(coords[0], coords[1], coords[2]);
+
       txtAct->SetPadding(0);
       txtAct->GetCaptionTextProperty()->SetColor(captionRed/255.0,captionGreen/255.0,captionBlue/255.0);
 
@@ -2792,7 +2819,7 @@ void Graph::highlight(int a, int b)
 	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
 	    {
 	      //if the tag is on and the edge is connected
-	      if(j->HasTag(*k) && tagOn[*k] && !connected)
+	      if(j->HasTag(*k) && tagOn[*k]) //&& !connected)
 		{
 		  //set connected to true
 		  connected = true; 
@@ -2837,8 +2864,8 @@ void Graph::highlight(int a, int b)
 	    }
 	}
 
-      printf("done drawing highlighted first");
-      fflush(stdout);
+      //printf("done drawing highlighted first");
+      //fflush(stdout);
     }  
 }
 
@@ -2862,7 +2889,7 @@ void Graph::drawHighlighted()
     }
  
   //turn off names
-  allNamesOff(false);
+  //allNamesOff(false);
 
   rendSetUp();
   
@@ -2910,7 +2937,7 @@ void Graph::drawHighlighted()
 	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
 	    {
 	      //if the tag is on and the edge is connected
-	      if(j->HasTag(*k) && tagOn[*k] && !connected)
+	      if(j->HasTag(*k) && tagOn[*k])// && !connected)
 		{
 		  //set connected to true
 		  connected = true; 
@@ -2957,12 +2984,6 @@ void Graph::drawHighlighted()
     }
 
   drawFadedEdges();
-}
-
-//draw the highlighted edges
-void Graph::drawHighlightedEdges()
-{
-
 }
 
 void Graph::drawFadedEdges()
@@ -3012,8 +3033,8 @@ void Graph::toggle(int a, int b)
 	{
 	  ndCon[i] = true;
 	  toggleConnected[i] = true;
-	  printf("toggle set up");
-	  fflush(stdout);
+	  //printf("toggle set up");
+	  //fflush(stdout);
 	}
     }
   else
@@ -3027,7 +3048,7 @@ void Graph::toggle(int a, int b)
     }
 
   //if selected node is not null
-  if(i >=0 && ndCon[i] && toggleConnected[i])
+  if(i >=0)// && ndCon[i] && toggleConnected[i])
     {
       //set toggle connected to true
       toggleConnected[i] = true;
@@ -3072,7 +3093,7 @@ void Graph::toggle(int a, int b)
 	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
 	    {
 	      //if the tag is on and the edge is connected and not already drawn
-	      if(tagOn[*k] && (*j).HasTag(*k) && !connected)
+	      if(tagOn[*k] && (*j).HasTag(*k))// && !connected)
 		{
 		  //set connected to true
 		  connected = true;
@@ -3135,9 +3156,6 @@ void Graph::drawToggled()
 	  con[i][j] = false;
 	}
     }
- 
-  //turn off names
-  allNamesOff(false);
 
   rendSetUp();
 
@@ -3186,7 +3204,7 @@ void Graph::drawToggled()
 	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
 	    {
 	      //if the tag is on and the edge is connected and not already drawn
-	      if(tagOn[*k] && (*j).HasTag(*k) && !connected)
+	      if(tagOn[*k] && (*j).HasTag(*k))// && !connected)
 		{
 		  //set connected to true
 		  connected = true;
@@ -3228,11 +3246,6 @@ void Graph::drawToggled()
 	    }
 	}    
     }
-}
-
-//draw the toggled edges
-void Graph::drawToggledEdges()
-{
 }
 
 //redraw the graph based on current node positions
@@ -3306,7 +3319,7 @@ void Graph::redrawGraph()
 	  for(k=tagsUsed.begin(); k!=tagsUsed.end(); k++)
 	    {
 	      //if the tag is on and the edge is connected and not already drawn
-	      if(tagOn[*k] && j->HasTag(*k) && !connected)
+	      if(tagOn[*k] && j->HasTag(*k))// && !connected)
 		{
 		  //set connected to true
 		  connected = true;
@@ -3450,8 +3463,8 @@ void Graph::drawGraph()
   //for the number of entries
   for(it=entries.begin(); it!=entries.end(); it++)
     {
-      printf("Entry: %i", *it);
-      fflush(stdout);
+      //printf("Entry: %i", *it);
+      //fflush(stdout);
 
       //get coordinates
       x = cntx;
@@ -3996,8 +4009,8 @@ void Graph::select()
   if(selected >=0 && ndCon[selected])
     {
 
-      printf("selected");
-      fflush(stdout);
+      //printf("selected");
+      //fflush(stdout);
 
       //remove the selected actor and delete it
       rend->RemoveActor(selActor);
@@ -4082,8 +4095,11 @@ char* Graph::stristr(char* strToSearch, char* searchStr)
 //search the names for the string key
 void Graph::search(char* key)
 {
-  printf("NUMBER OF NODES: %i", NUM_OF_NAMES);
+  /*printf("NUMBER OF NODES: %i", NUM_OF_NAMES);
   fflush(stdout);
+
+  printf("NUMBER OF EDGES: %i", edgeCount);
+  fflush(stdout);*/
 
   //reset the search strings
   resetSearch();
@@ -4188,11 +4204,6 @@ void Graph::resetSearch()
 //Parse the file with filename to get all names in the file
 void Graph::GetEntry(char* filename)
 {
-  printf("\n\nSTARTING GET ENTRY\n\n");
-  fflush(stdout);
-
-  progBar->setValue(0);
-
   stInd = (int*) calloc(NUM_OF_NAMES_C+NUM_OF_NAMES_C+NUM_OF_TAGS+100, sizeof(int));
   endInd = (int*) calloc(NUM_OF_NAMES_C+NUM_OF_NAMES_C+NUM_OF_TAGS+100, sizeof(int));
   nameInd = (int*) calloc(NUM_OF_NAMES_C+NUM_OF_NAMES_C, sizeof(int));
@@ -4309,6 +4320,12 @@ void Graph::GetEntry(char* filename)
       while(restOfFile != NULL)
 	{      
 	  lineN++;
+	  
+	  int prog = (int) ((((float)lSize-strlen(restOfFile))/lSize)*40);
+	  
+	  printf("%i\n", prog);
+	  fflush(stdout);
+	  progBar->setValue(prog);
 
 	  //duplicate the line
 	  char* ptr = strdup(line);
@@ -4340,8 +4357,8 @@ void Graph::GetEntry(char* filename)
 		  {
 		    //restOfFile == NULL;
 		    includeLn = false;
-		    printf("\n\nNOT INCLUDING LINE\n");
-		    fflush(stdout);
+		    //printf("\n\nNOT INCLUDING LINE\n");
+		    //fflush(stdout);
 		  }
 
 		else
@@ -4349,8 +4366,8 @@ void Graph::GetEntry(char* filename)
 		    //increment the number of entries
 		    numEntries++;
 		
-		    printf("ENTRY: %s", entryID);
-		    fflush(stdout);
+		    //printf("ENTRY: %s", entryID);
+		    //fflush(stdout);
 		    
 		    //initialize variables
 		    bool unique = true;
@@ -4392,14 +4409,6 @@ void Graph::GetEntry(char* filename)
 		    
 		    lineNum[entryIDNum] = lineN;
 
-		    //get the rest of the line
-		    //char* ptr3 = strtok(NULL,"\n"); 
-
-		    printf("ptr3");
-		    fflush(stdout);
-		    printf(ptr3);
-		    fflush(stdout);
-
 		    //find names
 		    do
 		      {		    
@@ -4408,10 +4417,10 @@ void Graph::GetEntry(char* filename)
 			strtok(ptr3,"\"");
 			name2 = strtok(NULL,"\"");
 			
-			printf("\n\nName 2:");
+			/*printf("\n\nName 2:");
 			printf(name2);
 			printf("\n\n");
-			fflush(stdout);
+			fflush(stdout);*/
 
 			//get the rest of the line
 			ptr3 = strtok(NULL,"\n");
@@ -4485,8 +4494,8 @@ void Graph::GetEntry(char* filename)
 				//increment number of names
 				numNames++;
 				
-				printf("number of names: %i \n",numNames);
-				fflush(stdout);
+				//printf("number of names: %i \n",numNames);
+				//fflush(stdout);
 				
 				//add the name to the list
 				nms.push_front(*nm);
@@ -4586,6 +4595,8 @@ void Graph::GetEntry(char* filename)
 		  tagList.push_back(NUM_OF_TAGS);
 		  
 		  Edge* e = new Edge(entryIDNum, (*it).getKeyNum(), tagList);
+
+		  edgeCount++;
 		  
 		  graph1[entryIDNum]->addChild(*e);
 		  graph1[(*it).getKeyNum()]->addChild(*e);
@@ -4602,8 +4613,8 @@ void Graph::GetEntry(char* filename)
 	  free(ptr);
 	  ptr = 0;	      
 	  
-	  printf("before rest of file check");
-	  fflush(stdout);
+	  //printf("before rest of file check");
+	  //fflush(stdout);
 
 	  
 	  //if there is still lines left in the file
@@ -4625,6 +4636,8 @@ void Graph::GetEntry(char* filename)
 	}
 
       mergeEdges();
+
+      setTitleText();
 
       initNames();
 
@@ -4649,48 +4662,126 @@ void Graph::GetEntry(char* filename)
       }
 }
 
+//set the title bar to show what the program is visualizing
+void Graph::setTitleText()
+{  
+  char* txt = (char*) calloc(10000, sizeof(char));
+
+  strcat(txt,"Visualization of ");
+
+  strcat(txt,orlandoDataName);
+
+  if(strlen(inclWords) > 1)
+    {
+      strcat(txt, ".   Words Included:");
+      strcat(txt, inclWords);
+      strcat(txt, ".");
+    }
+
+  if(strlen(exclWords) > 1)
+    {
+      strcat(txt, "   Words Excluded:");
+      strcat(txt, exclWords);
+      strcat(txt, ".");
+    }
+  
+  char* per = (char*) calloc(200, sizeof(char));
+
+  if(birthYear != 0 && deathYear != 0)
+    {
+      sprintf(per, "   Period: %i - %i. ", birthYear, deathYear);
+    }
+
+  strcat(txt, per);
+
+  if(onlyEntries)
+    {
+      strcat(txt, "   Entries only.");
+    }
+
+  Orlando* orl = (Orlando*) orland;
+
+  orl->setVisualizationText(txt);
+}
+
+//merge the edges that may have duplicate values... 
+//(these will all be entries with other entries as a connection because the connection may be mentioned in either or both entries)
 void Graph::mergeEdges()
 {
-  for(int i=0; i<NUM_OF_NAMES; i++)
+  list<int>::iterator it;
+  
+  for(it=entries.begin(); it!=entries.end(); it++)
     {
-      list<Edge> edg = graph1[i]->getChildren();
+       list<Edge> edg = graph1[*it]->getChildren();
+       
+       int q = -1;
 
-      list<int> inds;
-      
-      Edge newEdges[NUM_OF_NAMES];
+       Edge* newEdges[NUM_OF_NAMES];
 
-      list<Edge>::iterator it;
-      for(it=edg.begin(); it!=edg.end(); it++)
-	{
-	  int q = it->GetNode1();
-	  if(q == i)
-	    {
-	      q = it->GetNode2();
-	    }
+       list<Edge> newEdg;
 
-	  newEdges[q].AddTags(it->GetTags());
-	  newEdges[q].SetNode1(i);
-	  newEdges[q].SetNode2(q);
-	    
-	}
+       for(int i=0; i<NUM_OF_NAMES; i++)
+	 {
+	   newEdges[i] = new Edge();
+	 }
 
-      graph1[i]->resetChildren();
-      
-      for(int k=0; k<NUM_OF_NAMES; k++)
-	{
-	  if(newEdges[k].GetNode1() != -1)
-	    {
-	      graph1[i]->addChild(newEdges[k]);
-	    }
-	}
+       list<Edge>::iterator it2;
+       for(it2=edg.begin(); it2!=edg.end(); it2++)
+	 {
+	   q=it2->GetNode1();
+	   if(q == *it)
+	     {
+	       q=it2->GetNode2(); 
+	     }
+
+	   bool isEntry = false;
+
+	   list<int>::iterator it3;
+	   for(it3=entries.begin(); it3!=entries.end(); it3++)
+	     {
+	       if(q == *it3)
+		 {
+		   isEntry = true;
+		 }
+	     }
+
+	   if(isEntry)
+	     {
+	       newEdges[q]->AddTags(it2->GetTags());
+	       newEdges[q]->SetNode1(*it);
+	       newEdges[q]->SetNode2(q);
+	     }
+	   else
+	     {
+	       newEdg.push_back(*it2);
+	     }
+	 }
+
+       for(int i=0; i<NUM_OF_NAMES; i++)
+	 {
+	   if(newEdges[i]->GetNode1() != -1)
+	     {
+	       newEdg.push_back(*newEdges[i]);	       
+	     }
+	 }
+
+       graph1[*it]->resetChildren();
+
+       list<Edge>::iterator it4;
+       for(it4=newEdg.begin(); it4!=newEdg.end(); it4++)
+	 {
+	   graph1[*it]->addChild(*it4);
+	 }
     }
 }
 
 void Graph::includeOnlyEntries()
 {
-  printf("including only entries");
-  fflush(stdout);
+  //printf("including only entries");
+  //fflush(stdout);
   
+  edgeCount=0;
+
   entries.unique();
 
   int tmp[entries.size()];
@@ -4721,6 +4812,7 @@ void Graph::includeOnlyEntries()
 	  if(nd1 >=0 && nd2 >=0)
 	    {	      
 	      Edge* nwEdge = new Edge(nd1, nd2, it2->GetTags());
+	      edgeCount++;
 	      chldrn[i].push_back(*nwEdge);
 	    }
 	}
@@ -4795,7 +4887,8 @@ void Graph::setNewTagCol(int ind, int r, int g, int b)
 void Graph::tagChoices()
 {
   tagList->clear();
-  
+  tagsUsed.clear();
+
   //for the number of tags add the name of the tag to the list
   for(int i=0; i<NUM_OF_TAGS+1; i++)
     {
@@ -4806,14 +4899,23 @@ void Graph::tagChoices()
       tagCol->setGreen((int)(rgbCol[1]*255));
       tagCol->setBlue((int)(rgbCol[2]*255));
       tagItem->setBackgroundColor(*tagCol);      
+      tagItem->setFlags(Qt::ItemIsUserCheckable);
+      tagItem->setFlags(Qt::ItemIsEnabled);
+
+      if(tagOn[i])
+	{
+	  tagItem->setCheckState(Qt::Checked);
+	}
+      else
+	{
+	  tagItem->setCheckState(Qt::Unchecked);
+	}
     }
 }
 
 //set tags to the list of tags passed in
 void Graph::setTags(list<char*> lst)
 {
-  tagsUsed.clear();
-
   //for the number of tags: turn off the tags
   for(int i=0; i<NUM_OF_TAGS; i++)
     {
@@ -4827,7 +4929,7 @@ void Graph::setTags(list<char*> lst)
   for(it=lst.begin(); it!=lst.end(); it++)
     {      
       //for the number of tags 
-      for(int i=0; i<NUM_OF_TAGS; i++)
+      for(int i=0; i<NUM_OF_TAGS+1; i++)
 	{	  
 	  //if the tag is in the list
 	  if(strcmp(*it,tags[i]) == 0)
@@ -4840,9 +4942,9 @@ void Graph::setTags(list<char*> lst)
 	}
     }
   //turn on the whole entry tag
-  tagOn[NUM_OF_TAGS] = true;
+  //tagOn[NUM_OF_TAGS] = true;
   //put the whole entry tag in the tagsUsed list
-  tagsUsed.push_back(NUM_OF_TAGS);
+  //tagsUsed.push_back(NUM_OF_TAGS);
 
   //set the number of tags to the size of the tagsUsed list
   numOfTags = tagsUsed.size();
@@ -4873,9 +4975,10 @@ void Graph::setTags(list<char*> lst)
 
 void Graph::initialize(char* filename)
 {
+
   rendSetUp();
   textSetUp();
-
+  
   //get entries from the file nm
   GetEntry(filename);
 }
@@ -5049,8 +5152,8 @@ void Graph::showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb)
 	    {		 
 	      if(tb->find(nm))
 		{
-		  printf(nm);
-		  fflush(stdout);
+		  //printf(nm);
+		  //fflush(stdout);
 		}
 	      else
 		{
@@ -5137,13 +5240,13 @@ bool Graph::includeByTime(char* stdName)
 	      char* str1 = strtok(NULL, "\""); 
 	      strtok(NULL, "\"");
 	      
-	      printf("Name: ");
-	      printf(str1);
-	      fflush(stdout);
+	      //printf("Name: ");
+	      //printf(str1);
+	      //fflush(stdout);
 	      
-	      printf("STANDARD NAME: ");
-	      printf(stdName);
-	      fflush(stdout);
+	      //printf("STANDARD NAME: ");
+	      //printf(stdName);
+	      //fflush(stdout);
 	      
 	      if(strcmp(str1, stdName) == 0)
 		{
@@ -5173,34 +5276,34 @@ bool Graph::includeByTime(char* stdName)
       
       if(fnd)
 	{
-	  printf("\n\n CHECKING DATES \n\n");
-	  fflush(stdout);
+	  //printf("\n\n CHECKING DATES \n\n");
+	  //fflush(stdout);
 	  
 	  inclu = false;
-	  
+
+	  /*
 	  printf("Year of b1: %i", b1->GetYear());
 	  printf("Year of b2: %i", b2->GetYear());
 	  printf("Year of d1: %i", d1->GetYear());
 	  printf("Year of d2: %i", d2->GetYear());
-	  fflush(stdout);
+	  fflush(stdout);*/
 
 	  if(b1->lessThan(b2))
 	    {
-	      printf("b1 < b2");
-	      fflush(stdout);
-
+	      //printf("b1 < b2");
+	      //fflush(stdout);
+	      
 	      if(d1->greaterThan(b2))
 		{
-
-		  printf("include");
-		  fflush(stdout);
+		  //printf("include");
+		  //fflush(stdout);
 		  inclu = true;
 		}
 	    }
 	  else if(b1->lessThan(d2))
 	    {	
-	      printf("include");
-	      fflush(stdout);
+	      //printf("include");
+	      //fflush(stdout);
 	      inclu = true;
 	    }
 	}
@@ -5258,7 +5361,7 @@ bool Graph::includeLine(char* line)
 	      str1[strlen(s)]='\0';
 	      str2[strlen(s)]='\0';
 	      str3[strlen(s)]='\0';
-	  
+
 	      wd.push_back(s);
 	      wd.push_back(str1);
 	      wd.push_back(str2);
@@ -5382,14 +5485,14 @@ bool Graph::includeLine(char* line)
 
   if(incl && excl)
     {
-      printf("returned true");
-      fflush(stdout);
+      //printf("returned true");
+      //fflush(stdout);
       return true;
     }
   else
     {
-      printf("returned false");
-      fflush(stdout);
+      //printf("returned false");
+      //fflush(stdout);
       return false;
     }
 }
@@ -5418,7 +5521,9 @@ void Graph::include(char* s)
 	    }
 	  else
 	    { 
-	      file << str << endl;
+	      file << str << endl;	  
+	      strcat(inclWords," ");
+	      strcat(inclWords,str);
 	    }
 
 	  str = strtok(NULL, ", ");
@@ -5449,7 +5554,9 @@ void Graph::exclude(char* s)
 	    }
 	  else
 	    { 
-	      file << str << endl;
+	      file << str << endl;	      
+	      strcat(exclWords," ");
+	      strcat(exclWords,str);
 	    }
 
 	  
@@ -5498,6 +5605,89 @@ list<char*> Graph::wordCases(char* s)
   lst.push_back(str1);
   lst.push_back(str2);
   lst.push_back(str3);
+}
+
+void Graph::deselect(int a, int b)
+{
+   //initialize variable
+  int i = -1;
+
+  //if position is null
+  if(a != 0 &&  b != 0)
+    {   
+      //get the node at the position passed in
+      i = nodeAtPos(a,b,false);
+      if(!ndCon[i])
+	{
+	  i = -1;
+	}
+    }
+
+  //if selected node is not null
+  if(i >=0 && ndCon[i] && toggleConnected[i])
+    {
+      for(int j=0; j<NUM_OF_NAMES; j++)
+	{
+	  //set toggle connected to false
+	  toggleConnected[j] = false;
+	  ndCon[j] = false;      
+	}
+
+      toggledOn.remove(i);
+
+      oldSelected = -1;
+
+      if(mode == 't')
+	{
+	  drawToggled();
+	}
+      else
+	{
+	  drawHighlighted();
+	}
+      
+      for(int j=0; j<NUM_OF_NAMES; j++)
+	{
+	  if(nameOn[j] && ndCon[j])
+	    {
+	      nameOnOff(true, names[j]);
+	    }      
+	}
+    }
+}
+
+void Graph::saveScreenshot(char* filename, int filetype)
+{
+  vtkImageWriter* writer = vtkPNGWriter::New();
+  vtkWindowToImageFilter* imageFilter = vtkWindowToImageFilter::New();
+
+  window->Render();
+  imageFilter->SetInput(window);
+
+  switch(filetype)
+    {
+    case PNG: 
+      writer = vtkPNGWriter::New();      
+      break;
+    
+    case JPG: 
+      writer = vtkJPEGWriter::New();
+      break;
+    
+    case BMP: 
+      writer = vtkBMPWriter::New(); 
+      break;
+    
+    case TIF: 
+      writer = vtkTIFFWriter::New(); 
+      break;
+    }
+
+  writer->SetFileName(filename);
+
+  writer->SetInput(imageFilter->GetOutput());
+  writer->Update();
+  writer->Write();
 }
 
 //main function

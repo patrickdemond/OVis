@@ -25,8 +25,8 @@ Edge::Edge(int nd1, int nd2, list<int> tgs)
   list<int>::iterator it;
   for(it=tgs.begin(); it!=tgs.end(); it++)
     {
-      printf("Tag on: %i.    ", *it);
-      fflush(stdout);
+      //printf("Tag on: %i.    ", *it);
+      //fflush(stdout);
       tags[*it] = true;
     }
 }

@@ -35,6 +35,7 @@ public:
   //set variables
   void setUserStyle(userStyle* st);
   void setGraph(Graph* gra);
+  void setVisualizationText(char* text);
 
 public slots:
 
@@ -43,6 +44,7 @@ public slots:
   virtual void fileLoad();
   virtual void fileSave();
   virtual void fileExit();
+  virtual void saveScreenshot();
   virtual void popUpTags();
   virtual void popUpText();
   virtual void search();

@@ -37,10 +37,19 @@ Orlando::Orlando(QWidget* parent)
 
   //create file menu
   QMenu* file_menu = this->menuBar()->addMenu(tr("&File"));
-  file_menu->addAction(a_fileOpen);
   file_menu->addAction(a_fileLoad);
   file_menu->addAction(a_fileSave);
+  file_menu->addAction(a_fileOpen);
   file_menu->addAction(a_fileExit);
+
+ //create file open menu item
+  QAction* a_editScreenshot = new QAction(tr("&Save Screenshot"), this);
+  a_editScreenshot->setStatusTip(tr("Save a Screenshot as an Image"));
+  connect(a_editScreenshot, SIGNAL(triggered()), this, SLOT(saveScreenshot()));
+
+  //create file menu
+  QMenu* edit_menu = this->menuBar()->addMenu(tr("&Edit"));
+  edit_menu->addAction(a_editScreenshot);
 
   //create name tags menu item
   a_names = new QAction(tr("Name Tags On"), this);
@@ -117,6 +126,80 @@ Orlando::Orlando(QWidget* parent)
   listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 };
 
+void Orlando::saveScreenshot()
+{ 
+  QFileDialog ssD(this);
+  
+  ssD.setAcceptMode(QFileDialog::AcceptSave);
+
+  QStringList filters;
+  filters << "PNG (*.png)"
+	  << "JPG (*.jpg)"
+	  << "Bitmap (*.bmp)"
+	  << "TIFF (*.tif)";
+
+  ssD.setNameFilters(filters);
+
+  ssD.exec();
+
+  QString str2= ssD.selectedNameFilter();
+  QStringList strs = ssD.selectedFiles();
+
+  QString str = strs.takeLast();
+
+  ssD.hide();
+
+  if(str != "")
+    {
+
+      if(!str.contains(".png") && !str.contains(".jpg") && !str.contains(".bmp") && !str.contains(".tif"))
+	{
+      
+	  if(str2.compare("PNG (*.png)") == 0)
+	    {
+	      str.append(".png");
+	    }
+	  else if(str2.compare("JPG (*.jpg)") == 0)
+	    {
+	      str.append(".jpg");
+	    }
+	  else if(str2.compare("Bitmap (*.bmp)") == 0)
+	    {
+	      str.append(".bmp");
+	    }
+	  else if(str2.compare("TIFF (*.tif)") == 0)
+	    {
+	      str.append(".tif");
+	    }
+	}
+
+      char* fname = (char*) calloc(1000, sizeof(char));
+      sprintf(fname, str);
+
+      if(str.contains(".png"))
+	{
+	  graph->saveScreenshot(fname,PNG);
+	}
+      else if(str.contains(".jpg"))
+	{
+	  graph->saveScreenshot(fname,JPG);
+	} 
+      else if(str.contains(".bmp"))
+	{
+	  graph->saveScreenshot(fname,BMP);
+	}
+      else if(str.contains(".tif"))
+	{
+	  graph->saveScreenshot(fname,TIF);
+	}
+    }
+}
+
+void Orlando::setVisualizationText(char* text)
+{
+  labelTitle->setText(text);
+}
+
 void Orlando::setLabelProperties()
 {      
   Font* fntWin = new Font(this, graph);
@@ -146,7 +229,7 @@ void Orlando::doubleClick(QListWidgetItem* item)
   //set selected to string
   graph->setSelected(str);
   //determine what name tag to show
-  graph->nameOnOff(str);
+  graph->nameOnOff(true,str);
   //free string
   free(str);
   

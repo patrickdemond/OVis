@@ -42,7 +42,7 @@ private:
   //global variables
   bool continueTrue;
   Graph* graph;
-  
+
 };
 
 #endif

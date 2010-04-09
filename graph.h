@@ -6,6 +6,10 @@
 #define ARIAL 0
 #define COURIER 1
 #define TIMES 2
+#define PNG 0
+#define JPG 1
+#define BMP 2
+#define TIF 3
 
 #include <qapplication.h>
 #include "ui_uiOrlando4.h"
@@ -20,6 +24,12 @@
 #include <stdlib.h>
 #include <cmath>
 #include <list>
+#include "vtkWindowToImageFilter.h"
+#include "vtkImageWriter.h"
+#include "vtkPNGWriter.h"
+#include "vtkJPEGWriter.h"
+#include "vtkBMPWriter.h"
+#include "vtkTIFFWriter.h"
 #include "vtkMapper2D.h"
 #include "vtkActor2D.h"
 #include "vtkRenderer.h"
@@ -112,11 +122,9 @@ public:
   void highlightOn();
   void highlight(int a, int b);
   void drawHighlighted();
-  void drawHighlightedEdges();
   void toggleOn();
   void toggle(int a, int b);
   void drawToggled();
-  void drawToggledEdges();
   void redrawGraph();
   void displayPathInfo(int a, int b, list<int> path);
   void displayNdInfo(int a, int b);
@@ -150,8 +158,8 @@ public:
   void highlightNode(int x, int y);
   void allNamesOn(bool all);
   void allNamesOff(bool nw);
-  void nameOnOff(int a, int b);
-  void nameOnOff(char* nm);
+  void nameOnOff(bool on, int a, int b);
+  void nameOnOff(bool on, char* nm);
   void initNames();
   void changeInteractorToGraph();
   void changeInteractorToCamera();
@@ -173,7 +181,6 @@ public:
   void include(char* s);
   void exclude(char* s);
   void setEntriesOnly(bool b);
-  void removeHighlightAct();
   list<char*> wordCases(char* s);
   void drawEdge(int stInd, int endInd, bool alpha, int tag);
   vtkActor* drawNode(int ind, bool alpha, vtkActor* actor, double colR, double colG, double colB);
@@ -202,6 +209,9 @@ public:
   int getCaptionGreen();
   int getCaptionBlue(); 
   void redrawNameTags();
+  void deselect(int x, int y);
+  void setTitleText();
+  void saveScreenshot(char* filename, int filetype);
 
 private:  
   int lineNum[NUM_OF_NAMES_C];
@@ -296,6 +306,9 @@ private:
   int captionRed;
   int captionGreen;
   int captionBlue;
+  char inclWords[1000];
+  char exclWords[1000];
+  int edgeCount;
 };
 
 #endif

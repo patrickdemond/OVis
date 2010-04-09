@@ -12,12 +12,12 @@ Date::Date(int yr, int mnth, int dy)
 //constructor
 Date::Date(char* dt, bool start)
 {
-  printf("starting date set up");
+  /*printf("starting date set up");
   fflush(stdout);
 
   printf(dt);
   fflush(stdout);
-
+  */
   char* s1 = strtok(dt, "-");
   if(s1 != NULL)
     {
@@ -30,8 +30,8 @@ Date::Date(char* dt, bool start)
 
       year = *tempInt;
 
-      printf("year: %i ", year);
-      fflush(stdout);
+      //printf("year: %i ", year);
+      //fflush(stdout);
     }
   
   char* s2 = strtok(NULL, "-");     
@@ -49,8 +49,8 @@ Date::Date(char* dt, bool start)
 	    }
 	  
 	  month = *tempInt;
-	  printf("month: %i ", month);
-	  fflush(stdout);
+	  //printf("month: %i ", month);
+	  //fflush(stdout);
 	}
       else
 	{
@@ -76,8 +76,8 @@ Date::Date(char* dt, bool start)
 	}
 
       day = *tempInt;
-      printf("day: %i ", day);
-      fflush(stdout);
+      //printf("day: %i ", day);
+      //fflush(stdout);
     }
   else
     {
@@ -91,8 +91,8 @@ Date::Date(char* dt, bool start)
 	}
     }
 
-  printf("done date setup");
-  fflush(stdout);
+  //printf("done date setup");
+  //fflush(stdout);
 }
 
 //destructor

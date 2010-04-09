@@ -186,7 +186,6 @@ void userStyle::OnMouseMove()
  //destroy name
   gra->destroyName();
 
-  gra->removeHighlightAct();
   gra->highlightNode(x,y);
 
   //start the timer
@@ -259,7 +258,7 @@ void userStyle::OnLeftButtonDown()
   inter->GetEventPosition(x, y);
   
   //turn name on/off at position
-  gra->nameOnOff(x,y);
+  gra->nameOnOff(true,x,y);
 
   //if path is off
   if(!path)
@@ -416,23 +415,30 @@ void userStyle::OnRightButtonDown()
   //disable user interaction
   inter->Disable();
 
+  //ints to hold mouse coordinates
+  int x;
+  int y;
+  
+  //get mouse coordinates
+  inter->GetEventPosition(x,y);
+
+  gra->nameOnOff(false,x,y);
+
   //if graph mode is enabled find the path
   if(act)
     {
-      //ints to hold mouse coordinates
-      int x;
-      int y;
-      //get mouse coordinates
-      inter->GetEventPosition(x,y);
-
       //find path at coordinates
-      gra->findPath(x,y); 
+      //gra->findPath(x,y); 
 
       //draw selected node
       //gra->select();
 
       //turn path to true
-      path = true;   
+      //path = true;   
+    }
+  else if(toggle | highlight)
+    {    
+      gra->deselect(x,y);
     }
   
   //enable user interaction

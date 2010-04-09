@@ -145,8 +145,8 @@ void Words::setUpCombo2()
 
 void Words::checkDates(Date* dt1, Date* dt2)
 {
-  printf("CHECKING DATES");
-  fflush(stdout);
+  //printf("CHECKING DATES");
+  //fflush(stdout);
   
   graph->includeDatesBtw(dt1->GetYear(), dt1->GetMonth(), dt1->GetDay(), dt2->GetYear(), dt2->GetMonth(), dt2->GetDay());
 }

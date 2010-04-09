@@ -19,32 +19,42 @@ Tags::Tags(QWidget* parent)
   connect(listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(changeSelPal(QListWidgetItem*)));
 
   //turn on extended selection for the list
-  listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  //listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
   /*  QPalette pal = listWidget->palette();
   pal.setBrush(QPalette::Highlight, Qt::gray);
   //pal.setAlpha(10);
   listWidget->setPalette(pal);*/
+
 };
 
 void Tags::changeSelPal(QListWidgetItem* tagToChange)
-{
-  /*QPalette pal = listWidget->palette();
+{  
+  /*//QPalette pal = listWidget->palette();
   
   int index = listWidget->row(tagToChange);
 			      
   double* oldCol = graph->getColor(index);
   
-  QColor* col = new QColor();
-  col->setRed((int)(oldCol[0]*255));
-  col->setGreen((int)(oldCol[1]*255));
-  col->setBlue((int)(oldCol[2]*255));
+  //QColor* col = new QColor();
+  //col->setRed((int)(oldCol[0]*255));
+  //col->setGreen((int)(oldCol[1]*255));
+  //col->setBlue((int)(oldCol[2]*255));
   //col->setAlpha();
-  pal.setBrush(QPalette::HighlightedText, *col);
-  listWidget->setPalette(pal);*/
-
+  //pal.setBrush(QPalette::HighlightedText, *col);
+  //listWidget->setPalette(pal);
   
+  listWidget->setStyleSheet("*{selection-background-color: rgb(" + QString::number(oldCol[0]*255) + "," + QString::number(oldCol[1]*255) + "," + QString::number(oldCol[2]*255) + ")}");
+  */
 
+  if(tagToChange->checkState())
+    {
+      tagToChange->setCheckState(Qt::Unchecked);
+    }
+  else
+    {
+      tagToChange->setCheckState(Qt::Checked);
+    }
 }
 
 void Tags::changeTagCol(QListWidgetItem* tagToChange)
@@ -140,12 +150,20 @@ void Tags::tagCancel()
 
 //if ok is pressed
 void Tags::tagOk()
-{  
-  //get selected items from the list
-  QList<QListWidgetItem*> tgs = listWidget->selectedItems();
-  
+{    
   //list<char*> to hold the tags that are turned on
   list<char*> strs;
+
+
+  QList<QListWidgetItem*> tgs;
+
+  for(int i=0; i<listWidget->count(); i++)
+    {
+      if(listWidget->item(i)->checkState())
+	{
+	  tgs.push_back(listWidget->item(i));
+	}
+    }
 
   //iterator to go through list
   QList<QListWidgetItem*>::iterator it;
@@ -159,7 +177,7 @@ void Tags::tagOk()
       sprintf(str, (*it)->text());
       //push string into list
       strs.push_back(str);   
-    }
+      }
 
   //set tags to the strings
   graph->setTags(strs);

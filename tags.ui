@@ -53,7 +53,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="text">
-        <string>Use Ctrl-Left-Click to select tags.</string>
+        <string>Check the tags you wish to be selected.</string>
        </property>
       </widget>
      </item>
@@ -63,7 +63,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="text">
-        <string>Double-Click on a tag to change it's colour.</string>
+        <string>Double-Click on a tag to change its colour.</string>
        </property>
       </widget>
      </item>
