@@ -33,7 +33,7 @@ public slots:
   virtual void cancel();
   virtual void changeFont(int index);
   virtual void changeFontStyle(int index);
-  virtual void changeFontSize(int index);
+  virtual void changeFontSize(int sz);
   virtual void changeFontColour();
 
 protected:

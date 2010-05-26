@@ -151,6 +151,7 @@ Font::Font(QWidget* parent, Graph* grap)
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(cancel()));
 }
 
+//changes the font colour
 void Font::changeFontColour()
 {
    QColor col2 = QColorDialog::getColor(*col, this);
@@ -170,6 +171,8 @@ void Font::changeFontColour()
    fontWin->Render();
 }
 
+//changes the font to the index
+//0-ARIAL, 1-COURIER, 2-TIMES
 void Font::changeFont(int index)
 {
   switch(index)
@@ -195,6 +198,8 @@ void Font::changeFont(int index)
   fontWin->Render();
 }
 
+//changes the font style to the index
+//0-normal 1-bold 2-italic 3-bold & italic
 void Font::changeFontStyle(int index)
 {
   switch(index)
@@ -235,9 +240,10 @@ void Font::changeFontStyle(int index)
   fontWin->Render();
 }
 
-void Font::changeFontSize(int index)
+//change the font size to the sz passed in 
+void Font::changeFontSize(int sz)
 {
-  int i = index*2 + 4;
+  int i = sz*2 + 4;
   prop->SetFontSize(i);
 
   size = i;
@@ -245,6 +251,7 @@ void Font::changeFontSize(int index)
   fontWin->Render();
 }
 
+//set up the combo boxes
 void Font::setupComboBoxes()
 {
   for(int i=0; i<NUM_FONTS; i++)
@@ -265,6 +272,7 @@ void Font::setupComboBoxes()
     }
 }
 
+//
 void Font::okToGo()
 {
   printf("DONE");

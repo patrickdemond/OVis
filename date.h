@@ -15,7 +15,6 @@ public:
   //constructors
   Date(int yr, int mnth, int dy);
   Date(char* dt, bool start);
-  //Date(int yr, int mnth, int dy);
   //destructor
   ~Date();
   bool lessThan(Date* dt);

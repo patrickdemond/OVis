@@ -37,16 +37,19 @@ Edge::~Edge()
   
 }
 
+//set the node of one of the vertices
 void Edge::SetNode1(int n1)
 {
   node1 = n1;
 }
 
+//set the node of the other vertex
 void Edge::SetNode2(int n2)
 {
   node2 = n2;
 }
 
+//add the list of tags for the edge
 void Edge::AddTags(list<int> tgs)
 {
   list<int>::iterator it;
@@ -56,6 +59,7 @@ void Edge::AddTags(list<int> tgs)
     }
 }
 
+//add the tag
 void Edge::AddTag(int i)
 {
   tagList.push_back(i);
@@ -63,21 +67,25 @@ void Edge::AddTag(int i)
   tags[i] = true;
 }
 
+//get one of the vertices
 int Edge::GetNode1()
 {
   return node1;
 }
 
+//get the other vertex
 int Edge::GetNode2()
 {
   return node2;
 }
 
+//return true if the edge has the tag i turned on
 bool Edge::HasTag(int i)
 {
   return tags[i];
 }
 
+//gets the list of all the tags turned on in the edge
 list<int> Edge::GetTags()
 {
   return tagList;

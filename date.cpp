@@ -1,7 +1,8 @@
 #include "date.h"
 
-//using namespace std;
+using namespace std;
 
+//constructor
 Date::Date(int yr, int mnth, int dy)
 {
   year = yr;
@@ -101,6 +102,7 @@ Date::~Date()
   
 }
 
+//check if the date is less than the date passed in
 bool Date::lessThan(Date* dt)
 {
   if(year<dt->GetYear())
@@ -125,6 +127,7 @@ bool Date::lessThan(Date* dt)
   return false;
 }
 
+//check if the date is greater than the date passed in
 bool Date::greaterThan(Date* dt)
 {
   if(year>dt->GetYear())
@@ -149,16 +152,19 @@ bool Date::greaterThan(Date* dt)
   return false;
 }
 
+//get the year
 int Date::GetYear()
 {
   return year;
 }
 
+//get the month
 int Date::GetMonth()
 {
   return month;
 }
 
+//get the day
 int Date::GetDay()
 {
   return day;

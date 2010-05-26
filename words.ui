@@ -287,7 +287,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>Word to Exclude:</string>
+        <string>Words to Exclude:</string>
        </property>
       </widget>
       <widget class="QLabel" name="label">

@@ -14,6 +14,7 @@
 #include "Text.h"
 #include "date.h"
 
+
 //constructor for the graph
 //passed in all objects necessary from GUI
 Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label,QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind)
@@ -165,6 +166,7 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
 }
 
 //saves the graph in its current state for next time
+//*** NEEDS TO BE UPDATED FOR ALL ATTRIBUTES ***
 void Graph::saveFile(char* filename)
 {
   char* str = strtok(filename, " .");
@@ -467,6 +469,7 @@ void Graph::loadXML(char* filename)
   orl->graphMode(true); 
 }
 
+//render the window
 void Graph::renderWin()
 {
   window->Render();
@@ -475,6 +478,7 @@ void Graph::renderWin()
   progBar->setValue(100);
 }
 
+//save the included words for this dataset
 void Graph::saveInc(char* filename)
 {  
   //create file
@@ -496,6 +500,7 @@ void Graph::saveInc(char* filename)
   fl.close();
 }
 
+//loads the included words from the file
 void Graph::loadInc(char* filename)
 {  
   //create file
@@ -517,6 +522,7 @@ void Graph::loadInc(char* filename)
   fl.close();
 }
 
+//saves the excluded words for the dataset
 void Graph::saveExc(char* filename)
 {  
   //create file
@@ -538,6 +544,7 @@ void Graph::saveExc(char* filename)
   fl.close();
 }
 
+//loads the excluded words from the file
 void Graph::loadExc(char* filename)
 {  
   //create file
@@ -559,6 +566,7 @@ void Graph::loadExc(char* filename)
   fl.close();
 }
 
+//save the names that have been turned on
 void Graph::saveNamesOn(char* filename)
 {  
   //create file
@@ -573,6 +581,7 @@ void Graph::saveNamesOn(char* filename)
   file.close();
 }
 
+//load the names that had been turned on
 void Graph::loadNamesOn(char* filename)
 {
   fstream file;
@@ -609,6 +618,7 @@ void Graph::saveTagsUsed(char* filename)
   file.close();
 }
 
+//load the tagsUsed 
 void Graph::loadTagsUsed(char* filename)
 {
   fstream file;
@@ -634,6 +644,7 @@ void Graph::loadTagsUsed(char* filename)
   else cerr << "Unable to open file" << filename << endl;
 }
 
+//save the nodes that are toggled on
 void Graph::saveTogOn(char* filename)
 {
   //create file
@@ -648,6 +659,7 @@ void Graph::saveTogOn(char* filename)
   file.close();
 }
 
+//load the nodes that were toggled on
 void Graph::loadTogOn(char* filename)
 {
   fstream file;
@@ -672,6 +684,7 @@ void Graph::loadTogOn(char* filename)
   else cerr << "Unable to open file: " << filename << endl;
 }
 
+//save the nodes that are toggle connected
 void Graph::saveTogCon(char* filename)
 {
   //create file
@@ -686,6 +699,7 @@ void Graph::saveTogCon(char* filename)
   file.close();
 }
 
+//load the nodes that were toggle connected
 void Graph::loadTogCon(char* filename)
 {
   fstream file;
@@ -707,6 +721,7 @@ void Graph::loadTogCon(char* filename)
   else cerr << "Unable to open file: " << filename << endl;
 }
 
+//save the tags that are on
 void Graph::saveTagsOn(char* filename)
 {
   //create file
@@ -721,6 +736,7 @@ void Graph::saveTagsOn(char* filename)
   file.close();
 }
 
+//load the tags that were on
 void Graph::loadTagsOn(char* filename)
 {
   fstream file;
@@ -965,6 +981,7 @@ void Graph::drawKeys()
   window2->Render();
 }
 
+//reset the graph connectivity
 void Graph::resetGraphCons()
 {
   //for the number of names reset ndCon values to false
@@ -974,6 +991,7 @@ void Graph::resetGraphCons()
     }
 }
 
+//remove the edges for the node passed in
 void Graph::removeEdgesForNode(int nd)
 {
   //get the list of edge actors
@@ -990,12 +1008,19 @@ void Graph::removeEdgesForNode(int nd)
   graph1[nd]->resetEdgeActors();
 }
 
+//remove the node that is passed in
 void Graph::removeNode(int nd)
 {
   vtkActor* act = graph1[nd]->getSphereActor();
   rend->RemoveActor(act);
 }
 
+//draw a node to the screen
+//returns a pointer to the vtkActor
+//ind is the index number of the node
+//alpha decides whether the node is fully visible (false) or if it is only 25% (true)
+//the actor is the pointer to the actor to be returned
+//colR, colG, colB are the RGB numbers for the colour of the node
 vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, double colG, double colB)
 {
   //get the selected node
@@ -1048,12 +1073,12 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
   return actor;
 }
 
+//draw the edge to the screen
+//stInd and endInd are the vertices of the edge
+//alpha decides whether the edge is fully visible (false) or if it is only 25%  (true)
+//tag is the number of the tag
 void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
 {
-  //set connected to true
-  //con[stInd][endInd] = true;
-  //con[endInd][stInd] = true;
-
   //initialize variables
   int a = stInd;
   int b = endInd;
@@ -1126,6 +1151,9 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   matrix1->Delete();
 }
 
+//draw the edges for the node to the screen
+//ind is the index for the node
+//alpha decides whether the edges should be fully visible (false) or if it is only 25% (true)
 void Graph::drawEdgesForNode(int ind, bool alpha)
 {
   //get the children
@@ -1938,6 +1966,7 @@ void Graph::printPath(list<int> path)
       }
 }
 
+//finds if there is an edge between nd1 and nd2 with the tag
 bool Graph::hasEdgeBetween(int nd1, int nd2, int tag)
 {
   Node* nd = graph1[nd1];
@@ -1965,6 +1994,7 @@ bool Graph::hasEdgeBetween(int nd1, int nd2, int tag)
   return found;
 }
 
+//highlight the node (turn it white) at the position passed in
 void Graph::highlightNode(int a, int b)
 {  
    
@@ -2082,6 +2112,7 @@ void Graph::allNamesOn(bool all)
   namesAllowedOn = true;
 }
 
+//initialize the names of the nodes for labels
 void Graph::initNames()
 {
   for(int i=0; i<NUM_OF_NAMES; i++)
@@ -2249,6 +2280,8 @@ void Graph::nameOnOff(bool on, int a, int b)
     }
 }
 
+//turn the name on or off depending on the on parameter
+//nm is the string of the label
 void Graph::nameOnOff(bool on, char* nm)
 {  
   //if names are allowed on
@@ -2420,6 +2453,7 @@ void Graph::showName(int a,int b)
     }
 }
 
+//redraw the name tags
 void Graph::redrawNameTags()
 {
   for(int foundName=0; foundName<NUM_OF_NAMES; foundName++)
@@ -2477,26 +2511,31 @@ void Graph::redrawNameTags()
     }
 }
 
+//set the caption to be italic
 void Graph::setCaptionItalic(bool b)
 {
   captionItalic = b;
 }
 
+//set the caption to be bold
 void Graph::setCaptionBold(bool b)
 {
   captionBold = b;
 }
 
+//set the caption to the size
 void Graph::setCaptionSize(int sz)
 {
   captionSize = sz;
 }
 
+//set the caption font
 void Graph::setCaptionFont(int fnt)
 {
   captionFont = fnt;
 }
 
+//set the caption to the colour
 void Graph::setCaptionColour(int r, int g, int b)
 {
   captionRed = r;
@@ -2504,36 +2543,43 @@ void Graph::setCaptionColour(int r, int g, int b)
   captionBlue = b;
 }
 
+//get whether the caption is italic
 bool Graph::getCaptionItalic()
 {
   return captionItalic;
 }
 
+//get whether the caption is bold
 bool Graph::getCaptionBold()
 {
   return captionBold;
 }
 
+//get the caption font
 int Graph::getCaptionFont()
 {
   return captionFont;
 }
 
+//get the caption size
 int Graph::getCaptionSize()
 {
   return captionSize;
 }
 
+//get the caption red property
 int Graph::getCaptionRed()
 {
   return captionRed;
 }
 
+//get the caption green property
 int Graph::getCaptionGreen()
 {
   return captionGreen;
 }
 
+//get the caption blue property
 int Graph::getCaptionBlue()
 {
   return captionBlue;
@@ -2986,6 +3032,7 @@ void Graph::drawHighlighted()
   drawFadedEdges();
 }
 
+//draw the faded edges in the graph
 void Graph::drawFadedEdges()
 {
   //for all the edges
@@ -3399,6 +3446,7 @@ void Graph::changeInteractorToCamera()
   interactGraph = false;
 }
 
+//set up the window
 void Graph::windowSetup()
 {
   //add the renderer to the window
@@ -3907,6 +3955,7 @@ void Graph::drawEdges()
     }
 }
 
+//pop up the path dialog
 void Graph::popUpPath()
 {
   Path pathWindow;
@@ -3935,6 +3984,7 @@ void Graph::popUpPath()
   inter->Enable();
 }
 
+//set the default colours for the tags
 void Graph::setDefaultColors(char* filename)
 {    
   fstream file;
@@ -3959,6 +4009,7 @@ void Graph::setDefaultColors(char* filename)
   else cerr << "Unable to open file: " << filename << endl;
 }
 
+//save the tag colours to a file 
 void Graph::saveTagColors(char* filename)
 {
   ofstream oFile(filename);
@@ -4775,11 +4826,9 @@ void Graph::mergeEdges()
     }
 }
 
+//include only the entries of the graph
 void Graph::includeOnlyEntries()
-{
-  //printf("including only entries");
-  //fflush(stdout);
-  
+{  
   edgeCount=0;
 
   entries.unique();
@@ -4846,6 +4895,7 @@ void Graph::includeOnlyEntries()
       }
 }
 
+//check to see if the node n is an entry
 int Graph::isEntry(int n)
 {
   int ent=-1;
@@ -4876,6 +4926,7 @@ vtkRenderWindowInteractor* Graph::getInteractor()
   return inter;
 }
 
+//set the new tag rgb colour r, g, b for the index ind 
 void Graph::setNewTagCol(int ind, int r, int g, int b)
 {
   tagCols[ind][0] = r/255.0;
@@ -4973,6 +5024,7 @@ void Graph::setTags(list<char*> lst)
   renderWin();
 }
 
+//initialize the file from the xml file sent in
 void Graph::initialize(char* filename)
 {
 
@@ -4983,21 +5035,33 @@ void Graph::initialize(char* filename)
   GetEntry(filename);
 }
 
+//set the mode to the mode passed in
+//'g' = graph
+//'t' = toggle
+//'h' = highlight
+//'c' = camera
 void Graph::setMode(char a)
 {
   mode = a;
 }
 
+//get the mode
+//'g' = graph
+//'t' = toggle
+//'h' = highlight
+//'c' = camera
 char Graph::getMode()
 {
   return mode;
 }
 
+//get whether or not the file is loading
 bool Graph::getLoad()
 {
   return load;
 }
 
+//pop up the tag window
 void Graph::tagWindowOn()
 {
   Tags* tagWin = (Tags*) tagWindow;
@@ -5016,6 +5080,7 @@ void Graph::tagWindowOn()
   inter->Enable();
 }
 
+//pop up the text window
 void Graph::textWindowOn()
 {
   Text* textWin = new Text();
@@ -5071,6 +5136,7 @@ void Graph::textWindowOn()
   inter->Enable();
 }
 
+//sets up the names in the combobox cb from the entry en passed in
 void Graph::namesFromEntry(char* en, QComboBox* cb)
 {
   int ind = findIndexFromName(en);
@@ -5087,6 +5153,7 @@ void Graph::namesFromEntry(char* en, QComboBox* cb)
   (cb->model())->sort(0,Qt::AscendingOrder);
 }
 
+//sets up the tags in the combobox cb from the information of the entry en and the name nm
 void Graph::tagsFromNameEntry(char* en, char*nm, QComboBox* cb)
 {
   int ind1 = findIndexFromName(en);
@@ -5105,6 +5172,7 @@ void Graph::tagsFromNameEntry(char* en, char*nm, QComboBox* cb)
   (cb->model())->sort(0,Qt::AscendingOrder);
 }
 
+//show the xml entry in the text browser tb based on the entry en, name nm, tag tg
 void Graph::showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb)
 {
   if(en != NULL)
@@ -5187,6 +5255,7 @@ void Graph::showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb)
     }
 }
 
+//find the index of the node from a name nm
 int Graph::findIndexFromName(char* nm)
 {
   //for the number of names
@@ -5202,6 +5271,7 @@ int Graph::findIndexFromName(char* nm)
   return -1;
 }
 
+//set the dates that the information should be between
 void Graph::includeDatesBtw(int bY, int bM, int bD, int dY, int dM, int dD)
 {
   birthYear = bY;
@@ -5213,6 +5283,7 @@ void Graph::includeDatesBtw(int bY, int bM, int bD, int dY, int dM, int dD)
   deathDay = dD;
 }
 
+//check the name to see if it is included based on the time constraints
 bool Graph::includeByTime(char* stdName)
 {
   
@@ -5312,6 +5383,7 @@ bool Graph::includeByTime(char* stdName)
   return inclu;
 }
 
+//check to see if you should include the line based on words excluded or included
 bool Graph::includeLine(char* line)
 {
   bool incl = true;
@@ -5497,6 +5569,7 @@ bool Graph::includeLine(char* line)
     }
 }
 
+//include the words that are in the string s
 void Graph::include(char* s)
 {
   //create file
@@ -5532,6 +5605,7 @@ void Graph::include(char* s)
     }
 }
 
+//exclude the words that are in the string s
 void Graph::exclude(char* s)
 {
   ofstream file("/var/tmp/orlando.exc");
@@ -5567,11 +5641,14 @@ void Graph::exclude(char* s)
     }
 }
 
+//set whether or not to include a node based on it being an entry
 void Graph::setEntriesOnly(bool b)
 {
   onlyEntries = b;
 }
 
+//get a list of all of the cases that might be seen in the file
+//EXAMPLE: "poetess" = Poetess, POETESS, poetess 
 list<char*> Graph::wordCases(char* s)
 {
   //create a list for the word cases
@@ -5607,6 +5684,7 @@ list<char*> Graph::wordCases(char* s)
   lst.push_back(str3);
 }
 
+//deselect the node based on the position
 void Graph::deselect(int a, int b)
 {
    //initialize variable
@@ -5656,6 +5734,7 @@ void Graph::deselect(int a, int b)
     }
 }
 
+//save a screenshot of the graph
 void Graph::saveScreenshot(char* filename, int filetype)
 {
   vtkImageWriter* writer = vtkPNGWriter::New();
