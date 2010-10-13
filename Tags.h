@@ -26,6 +26,7 @@ public:
 public slots:
   
   virtual void changeSelPal(QListWidgetItem* tagToChange);
+  virtual void checkUncheckAll();
   virtual void loadCols();
   virtual void saveCols();
   virtual void changeTagCol(QListWidgetItem* tagToChange);

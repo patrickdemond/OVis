@@ -1,6 +1,3 @@
-//Created by Jennifer Berberich for the ORLANDO Project
-//If you have any questions you can contact me... Jenn_b19@hotmail.com
-
 //#define RESOLUTION_X 6
 //#define RESOLUTION_Y 6
 
@@ -14,13 +11,17 @@
 #include "Text.h"
 #include "date.h"
 
-
 //constructor for the graph
 //passed in all objects necessary from GUI
 Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label,QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind)
 {
+  //initialize the tag names
+  initTags();
+  
+  //initializes the number of edges to zero	
   edgeCount = 0;
 
+  //initializes the font formatting to the default settings	
   captionBold = false;
   captionItalic = false;
   captionFont = ARIAL; //0-ARIAL, 1-COURIER, 2-TIMES
@@ -29,13 +30,21 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   captionGreen = 255;
   captionBlue = 255;
 
+  //initializes selected node's details to null settings	
   birthYear = 0;
   birthMonth = 0;
   birthDay = 0;
   deathYear = 0;
   deathMonth = 0;
   deathDay = 0;
+  shiftSelected = -1;
+
+  // Initializing Important Variable used in Comparisons while Orlando is being set-up
+  NUM_OF_NAMES = 0; // Until a graph is loaded or opened, NUM_OF_NAMES should be 0 - NUM_OF_NAMES also should not be capitalized as this infers that the number is static
+  mode = 'g'; // Mode needs to be initialized
+  prevMode = 'g'; // Previous mode needs to be initialized for checks...
   
+  //sets the default colors for the tags to that found in the default file	
   setDefaultColors("Resources/default.tagCols");
 
   //initialize global variables
@@ -70,6 +79,862 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   tagList = tagLst;
   mainWin = mainWind;
   tagWindow = tagWind;
+  lastHighlighted = -1;
+  highlighted = false;
+
+  //create a sphere
+  sphere1 = vtkSphereSource::New();
+  sphere1->SetRadius(2.5);
+  
+  //create the mapper
+  mapper1 = vtkPolyDataMapper::New();
+  mapper1->SetInput(sphere1->GetOutput());
+  //initialize the tag names
+
+  sphere1->Delete();
+
+  //create line
+  line1 = vtkLineSource::New();			  
+  line1->SetPoint1(0.5,0,0);
+  line1->SetPoint2(-0.5,0,0);
+
+  mapper2 = vtkPolyDataMapper::New();
+  mapper2->SetInput(line1->GetOutput());
+
+  line1->Delete();
+
+  //set sorting enabled for the list to get it to be alphabetized
+  listWidge->setSortingEnabled(true);
+  
+  //for the number of tags 
+  for(int i=0; i<NUM_OF_TAGS+1; i++)
+    {
+      //set tagOn to false
+      tagOn[i] = false;
+    }
+
+  namesAllowedOn = false;
+
+  rendSetUp();
+
+//create new renderer and add it to tag legend window
+  rend2 = vtkRenderer::New();
+  rend2->SetViewport(0.0/600,0.0/800.0,600.0/600.0,800.0/800.0);
+  rend2->SetBackground(0.2,0.2,0.2);
+  window2->AddRenderer(rend2);
+
+  renderWin();
+  window2->Render();
+  rend2->Delete();
+
+  Orlando* orl = (Orlando*) orland;
+  orl->setGraph(this);
+  
+  //create new user style
+  userStyle* style = new userStyle(inter,window,this);
+
+  orl->setUserStyle(style);
+  orl->graphMode(false);
+
+  onlyEntries = false;
+
+  progBar->setValue(100);
+
+  tagOn[NUM_OF_TAGS] = true;
+  tagsUsed.push_back(NUM_OF_TAGS);
+
+}
+
+void Graph::initTags(){
+  char* filename = "Resources/default.tags";
+
+  //create a file
+  fstream file;
+
+  //open the file
+  file.open(filename);
+
+  //if the file opens properly
+  if(file.is_open())
+    {      
+      int cntr=0;
+      do{
+	char* line = (char*) calloc(1000, sizeof(char));
+	file.getline(line, 1000);
+
+	tags[cntr] = strdup(line);
+
+	cout << line << ": " << cntr  << endl;
+
+	free(line);
+	cntr++;
+      }while(!file.eof());
+
+      tags[cntr] = "WHOLE ENTRY";
+
+      NUM_OF_TAGS = cntr;
+
+      cout << cntr;
+
+      file.close();
+    }
+  else{
+    cout << "NOT FOUND";
+  }
+
+}
+
+//saves the graph in its current state for next time
+//*** NEEDS TO BE UPDATED FOR ALL ATTRIBUTES ***
+void Graph::saveFile(char* filename)
+{
+
+  // An array of lists to ensure duplicate pairs are not saved 	
+  list<int> pairBools[25000];
+
+  // Notifies whether a pair has already been saved
+  bool match;
+
+  char* str = strtok(filename, " .");
+
+  if(str != NULL)
+    {
+      strcat(str, ".orlando");
+    }
+  else
+    {
+      str = filename;
+    }
+
+  ofstream oFile(str);
+
+        if (!oFile) {
+                cout << "Unable to write to file: " << str << endl;
+        } else {
+                
+        
+
+  oFile << orlandoDataName << "\n";  // Saves Filename
+
+  oFile << selected << "\n"; // Saves Selected Node
+  
+  oFile << namesAllowedOn << "\n"; // Saves if Names are allowed On
+
+  oFile << mode << "\n"; // Saves the Mode
+
+  // If currently in path mode, save the names associated with that path		
+  if(mode == 'p')
+    {
+      oFile << names[pathS] << "\n";
+
+      oFile << names[pathF] << "\n";
+    }
+
+	oFile << NUM_OF_NAMES << endl;
+
+	/* This section traverses the Nodes in the graph, gets each of the edges associated with them
+ 	and prints their pair of nodes */
+
+	for(int i=0; i < NUM_OF_NAMES; i++)
+	{
+
+		progBar->setValue(((float)i/(float)NUM_OF_NAMES)*95); // Updates the progress bar
+
+		match = false;
+
+                list<Edge> children = graph1[i]->getChildren();
+
+                list<Edge>::iterator it = children.begin();
+
+		for(int j=0; j < graph1[i]->numOfChildren(); j++)
+		{
+
+			// Checks if pair of nodes has already been saved
+		   list<int>::const_iterator bii;
+		   for(bii = pairBools[(*it).GetNode1()].begin(); bii != pairBools[(*it).GetNode1()].end(); bii++)
+		   {
+			if( (*bii) == (*it).GetNode2() )
+			{
+			   match = true;
+			}
+		   }
+	 
+			// Pair has not been saved, continue
+			if(!match)
+			{ 
+
+				// Add pair to saved nodes
+				 pairBools[(*it).GetNode1()].push_back((*it).GetNode2());
+				pairBools[(*it).GetNode2()].push_back((*it).GetNode1());
+				
+				// Write Node 1 to the File
+				oFile << names[(*it).GetNode1()] << endl;
+				oFile <<  (*it).GetNode1() << endl; 
+
+				// Write Node 2 to the File
+				oFile << names[(*it).GetNode2()] << endl;
+              	                oFile << (*it).GetNode2() << endl;
+			
+
+
+				// Save tags associated with this pair, 1 for present, 2 for absent
+				for(int t=0; t <= NUM_OF_TAGS; t++)
+				{
+			
+				if((*it).HasTag(t) == true)
+				{
+					
+					oFile << "1";
+
+				}else
+					{
+					
+					oFile << "0";
+
+					}
+				}
+				oFile << endl;
+
+			}
+			it++;
+		}
+
+		// Special Case for a Node that was unconnected (thus, had no edges)
+		if(graph1[i]->numOfChildren() == 0)
+		{
+
+				// Write Node 1 to the File
+				oFile << names[i] << endl;
+				oFile <<  i << endl; 
+				
+
+				// Write Node 2 to the File
+				oFile << "EMPTY" << endl;
+              	                oFile << "-1" << endl;
+
+				for(int t=0; t <= NUM_OF_TAGS; t++)
+				{
+					oFile << "0";
+				}
+				oFile << endl;
+
+		}	 
+	}
+
+
+
+  oFile.close();
+
+  }
+
+  char* strT = strtok(str, ". ");
+  mkdir(strT,0777);
+  
+  char* pch;
+  pch=strrchr(filename,'/');
+
+  char* pch2 = strdup(pch);
+
+  char* str1 = strtok(filename, " .");
+
+  strcat(str1, pch2);
+
+  strcat(str1, ".nodes");
+
+  // After set-up above, saves node positions into the correct file location
+  SaveNodePos(str1);
+
+  progBar->setValue(96); // Update progress bar
+
+  // Saves the Tags Used
+  char* str2 = strtok(str1, ".");
+  strcat(str2, ".tagsU");
+  saveTagsUsed(str2);
+
+  // Saves the Line Number	
+  char* str13 = strtok(str2, ".");
+  strcat(str13, ".lineNum");
+  saveLineNum(str13);
+
+  progBar->setValue(97); // Update progress bar
+
+  // Saves the Tags On	
+  char* str3 = strtok(str13, ".");
+  strcat(str3, ".tagsO");
+  saveTagsOn(str3);
+
+  char* str7 = strtok(str3, ".");
+  strcat(str7, ".inc");
+
+  saveInc(str7);
+
+  progBar->setValue(98); // Update progress bar
+
+  char* str8 = strtok(str3, ".");
+  strcat(str8, ".exc");
+  saveExc(str8);
+	
+	// Save the entries
+	char* str10 = strtok(str3, ".");
+	strcat(str10, ".entries");
+	saveEntries(str10); 
+
+	// Save the formatting
+	char* str11 = strtok(str3, ".");
+	strcat(str11, ".format");
+	saveFormatting(str11);
+
+  progBar->setValue(99); // Update progress bar
+
+	// Save the names that are on (if they are allowed on)
+  if(namesAllowedOn)
+    {
+      char* str6 = strtok(str3, ".");
+      strcat(str6, ".namesO");
+      saveNamesOn(str6);
+    }
+
+	// If an acceptable mode, save toggles
+  if(mode == 'h' || mode == 't')
+    {
+      char* str4 = strtok(str3, ".");
+      strcat(str4, ".togO");
+      saveTogOn(str4);
+
+      char* str5 = strtok(str4, ".");
+      strcat(str5, ".togC");
+      saveTogCon(str5);
+    }
+
+  free(str);
+
+	
+  progBar->setValue(100); // Complete the progress bar load
+
+}
+
+
+
+
+
+//loads the graph in from the state found in the file
+void Graph::loadFile(char* filename)
+{
+
+  	char* line;
+	char* Name1;
+	char* Name2;
+	char* EntryNum1;
+	char* EntryNum2;
+	char* Tags;
+	char* numNames;
+
+	int EntryNumOne;
+	int EntryNumTwo;
+
+	int progInt = 0;
+
+	bool nameBool[25000] = {false};  // Indicates whether the Node at this EntryNum has already been created
+
+  	load = true;
+
+  windowSetup();
+  rendSetUp();
+
+  //create a file
+  fstream file;
+
+  //open the file
+  file.open(filename);
+
+  //if the file opens properly
+  if(file.is_open())
+    {      
+
+	free(orlandoDataName);
+
+      //get the filename of the data file from the file
+      char* fileN = (char*) calloc(1000, sizeof(char));
+      file.getline(fileN, 1000);
+
+	orlandoDataName = fileN;
+	
+      //get the selected node from the file
+      char* sel = (char*) calloc(1000, sizeof(char));
+      file.getline(sel, 1000);
+
+      selected = atoi(sel);
+
+      free(sel); // Leakage
+
+      //find if names are allowed
+      char* nameA = (char*) calloc(1000, sizeof(char));
+      file.getline(nameA, 1000);
+
+      if(strcmp(nameA, "1") == 0)
+	{
+	  allNamesOn(false);
+	  namesAllowedOn = true;
+	}
+      else
+	{
+	  allNamesOff(true);
+	}  
+
+	free(nameA); // Leakage    
+ 
+      //get the mode from the file
+      char* md = (char*) calloc(1000, sizeof(char));
+      file.getline(md, 1000);
+
+      mode = md[0];
+
+	free(md); // Leakage
+	
+      char* pch = strtok(filename, ". ");
+      pch=strrchr(filename,'/');
+
+      char* pch2 = strdup(pch);
+
+      char* fileC = strtok(filename, ". ");
+      strcat(fileC, pch2);
+    
+	strcat(fileC, ".inc");
+	
+
+      loadInc(fileC); 
+
+
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".exc");
+      loadExc(fileC);    
+
+	entries.clear(); // Clear the list of entries (according to int)
+
+ 	 //create variables
+	numNames = (char*) calloc(1000, sizeof(char));
+
+	file.getline(numNames, 1000);
+
+	NUM_OF_NAMES = atoi(numNames);
+
+	free(numNames); // Leakage
+
+	
+	  //set the progress bar to 0
+	  progBar->setValue(0);
+	  printf("\r[  %i%]", 0);
+    	  fflush(stdout);
+
+
+	int namesREAD = 0;
+
+	  //if the file is open
+  	if(file.is_open())
+    	{
+
+      		line = (char*) calloc(1000, sizeof(char));
+      		Name1 = (char*) calloc(1000, sizeof(char));
+      		EntryNum1 = (char*) calloc(1000, sizeof(char));
+      		Name2 = (char*) calloc(1000, sizeof(char));
+      		EntryNum2 = (char*) calloc(1000, sizeof(char));
+      		Tags = (char*) calloc(1000, sizeof(char));
+
+
+		while(!file.eof())
+		{
+
+		if(((((float)namesREAD/(float)NUM_OF_NAMES*2)*100)/2) < 50)
+		{		
+
+		  progBar->setValue((((float)namesREAD/(float)NUM_OF_NAMES*2)*100)/2);
+
+		  progInt = ((((float)namesREAD/(float)NUM_OF_NAMES*2)*100)/2);
+
+		  printf("\r[  %i%]", progInt);
+    		  fflush(stdout);
+
+
+			
+		}
+
+		
+
+		
+		  //get the line from the file
+	 	 	file.getline(Name1, 1000);
+
+	 	 	file.getline(EntryNum1, 1000);
+		
+	 	 	file.getline(Name2, 1000);
+
+	 	 	file.getline(EntryNum2, 1000);
+
+	 	 	file.getline(Tags, 1000);
+	
+
+			EntryNumOne = atoi(EntryNum1);
+			EntryNumTwo = atoi(EntryNum2);
+
+			
+			
+			/* An Exception in case there is a Node with no Edges present in the Saved Graph */
+			if(EntryNumTwo == -1)
+			{
+
+					// Indicates Node is now being created
+					nameBool[EntryNumOne] = true;
+					// Adds Name to list of names
+					names[EntryNumOne] = strdup(Name1);
+
+					entries.push_back(EntryNumOne);
+			
+					//create a new name
+					Name *nm1 = new Name();
+					nm1->setKey(names[EntryNumOne]);
+					
+					nm1->setKeyNum(EntryNumOne);
+				
+				
+						
+					graph1[EntryNumOne] = new Node(EntryNumOne);
+	
+
+			}
+			else
+			{		
+				/* Checks if this Node has already been created - to avoid overwriting - must still be done correctly */
+				if(nameBool[EntryNumOne] == false)
+				{	
+					// Indicates Node is now being created
+					nameBool[EntryNumOne] = true;
+					// Adds Name to list of names
+					names[EntryNumOne] = strdup(Name1);
+
+					entries.push_back(EntryNumOne);
+			
+					//create a new name
+					Name *nm1 = new Name();
+					nm1->setKey(names[EntryNumOne]);
+					
+					nm1->setKeyNum(EntryNumOne);
+						
+					graph1[EntryNumOne] = new Node(EntryNumOne);
+				}
+
+				/* Checks if this Node has already been created - to avoid overwriting - must still be done correctly */
+				if(nameBool[EntryNumTwo] == false)
+				{
+
+					nameBool[EntryNumTwo] = true;
+
+					names[EntryNumTwo] = strdup(Name2);
+
+					entries.push_back(EntryNumTwo);
+
+
+					//create a new name
+					Name *nm2 = new Name();
+					nm2->setKey(names[EntryNumTwo]);
+					
+					nm2->setKeyNum(EntryNumTwo);
+					
+
+					graph1[EntryNumTwo] = new Node(EntryNumTwo);
+
+				}
+
+
+				Edge *edge = new Edge();
+				edge->SetNode1(EntryNumOne);
+				edge->SetNode2(EntryNumTwo);
+
+
+				for(int q=0; q<=25; q++)
+				{
+					
+					if(Tags[q] == '1')
+					{
+					
+						edge->AddTag(q);
+					}
+				}
+				
+				graph1[EntryNumOne]->addChild(*edge);
+				graph1[EntryNumTwo]->addChild(*edge);
+				
+				//delete edge; //works???
+		
+			}
+
+			namesREAD++;
+	 
+		}
+      	
+		//close the file
+      		file.close();
+
+      		/*free(line); 
+      		free(Name1);
+      		free(EntryNum1);
+      		free(Name2);
+      		free(EntryNum2); 
+      		free(Tags); */
+
+
+    	}
+  	//else give error message
+  	else cerr << "Unable to open file: " << filename << endl;
+
+	
+
+
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".nodes");     
+      GetNodePos(fileC); // Leakage (for loop w/ line malloc'd)
+  
+	
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".tagsU");  
+      loadTagsUsed(fileC); // Leakage (single line malloc'd)
+
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".lineNum");
+      loadLineNum(fileC); 
+	
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".tagsO");
+      loadTagsOn(fileC); // Leakage (for loop w/ line malloc'd)
+
+	
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".inc");
+      loadInc(fileC); // Leakage (for loop w/ line malloc'd)
+
+	
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".exc");
+      loadExc(fileC); // Leakage (for loop w/ line malloc'd)
+
+	
+      fileC = strtok(fileC, ". ");
+      strcat(fileC, ".entries");
+      loadEntries(fileC); // Leakage (single line malloc'd)   
+
+  
+
+	fileC = strtok(fileC, ". ");
+	strcat(fileC, ".format");
+	loadFormatting(fileC); // Leakage (single line malloc'd)
+
+	
+      Orlando* orl = (Orlando*) orland;
+      orl->setGraph(this);
+
+      mergeEdges();
+
+	progBar->setValue(52);
+
+      setTitleText();
+
+	progBar->setValue(54);
+
+      initNames();
+
+	progBar->setValue(55);
+
+
+
+      if(namesAllowedOn)
+	{   
+	  orl->nameTagsOn();
+
+	  fileC = strtok(fileC, ". ");
+	  strcat(fileC, ".namesO");
+	  loadNamesOn(fileC); // Need to change loadNamesOn
+	}
+      else
+	{
+	  orl->nameTagsOff();
+	}
+  
+      if(mode == 'h' || mode == 't')
+	{
+	  fileC = strtok(fileC, ". ");
+	  strcat(fileC, ".togO");
+	  loadTogOn(fileC);
+
+	  fileC = strtok(fileC, ". ");
+	  strcat(fileC, ".togC");
+	  loadTogCon(fileC);
+	}
+
+	
+      //create new user style
+      userStyle* style = new userStyle(inter,window,this);
+
+      //if the mode is graph then redraw the graph
+      if(mode == 'g')
+	{
+	  redrawGraph();
+	  rend->ResetCamera();
+	  displayNdInfo(0,0);
+	  orl->setUserStyle(style);
+	  orl->graphMode(false);
+	}
+      //else if the mode is camera redraw the graph and go into camera mode
+      else if(mode == 'c')
+	{
+	  redrawGraph();
+	  rend->ResetCamera();
+	  displayNdInfo(0,0);
+	  orl->cameraMode();
+	}
+      //else if the mode is toggle, draw the toggled graph
+      else if(mode == 't')
+	{
+	  toggle(0,0);
+	  drawToggled();
+	  rend->ResetCamera();
+	  orl->setUserStyle(style);
+	  orl->toggleMode();
+	}
+      //else if the mode is highlight, draw the highlighted graph
+      else if(mode == 'h')
+	{
+	  highlight(0,0);
+	  drawHighlighted();  
+	  rend->ResetCamera();  
+	  orl->setUserStyle(style);
+	  orl->highlightMode();
+	}
+      //else the mode is path, find the strings of the path ends and display the paths between them
+      else
+	{
+	  //get path beginning
+	  char* nd1 = (char*) calloc(1000, sizeof(char));
+	  file.getline(nd1, 1000);
+
+	  //get path end
+	  char* nd2 = (char*) calloc(1000, sizeof(char));
+	  file.getline(nd2, 1000);
+
+	  orl->setUserStyle(style);
+	  orl->graphMode(false);
+	  findPathBtw(nd1, nd2);
+
+	  free(nd1);
+	  free(nd2);
+	}
+      
+
+      if(namesAllowedOn)
+	{  
+		selectedNodesOn();
+	}
+      drawKeys(); 
+      load = false;
+
+      orl->enableMenuItems(mode);      
+    }
+  //else give error message
+  else cerr << "Unable to open file: " << filename << endl;
+}
+
+
+
+
+
+
+// Clears the graph of its visual components, without introducing new components
+void Graph::clearGraph()
+{
+
+int oldNumNames = NUM_OF_NAMES;
+
+for(int j = 0; j < NUM_OF_NAMES; j++)
+{
+
+// Would have to find each edge and it's respective VTK aspects to completely clear the graph.
+//
+/*
+	list<Edge> nodeEdges = graph1[j]->getChildren();
+
+	for(int r = 0; r < nodeEdges.size(); r++)
+	{
+
+	nodeEdges.pop_front(); // pops all of the edges off (delete)
+
+	}
+*/
+
+graph1[j]->resetEdgeActors(); // Deletes the edge actors associated with each node
+
+graph1[j]->resetChildren(); // Deletes edges associated with each node
+
+delete graph1[j]; // deletes every node in the graph
+
+
+}
+	
+	/* The rest resets all of the variables to their initial values */
+
+  edgeCount = 0;
+
+  captionBold = false;
+  captionItalic = false;
+  captionFont = ARIAL; //0-ARIAL, 1-COURIER, 2-TIMES
+  captionSize = 12;
+  captionRed = 255;
+  captionGreen = 255;
+  captionBlue = 255;
+
+  birthYear = 0;
+  birthMonth = 0;
+  birthDay = 0;
+  deathYear = 0;
+  deathMonth = 0;
+  deathDay = 0;
+
+  // Initializing Important Variable used in Comparisons while Orlando is being set-up
+  NUM_OF_NAMES = 0; // Until a graph is loaded or opened, NUM_OF_NAMES should be 0 - NUM_OF_NAMES also should not be capitalized as this infers that the number is static
+  mode = 'g'; // Mode needs to be initialized
+  prevMode = 'g'; // Previous mode needs to be initialized for checks...
+  
+  setDefaultColors("Resources/default.tagCols");
+
+  //initialize global variables
+  length = 0;
+  cutoff = 0;
+  cutOff = 0.0;
+  x = 0;
+  y = 0;
+  z = 0;
+ // progBar = pBar;
+ // inter2 = interact2;
+ // window2 = wind2;
+//  label1 = lab1;
+ // label2 = lab2;
+//  searchButton = button;
+ // orland = widge;
+ // searchLine = line;
+//  labelSelected = label;
+//  listWidge = lst;
+  rend1 = vtkRenderer::New();
+  rend = vtkRenderer::New();
+//  window = wind;
+  window->AddRenderer(rend1);
+  window->AddRenderer(rend);
+//  inter = interact;
+  cam = vtkCamera::New();  
+  rendText = vtkRenderer::New();
+  mouseActor = vtkActor::New();
+  rend->AddActor(mouseActor);
+  selActor = vtkActor::New();
+  selected = -1;
+ // tagList = tagLst;
+//  mainWin = mainWind;
+ // tagWindow = tagWind;
   lastHighlighted = -1;
   highlighted = false;
 
@@ -150,299 +1015,31 @@ Graph::Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, 
   orl->setGraph(this);
   
   //create new user style
+  
   userStyle* style = new userStyle(inter,window,this);
 
   orl->setUserStyle(style);
   orl->graphMode(false);
 
-  mode = 'g'; 
-
-  onlyEntries = false;;
+  onlyEntries = false;
 
   progBar->setValue(100);
 
   tagOn[NUM_OF_TAGS] = true;
   tagsUsed.push_back(NUM_OF_TAGS);
+
+
+cout << "Graph Cleared. " << endl;
+
+// Should also set "Clear Graph" to unselectable, as well as the rest.
+
 }
 
-//saves the graph in its current state for next time
-//*** NEEDS TO BE UPDATED FOR ALL ATTRIBUTES ***
-void Graph::saveFile(char* filename)
-{
-  char* str = strtok(filename, " .");
 
-  if(str != NULL)
-    {
-      strcat(str, ".orlando");
-    }
-  else
-    {
-      str = filename;
-    }
 
-  ofstream oFile(str);
 
-  oFile << orlandoDataName << "\n";
 
-  oFile << selected << "\n";
-  
-  oFile << namesAllowedOn << "\n";
 
-  oFile << mode << "\n";
-
-  if(mode == 'p')
-    {
-      oFile << names[pathS] << "\n";
-
-      oFile << names[pathF] << "\n";
-    }
-  
-  oFile.close();
-
-  char* strT = strtok(str, ". ");
-  mkdir(strT,0777);
-  
-  char* pch;
-  pch=strrchr(filename,'/');
-
-  char* pch2 = strdup(pch);
-
-  char* str1 = strtok(filename, " .");
-  strcat(str1, pch2);
-  strcat(str1, ".nodes");
-  SaveNodePos(str1);
-
-  char* str2 = strtok(str1, ".");
-  strcat(str2, ".tagsU");
-  saveTagsUsed(str2);
-
-  char* str3 = strtok(str2, ".");
-  strcat(str3, ".tagsO");
-  saveTagsOn(str3);
-
-  char* str7 = strtok(str3, ".");
-  strcat(str7, ".inc");
-  saveInc(str7);
-
-  char* str8 = strtok(str3, ".");
-  strcat(str8, ".exc");
-  saveExc(str8);
-
-  if(namesAllowedOn)
-    {
-      char* str6 = strtok(str3, ".");
-      strcat(str6, ".namesO");
-      saveNamesOn(str6);
-    }
-
-  if(mode == 'h' || mode == 't')
-    {
-      char* str4 = strtok(str3, ".");
-      strcat(str4, ".togO");
-      saveTogOn(str4);
-
-      char* str5 = strtok(str4, ".");
-      strcat(str5, ".togC");
-      saveTogCon(str5);
-    }
-
-  free(str);
-}
-
-//loads the graph in from the state found in the file
-void Graph::loadFile(char* filename)
-{
-  load = true;
-
-  //reset names
-  allNamesOn(false);
-  
-  windowSetup();
-  rendSetUp();
-
-  //create a file
-  fstream file;
-
-  //open the file
-  file.open(filename);
-  
-  //if the file opens properly
-  if(file.is_open())
-    {      
-      //get the filename of the data file from the file
-      char* fileN = (char*) calloc(1000, sizeof(char));
-      file.getline(fileN, 1000);
-	
-      //get the selected node from the file
-      char* sel = (char*) calloc(1000, sizeof(char));
-      file.getline(sel, 1000);
-
-      selected = atoi(sel);
-
-      //find if names are allowed
-      char* nameA = (char*) calloc(1000, sizeof(char));
-      file.getline(nameA, 1000);
-
-      if(strcmp(nameA, "1") == 0)
-	{
-	  allNamesOn(false);
-	  namesAllowedOn = true;
-	}
-      else
-	{
-	  allNamesOff(true);
-	}      
- 
-      //get the mode from the file
-      char* md = (char*) calloc(1000, sizeof(char));
-      file.getline(md, 1000);
-
-      mode = md[0];
-
-      char* pch = strtok(filename, ". ");
-      pch=strrchr(filename,'/');
-
-      char* pch2 = strdup(pch);
-
-      char* fileC = strtok(filename, ". ");
-      strcat(fileC, pch2);
-      strcat(fileC, ".inc");
-      loadInc(fileC);
-
-      fileC = strtok(fileC, ". ");
-      strcat(fileC, ".exc");
-      loadExc(fileC);    
-
-      initialize(fileN);
-   
-      fileC = strtok(fileC, ". ");
-      strcat(fileC, ".nodes");     
-      GetNodePos(fileC);
-  
-      fileC = strtok(fileC, ". ");
-      strcat(fileC, ".tagsU");  
-      loadTagsUsed(fileC);
-
-      fileC = strtok(fileC, ". ");
-      strcat(fileC, ".tagsO");
-      loadTagsOn(fileC);
-
-      fileC = strtok(fileC, ". ");
-      strcat(fileC, ".inc");
-      loadInc(fileC);
-
-      fileC = strtok(fileC, ". ");
-      strcat(fileC, ".exc");
-      loadExc(fileC);    
-
-      Orlando* orl = (Orlando*) orland;
-      orl->setGraph(this);
-
-      if(namesAllowedOn)
-	{   
-	  orl->nameTagsOn();
-
-	  fileC = strtok(fileC, ". ");
-	  strcat(fileC, ".namesO");
-	  loadNamesOn(fileC);
-	}
-      else
-	{
-	  orl->nameTagsOff();
-	}
-  
-      if(mode == 'h' || mode == 't')
-	{
-	  fileC = strtok(fileC, ". ");
-	  strcat(fileC, ".togO");
-	  loadTogOn(fileC);
-
-	  fileC = strtok(fileC, ". ");
-	  strcat(fileC, ".togC");
-	  loadTogCon(fileC);
-	}
-
-      //create new user style
-      userStyle* style = new userStyle(inter,window,this);
-
-      //if the mode is graph then redraw the graph
-      if(mode == 'g')
-	{
-	  redrawGraph();
-	  rend->ResetCamera();
-	  displayNdInfo(0,0);
-	  orl->setUserStyle(style);
-	  orl->graphMode(false);
-	}
-      //else if the mode is camera redraw the graph and go into camera mode
-      else if(mode == 'c')
-	{
-	  redrawGraph();
-	  rend->ResetCamera();
-	  displayNdInfo(0,0);
-	  orl->cameraMode();
-	}
-      //else if the mode is toggle, draw the toggled graph
-      else if(mode == 't')
-	{
-	  toggle(0,0);
-	  drawToggled();
-	  rend->ResetCamera();
-	  orl->setUserStyle(style);
-	  orl->toggleMode();
-	}
-      //else if the mode is highlight, draw the highlighted graph
-      else if(mode == 'h')
-	{
-	  highlight(0,0);
-	  drawHighlighted();  
-	  rend->ResetCamera();  
-	  orl->setUserStyle(style);
-	  orl->highlightMode();
-	}
-      //else the mode is path, find the strings of the path ends and display the paths between them
-      else
-	{
-	  //get path beginning
-	  char* nd1 = (char*) calloc(1000, sizeof(char));
-	  file.getline(nd1, 1000);
-
-	  //get path end
-	  char* nd2 = (char*) calloc(1000, sizeof(char));
-	  file.getline(nd2, 1000);
-
-	  orl->setUserStyle(style);
-	  orl->graphMode(false);
-	  findPathBtw(nd1, nd2);
-	}
-      
-      if(namesAllowedOn)
-	{  
-
-	  for(int i=0; i<NUM_OF_NAMES; i++)
-	    {
-	      if(nameOn[i])
-		{
-		  nameText[i] = vtkCaptionActor2D::New();
-
-		  nameText[i]->SetCaption(names[i]);  
-		  nameText[i]->SetPadding(0);
-		  nameText[i]->SetHeight(0.015);
-		  nameText[i]->GetCaptionTextProperty()->BoldOff();		 
-		  nameText[i]->GetCaptionTextProperty()->ShadowOff();
-		  nameText[i]->SetAttachmentPoint(graph1[i]->getX(),graph1[i]->getY(),graph1[i]->getZ());
-		  nameText[i]->BorderOff();
-
-		  rend->AddActor(nameText[i]);
-		}	      
-	    }
-	}
-      drawKeys(); 
-      load = false;      
-    }
-  //else give error message
-  else cerr << "Unable to open file: " << filename << endl;
-}
 
 //loads an xml file to work with -- must open and add ^ as the last line and take out first 2 lines
 void Graph::loadXML(char* filename)
@@ -455,9 +1052,6 @@ void Graph::loadXML(char* filename)
   //set the progress bar to 0
   progBar->setValue(0);
   
-  //printf("before initialize");
-  //fflush(stdout);
-
   initialize(filename);
   
   //create new user style
@@ -485,7 +1079,7 @@ void Graph::saveInc(char* filename)
   ofstream file(filename);
   fstream fl;
 
-  fl.open("/var/tmp/orlando.inc");
+  fl.open("../ORLANDO-git/tmp/orlando.inc");
 
   do
     {   
@@ -493,6 +1087,8 @@ void Graph::saveInc(char* filename)
       fl.getline(line, 1000);
       
       file << line << "\n";
+
+      free(line); // FREE MEM
 
     }while(!fl.eof());
 
@@ -504,7 +1100,7 @@ void Graph::saveInc(char* filename)
 void Graph::loadInc(char* filename)
 {  
   //create file
-  ofstream file("/var/tmp/orlando.inc");
+  ofstream file("../ORLANDO-git/tmp/orlando.inc");
   fstream fl;
 
   fl.open(filename);
@@ -515,6 +1111,8 @@ void Graph::loadInc(char* filename)
       fl.getline(line, 1000);
       
       file << line << "\n";
+
+	free(line);
 
     }while(!fl.eof());
 
@@ -529,7 +1127,7 @@ void Graph::saveExc(char* filename)
   ofstream file(filename);
   fstream fl;
 
-  fl.open("/var/tmp/orlando.exc");
+  fl.open("../ORLANDO-git/tmp/orlando.exc");
 
   do
     {   
@@ -537,6 +1135,8 @@ void Graph::saveExc(char* filename)
       fl.getline(line, 1000);
       
       file << line << "\n";
+
+	free(line); // FREE MEM
       
     }while(!fl.eof());
 
@@ -548,7 +1148,7 @@ void Graph::saveExc(char* filename)
 void Graph::loadExc(char* filename)
 {  
   //create file
-  ofstream file("/var/tmp/orlando.exc");
+  ofstream file("../ORLANDO-git/tmp/orlando.exc");
   fstream fl;
 
   fl.open(filename);
@@ -559,6 +1159,8 @@ void Graph::loadExc(char* filename)
       fl.getline(line, 1000);
       
       file << line << "\n";
+
+      free(line);
 
     }while(!fl.eof());
 
@@ -596,12 +1198,67 @@ void Graph::loadNamesOn(char* filename)
 	  file.getline(line, 1000);
 
 	  nameOn[i] = atoi(line);
+
+   	  if(nameOn[i])
+	  {
+		selectedNodes.push_back(i);
+  	  }
+
+	  free(line); // FREE MEM
 	}
       file.close();
     }
   //else give error message
   else cerr << "Unable to open file: " << filename << endl;
 }
+
+void Graph::saveLineNum(char* filename)
+{
+	ofstream file(filename);
+	
+	for(int i=0; i<NUM_OF_NAMES_C; i++)
+	{
+		file << lineNum[i] << "\n";
+	}
+	
+	file.close();
+	
+}
+
+
+//load the tagsUsed 
+void Graph::loadLineNum(char* filename)
+{
+	fstream file;
+	
+	int i = 0;
+	
+	file.open(filename);
+	
+	if(file.is_open())
+    {
+		//tagsUsed.clear();
+		
+		char* line = (char*) calloc(1000, sizeof(char));
+		file.getline(line, 1000);
+		
+		while(!file.eof())
+		{
+			//tagsUsed.push_back(atoi(line));
+			lineNum[i] = atoi(line);
+			i++;
+			file.getline(line, 1000);
+		}
+		//numOfTags = tagsUsed.size();
+		file.close();
+		free(line);
+    }
+	//else give error message
+	else cerr << "Unable to open file" << filename << endl;
+}
+
+
+
 
 //save tagsUsed to a file
 void Graph::saveTagsUsed(char* filename)
@@ -639,6 +1296,7 @@ void Graph::loadTagsUsed(char* filename)
 	}
       numOfTags = tagsUsed.size();
       file.close();
+      free(line);
     }
   //else give error message
   else cerr << "Unable to open file" << filename << endl;
@@ -678,6 +1336,7 @@ void Graph::loadTogOn(char* filename)
 	  toggledOn.push_back(atoi(line));
 	  file.getline(line, 1000);
 	}
+      free(line); // FREE MEM
       file.close();
     }
   //else give error message
@@ -714,6 +1373,8 @@ void Graph::loadTogCon(char* filename)
 	  file.getline(line, 1000);
 
 	  toggleConnected[i] = atoi(line);
+
+	  free(line); // FREE MEM
 	}
       file.close();
     }
@@ -751,12 +1412,163 @@ void Graph::loadTagsOn(char* filename)
 	  file.getline(line, 1000);
 
 	  tagOn[i] = atoi(line);
+	  free(line);
 	}
       file.close();
     }
   //else give error message
   else cerr << "Unable to open file: " << filename << endl;
 }
+
+
+
+//save each of the entries
+void Graph::saveEntries(char* filename)
+{
+  //create file
+  ofstream file(filename);
+
+   list<int>::iterator ei;
+
+	//Write each of the entries to a file
+   for(ei=entries.begin(); ei != entries.end(); ++ei)
+	{
+ 	file << *ei << "\n";
+	}
+  
+  file.close();
+}
+
+
+
+
+//load the tags that were on
+void Graph::loadEntries(char* filename)
+{
+  fstream file;
+
+  file.open(filename);
+
+  if(file.is_open())
+    {
+      entries.clear();
+
+      char* line = (char*) calloc(1000, sizeof(char));
+      file.getline(line, 1000);
+
+      while(!file.eof())
+	{
+	  entries.push_back(atoi(line));
+	  file.getline(line, 1000);
+	}
+      file.close();
+      free(line);
+
+    }
+  //else give error message
+  else cerr << "Unable to open file: " << filename << endl;
+}
+
+
+
+/* Must Save the Formatting for the File */
+//  bool captionBold;
+//  bool captionItalic;
+//  int captionFont; //0-ARIAL, 1-COURIER, 2-TIMES
+//  int captionSize; 
+//  int captionRed;
+//  int captionGreen;
+//  int captionBlue;
+
+// Save the formatting options that were chosen
+void Graph::saveFormatting(char* filename)
+{
+
+  //create file
+  ofstream file(filename);
+
+  // Save the different formatting options (text, labels etc.)
+  file << captionBold << endl;
+  file << captionItalic << endl;
+  file << captionFont << endl;
+  file << captionSize << endl;
+  file << captionRed << endl;
+  file << captionGreen << endl;
+  file << captionBlue << endl;
+
+  //close the file
+  file.close();
+
+}
+
+
+// Load the formatting options that had been chosen (text, labels etc.)
+void Graph::loadFormatting(char* filename)
+{
+  fstream file;
+  int bold;
+  int italic;
+
+  file.open(filename);
+
+  if(file.is_open())
+  {
+      char* line = (char*) calloc(1000, sizeof(char));
+      file.getline(line, 1000);
+
+      bold = atoi(line);
+
+      if(bold == 0)
+      {
+        captionBold = false;
+      }
+      else
+      {
+        captionBold = true;
+      }
+
+      file.getline(line, 1000);
+
+      italic = atoi(line);
+
+      if(italic == 0)
+      {
+        captionItalic = false;
+      }
+      else
+      {
+        captionItalic = true;
+      }
+
+      file.getline(line, 1000);
+      captionFont = atoi(line);
+
+      file.getline(line, 1000);
+      captionSize = atoi(line);
+
+      file.getline(line, 1000);
+      captionRed = atoi(line);
+
+      file.getline(line, 1000);
+      captionGreen = atoi(line);
+
+      file.getline(line, 1000);
+      captionBlue = atoi(line);
+
+      free(line);
+
+  }
+  else cerr << "Unable to open file: " << filename << endl;
+}
+
+
+
+
+
+
+
+
+
 
 //save node positions to file
 //filename is the name of the file to save to
@@ -787,7 +1599,7 @@ void Graph::SaveNodePos(char* filename)
 void Graph::GetNodePos(char* filename)
 {
   //create variables
-  char* line;
+//  char* line;
   int x, y, z;  
   fstream file;
   Node* nd;
@@ -802,14 +1614,18 @@ void Graph::GetNodePos(char* filename)
       for(int i=0; i<NUM_OF_NAMES; i++)
 	{
 	  //get the line from the file
-	  line = (char*) calloc(1000, sizeof(char));
-	  file.getline(line, 1000);
+//	  line = (char*) calloc(1000, sizeof(char));
+//	  file.getline(line, 1000);
 	  //get the coordinates from the line
-	  x=atoi(strtok(line, " "));
-	  y=atoi(strtok(NULL, " "));
-	  z=atoi(strtok(NULL, " \n"));
+	  file >> x;
+	  file >> y;
+	  file >> z;
+//	  x=atoi(strtok(line, " "));
+//	  y=atoi(strtok(NULL, " "));
+//	  z=atoi(strtok(NULL, " \n"));
 	  //set the center to the read in coordinates
 	  graph1[i]->setCenter(x,y,z);
+//	  free (line);
       	}
       //close the file
       file.close();
@@ -1035,8 +1851,6 @@ vtkActor* Graph::drawNode(int ind, bool alpha, vtkActor* actor, double colR, dou
       
       if(actor != highlightActor && !alpha)
 	{
-	  //printf("not highlighted");
-	  //fflush(stdout);
 	  ndCon[ind] = true;
 	}
 
@@ -1121,11 +1935,15 @@ void Graph::drawEdge(int stInd, int endInd, bool alpha, int tag)
   matrix1->Element[1][2]=0.0;
   matrix1->Element[2][2]=1.0;
   matrix1->Element[3][2]=0.0;
-  matrix1->Element[0][3]=(x1+(0.1*tagNum*flip)+x2+(0.1*tagNum*flip))/2.0;
+  matrix1->Element[0][3]=(x1+(0.1*tagNum*flip)+x2-(0.1*tagNum*flip))/2.0;
   matrix1->Element[1][3]=(y1+y2)/2.0;
   matrix1->Element[2][3]=(z1+(0.1*tagNum*flip)+z2+(0.1*tagNum*flip))/2.0;
   matrix1->Element[3][3]=1.0;
 
+  if(abs(x1-x2)<=(abs(z1-z2)/2))
+    {
+      matrix1->Element[0][3]=(x1+(0.1*tagNum*flip)+x2+(0.1*tagNum*flip))/2.0;
+    }
 
   linAct->SetUserMatrix(matrix1);
 
@@ -1328,7 +2146,7 @@ void Graph::tagTouched(int x, int y)
       redrawGraph();
     }
 
-  select();
+  select(false);
 
   //render the main window
   renderWin();
@@ -1526,11 +2344,7 @@ bool Graph::findIfPath(int startNode, int nodeToFind, int cutOff)
 	}
       done[currentVertex] = true;
     }
-  /*
-  if(found)
-    printf("FOUND!");
-  
-  fflush(stdout);*/
+
   return found;
 }
 
@@ -1560,8 +2374,6 @@ void Graph::findPathBtw(char* x, char* y)
   rendSetUp();
   textSetUp();
 
-  //printf("after set up");
-  //fflush(stdout);
 
   //clear the inPath list
   inPath.clear();
@@ -1614,31 +2426,19 @@ void Graph::findPathBtw(char* x, char* y)
 	  
 	  //initialize found to false
 	  found = false;
-
-	  //printf("size = %i", sz);
-	  //fflush(stdout);
 	  
 	  //find all paths with the cutoff of the shortest path's size
 	  findAllPaths(c, d, path, sz, true);
 	}
     }
   
-  //printf("before print path");
-  //fflush(stdout);
-
   //show the path information for the two nodes
   list<int> empty;	  
   displayPathInfo(c,d,empty);
   empty.push_back(c);
   empty.push_back(d);
 
-  //printf("right before");
-  //fflush(stdout);
-
   printPath(empty);
-
-  //printf("after print path");
-  //fflush(stdout);
 
   //set mode to path
   mode = 'p';
@@ -1869,15 +2669,9 @@ void Graph::printPath(list<int> path)
   int prev = -1;
   int cnt = 0;
   
-  //printf("in print path");
-  //fflush(stdout);
-
   //for each node in the path
   for(list<int>::iterator it = path.begin(); it != path.end(); it++)
     {
-      //printf("NODE: %i", *it);
-      //fflush(stdout);
-
       //get the node
       ndP = graph1[*it];
       
@@ -2062,12 +2856,14 @@ void Graph::allNamesOff(bool nw)
 //allow name tags on and reset the tags
 void Graph::allNamesOn(bool all)
 {
+
   //for the number of names
   for(int i=0; i<NUM_OF_NAMES; i++)
     {
+
       //set the name on to false
       nameOn[i] = false;  //if names are allowed on
-            
+      
       //if a node was at the mouse position
       if(all)
 	{
@@ -2080,11 +2876,14 @@ void Graph::allNamesOn(bool all)
 	  //if the name is not on and the mode is either not toggle or the node is toggle connected
 	  if(!nameOn[i] && ((!toggleTrue) || toggleConnected[i]))
 	    {     
+
 	      //set the position and input for the name
 	      nameText[i]->SetAttachmentPoint(graph1[i]->getX(),graph1[i]->getY(),graph1[i]->getZ());
 	      
+
 	      //add the actor to the renderer
 	      rend->AddActor(nameText[i]); 
+
 	      
 	      //turn on the name
 	      nameOn[i] = true;
@@ -2097,6 +2896,7 @@ void Graph::allNamesOn(bool all)
 	}
       else
 	{
+
 	  //set the position and input for the name
 	  nameText[selected]->SetAttachmentPoint(graph1[selected]->getX(),graph1[selected]->getY(),graph1[selected]->getZ());
 	      
@@ -2110,7 +2910,42 @@ void Graph::allNamesOn(bool all)
 
   //allow names to be on
   namesAllowedOn = true;
+
 }
+
+
+void Graph::selectedNodesOn()
+{
+
+    for(int i=0; i<NUM_OF_NAMES; i++)
+    {
+	nameOn[i] = false;
+    }
+
+ 	 for (list<int>::iterator it=selectedNodes.begin(); it!=selectedNodes.end(); ++it)
+	  {
+
+		if((!toggleTrue) | (toggleConnected[(*it)]))
+		{
+		          //set the position and input for the name
+	   	  	  nameText[(*it)]->SetAttachmentPoint(graph1[(*it)]->getX(),graph1[(*it)]->getY(),graph1[(*it)]->getZ());
+	      	
+
+	    	   	  //add the actor to the renderer
+	    		  rend->AddActor(nameText[(*it)]); 
+
+			  nameOn[(*it)] = true;
+		}
+
+	  }
+
+ 	 namesAllowedOn = true;
+
+}
+
+
+
+
 
 //initialize the names of the nodes for labels
 void Graph::initNames()
@@ -2588,6 +3423,7 @@ int Graph::getCaptionBlue()
 //returns the index of the node at the position passed in
 int Graph::nodeAtPos(int a, int b, bool setSel)
 {
+
   //initialize variables
   Node* nd2;
   double coords[3];
@@ -2616,6 +3452,7 @@ int Graph::nodeAtPos(int a, int b, bool setSel)
 		      //set the selected node to the node at the position and return it
 		      oldSelected = selected;
 		      selected = i;
+			
 		    }
 		  return i;
 		}
@@ -2630,6 +3467,56 @@ int Graph::nodeAtPos(int a, int b, bool setSel)
     }
   return -1;
 }
+
+
+int Graph::nodeAtPosNoSelect(int a, int b)
+{
+
+  //initialize variables
+  Node* nd2;
+  double coords[3];
+
+  //find the coordinates of the position passed in
+  vtkWorldPointPicker *picker = vtkWorldPointPicker::New();
+  picker->Pick(a,b,0.0,rend);
+  picker->GetPickPosition(coords);
+  picker->Delete();
+  
+  //for the number of names
+  for(int i=0; i<NUM_OF_NAMES; i++)
+    {
+      //get the node
+      nd2 = graph1[i];
+
+      //check if all the coordinates match the coordinates of the mouse position passed in
+      if(nd2->getX()-3 <= coords[0] && nd2->getX()+3 >= coords[0])
+	{
+	  if(nd2->getY()-3 <= coords[1] && nd2->getY()+3 >=coords[1])
+	    {
+	      if(nd2->getZ()-3 <= coords[2] && nd2->getZ()+3 >= coords[2])
+		{
+		      //set the selected node to the node at the position and return it
+		      //oldSelected = selected;
+		      shiftSelected = i;
+		
+		    
+		  return i;
+		}
+	    }
+	}
+    }
+
+      //set selected to -1 (null) and return it
+      shiftSelected = -1;
+    
+  return -1;
+
+}
+
+
+
+
+
 
 //display the node information 
 void Graph::displayNdInfo(int a, int b)
@@ -3298,6 +4185,7 @@ void Graph::drawToggled()
 //redraw the graph based on current node positions
 void Graph::redrawGraph()
 {
+
   //for the number of names
   for(int i=0; i<NUM_OF_NAMES; i++)
     {
@@ -3317,6 +4205,7 @@ void Graph::redrawGraph()
   rendSetUp();
 
   setToggle(false);
+
 
   if(!load || (mode != 'p' && load))
     {
@@ -3511,9 +4400,6 @@ void Graph::drawGraph()
   //for the number of entries
   for(it=entries.begin(); it!=entries.end(); it++)
     {
-      //printf("Entry: %i", *it);
-      //fflush(stdout);
-
       //get coordinates
       x = cntx;
       z = cntz;
@@ -3944,15 +4830,32 @@ void Graph::drawEdges()
 	}
     }
 
+   fflush(stdout);
+
   //for the number of names
   for(int i=0; i<NUM_OF_NAMES; i++)
     {
       //change the progress bar 
       float fl = ((float)i)/((float)NUM_OF_NAMES-1) *40;
-      progBar->setValue(40+fl);
+      progBar->setValue(55+fl);
+      int flint = fl + 55;
+
+      if(flint < 100)
+      {
+      printf("\r[  %i%]", flint);
+      fflush(stdout);
+      }
+
+     //
+     // JON - commented out updating progress bar here to do it properly in individual places
 
       drawEdgesForNode(i, false);  
+
     }
+
+     printf("\r[  %i%]     Loaded.\n", 100);
+     fflush(stdout);
+
 }
 
 //pop up the path dialog
@@ -4001,6 +4904,7 @@ void Graph::setDefaultColors(char* filename)
 	      file.getline(line, 1000);
 
 	      tagCols[i][j] = atof(line);
+	      free(line); // FREE MEM
 	    }
 	}
       file.close();
@@ -4040,6 +4944,9 @@ double *Graph::getColor(int dt)
 //set selected to the name that corresponds with char* sel
 void Graph::setSelected(char* sel)
 {
+
+	bool match = false;
+
   //for the number of names
   for(int i =0; i<NUM_OF_NAMES; i++)
     {
@@ -4051,31 +4958,155 @@ void Graph::setSelected(char* sel)
 	  selected = i;
 	}
     }
+
+	for (list<int>::iterator it = selectedNodes.begin(); it != selectedNodes.end(); it++)
+	{
+
+		if((*it) == selected)
+		{
+			
+			selectedNodes.remove(selected);
+			match = true;
+		}
+
+	}
+    
+	if(!match)
+	{
+		selectedNodes.push_back(selected);
+	}
+
+	allNamesOn(true);
+
+	
 }
 
+
+
+
+
 //show the node as white if selected
-void Graph::select()
+void Graph::select(bool shift)
 {
+	bool match = false;
+
+	
   //if a node is selected
   if(selected >=0 && ndCon[selected])
     {
-
-      //printf("selected");
-      //fflush(stdout);
-
-      //remove the selected actor and delete it
-      rend->RemoveActor(selActor);
-      selActor->Delete();
-
-      if(oldSelected >= 0 && (mode == 'g' || toggleConnected[oldSelected]))
+	
+	for (list<int>::iterator it = selectedNodes.begin(); it != selectedNodes.end(); it++)
 	{
-	  drawNode(oldSelected, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
+
+		if((*it) == selected)
+		{
+			selectedNodes.remove(selected);
+
+			//Actually removes the text actor (the label) from the selected node
+		        if(nameText[selected] != NULL)
+			{      
+			  //remove the text actor
+			  rend->RemoveActor(nameText[selected]);
+			}
+
+			match = true; // To indicate it had already been selected
+			
+			it = selectedNodes.end(); // To exit loop
+		}
+
+	}
+    
+	if(!match)
+	{
+		selectedNodes.push_back(selected);
 	}
 
-      selActor = drawNode(selected, false, selActor, 1,1,1);
-      rend->AddActor(selActor);
+	if(namesAllowedOn)
+	{
+	
+	  selectedNodesOn();
+
+	}
+
+	if(!shift)
+	{
+
+          //remove the selected actor and delete it
+          rend->RemoveActor(selActor);
+          selActor->Delete();
+
+
+          if(oldSelected >= 0 && (mode == 'g' || toggleConnected[oldSelected]))
+	  {
+	    drawNode(oldSelected, false, vtkActor::New(), 0.0, 95.0/255.0, 1.0);
+	  }
+
+	
+
+          selActor = drawNode(selected, false, selActor, 1,1,1);
+          rend->AddActor(selActor);
+
+	}
     }
 }
+
+
+
+//show the node as white if selected
+void Graph::shiftSelect(bool shift)
+{
+	bool match = false;
+
+	
+  //if a node is selected
+  if(shiftSelected >=0 && ndCon[shiftSelected])
+    {
+	
+		// Iterates through all currently selected nodes
+	for (list<int>::iterator it = selectedNodes.begin(); it != selectedNodes.end(); it++)
+	{
+
+		// Checks to see if the node shiftselected is already selected
+		if((*it) == shiftSelected)
+		{
+			selectedNodes.remove(shiftSelected); // If so, remove it from selected nodes
+
+			//Actually removes the text actor (the label) from the selected node
+		        if(nameText[shiftSelected] != NULL)
+			{      
+			  //remove the text actor
+			  rend->RemoveActor(nameText[shiftSelected]);
+			}
+
+			match = true; // To indicate it had already been selected
+			
+			it = selectedNodes.end(); // To exit loop
+		}
+
+	}
+    
+	// If not already selected, add it to selected nodes	
+	if(!match)
+	{
+		selectedNodes.push_back(shiftSelected);
+	}
+
+	// If name tags are allowed on, update them	
+	if(namesAllowedOn)
+	{
+	
+	  selectedNodesOn();
+
+	}
+          
+    }
+}
+
+
+
+
+
+
 
 //set up the display
 void Graph::display()
@@ -4146,12 +5177,6 @@ char* Graph::stristr(char* strToSearch, char* searchStr)
 //search the names for the string key
 void Graph::search(char* key)
 {
-  /*printf("NUMBER OF NODES: %i", NUM_OF_NAMES);
-  fflush(stdout);
-
-  printf("NUMBER OF EDGES: %i", edgeCount);
-  fflush(stdout);*/
-
   //reset the search strings
   resetSearch();
   
@@ -4239,7 +5264,7 @@ void Graph::search(char* key)
 	{
 	  oldSelected = selected;
 	  selected = target;	  
-	  select();
+	  select(false);
 	}
     }
   //render the window
@@ -4255,6 +5280,7 @@ void Graph::resetSearch()
 //Parse the file with filename to get all names in the file
 void Graph::GetEntry(char* filename)
 {
+
   stInd = (int*) calloc(NUM_OF_NAMES_C+NUM_OF_NAMES_C+NUM_OF_TAGS+100, sizeof(int));
   endInd = (int*) calloc(NUM_OF_NAMES_C+NUM_OF_NAMES_C+NUM_OF_TAGS+100, sizeof(int));
   nameInd = (int*) calloc(NUM_OF_NAMES_C+NUM_OF_NAMES_C, sizeof(int));
@@ -4264,7 +5290,7 @@ void Graph::GetEntry(char* filename)
 
  //create a file
   fstream fil;
-  ofstream tempFile("/var/tmp/data.txt");
+  ofstream tempFile("../ORLANDO-git/tmp/data.txt");
 
   //open the file
   fil.open(filename);
@@ -4272,38 +5298,62 @@ void Graph::GetEntry(char* filename)
   //if the file opens properly
   if(fil.is_open())
     {  
-      char* line = (char*) calloc(1000, sizeof(char));
+      
+     char* line = (char*) calloc(1000, sizeof(char));
       fil.getline(line,1000);
 
-      if(line!= NULL)
-	{	
-	  free(line);
-	  line = NULL;
-	}
+	// Finds the beginning of the file based on the "<ORLANDO>" tag	
+	while(strstr(line, "<ORLANDO") == NULL)
+	{
 
-      line = (char*) calloc(1000, sizeof(char));
-      fil.getline(line,1000);
+		// Skips blank space, or headers
+		if(line!= NULL)
+		{	
+		  free(line);
+	 	 line = NULL;
+		}
+		else
+		{
+	  	 free(line); // FREE MEM
+		}
 
-      while(!fil.eof())
+		line = (char*) calloc(1000, sizeof(char));
+   	   fil.getline(line,1000);
+
+      }
+
+
+	while(!fil.eof())
 	{
 	  if(line != NULL)
 	    {
 	      free(line);
 	      line = NULL;
 	    }
-
+	    else
+	   {
+ 	     free(line); // FREE MEM
+	   }
+			
+		// Writes entire XML file to a temp file that includes seperation markers
 	  line = (char*) calloc(10000000, sizeof(char));
 	  fil.getline(line, 10000000);
 	  char* str = strtok(line,"^");
 	  tempFile << str << "\n";
+		
 	}
 
-      if(line != NULL)
+	if(line != NULL)
 	{
 	  free(line);
 	  line = NULL;
 	}
+	else
+	{
+	  free(line); // FREE MEM
+	}
 
+		// Adds marker to end of file
       tempFile << "^" << endl;
 
       tempFile.close();
@@ -4314,10 +5364,13 @@ void Graph::GetEntry(char* filename)
 	  setTags(emptyList);
 	}
 
-      filename = "/var/tmp/data.txt";
+      filename = "../ORLANDO-git/tmp/data.txt";
     }  
   //else give error message
   else cerr << "Unable to open file" << endl;
+
+
+
 
   //file to hold the file
   FILE* file;
@@ -4343,6 +5396,7 @@ void Graph::GetEntry(char* filename)
   //open file for reading
   file = fopen(filename,"rb");
 
+
   //if the file opens with no problems
   if(file != NULL)
     {
@@ -4363,20 +5417,24 @@ void Graph::GetEntry(char* filename)
       //get the first line
       char* line = strtok(buffer,"\n");
 
+
       //get the rest of the file
       char* restOfFile = strtok(NULL, "^");
 
       int lineN = 0;
 
+	
       while(restOfFile != NULL)
 	{      
+
+
 	  lineN++;
 	  
-	  int prog = (int) ((((float)lSize-strlen(restOfFile))/lSize)*40);
+	  int prog = (int) ((((float)lSize-strlen(restOfFile))/lSize)*40); // Calculates progress
 	  
-	  printf("%i\n", prog);
+	  printf("\r[  %i%]", prog); // Updates textual progress bar
 	  fflush(stdout);
-	  progBar->setValue(prog);
+	  progBar->setValue(prog); // Updates progress bar
 
 	  //duplicate the line
 	  char* ptr = strdup(line);
@@ -4400,7 +5458,8 @@ void Graph::GetEntry(char* filename)
 		//find entryID
 		strtok(ptr,"\"");	
 		//get entry id
-		entryID = strtok(NULL,"\"");		    
+		entryID = strtok(NULL,"\"");
+		    
 		//get the rest of the line
 		char* ptr3 = strtok(NULL,"\n"); 
 		
@@ -4417,9 +5476,6 @@ void Graph::GetEntry(char* filename)
 		    //increment the number of entries
 		    numEntries++;
 		
-		    //printf("ENTRY: %s", entryID);
-		    //fflush(stdout);
-		    
 		    //initialize variables
 		    bool unique = true;
 		    int keyInt = 0;
@@ -4467,12 +5523,8 @@ void Graph::GetEntry(char* filename)
 			ptr3 = strstr(ptr3,"<NAME");	
 			strtok(ptr3,"\"");
 			name2 = strtok(NULL,"\"");
-			
-			/*printf("\n\nName 2:");
-			printf(name2);
-			printf("\n\n");
-			fflush(stdout);*/
 
+			
 			//get the rest of the line
 			ptr3 = strtok(NULL,"\n");
 			
@@ -4613,9 +5665,12 @@ void Graph::GetEntry(char* filename)
 				    it->checkTag(startTag, endTag, t);		   
 				  }
 			      }
+				free(str); // FREE MEM
 			  }
 			while(ptr2 != NULL);
 			//while the line is not searched through
+			
+			free(ptr2); // FREE MEM
 		      }
 		  }
 	      }
@@ -4664,9 +5719,6 @@ void Graph::GetEntry(char* filename)
 	  free(ptr);
 	  ptr = 0;	      
 	  
-	  //printf("before rest of file check");
-	  //fflush(stdout);
-
 	  
 	  //if there is still lines left in the file
 	  if(restOfFile != NULL)
@@ -4702,6 +5754,9 @@ void Graph::GetEntry(char* filename)
       //close the file
       fclose(file);
 
+      Orlando* orl = (Orlando*) orland;
+      orl->enableMenuItems(mode); 
+
     }
   //else the file open failed
   else
@@ -4711,7 +5766,10 @@ void Graph::GetEntry(char* filename)
       printf("\n");
       fflush(stdout);
       }
+
+printf("\r");
 }
+
 
 //set the title bar to show what the program is visualizing
 void Graph::setTitleText()
@@ -4753,7 +5811,11 @@ void Graph::setTitleText()
   Orlando* orl = (Orlando*) orland;
 
   orl->setVisualizationText(txt);
+
+  free(txt); // FREE MEM
+  free(per); // FREE MEM
 }
+
 
 //merge the edges that may have duplicate values... 
 //(these will all be entries with other entries as a connection because the connection may be mentioned in either or both entries)
@@ -5019,7 +6081,7 @@ void Graph::setTags(list<char*> lst)
       redrawGraph();
     }
 
-  select();
+  select(false);
 
   renderWin();
 }
@@ -5042,7 +6104,9 @@ void Graph::initialize(char* filename)
 //'c' = camera
 void Graph::setMode(char a)
 {
+
   mode = a;
+
 }
 
 //get the mode
@@ -5097,39 +6161,40 @@ void Graph::textWindowOn()
     }  
 
   (cb1->model())->sort(0,Qt::AscendingOrder);
+  int comboIndex = 0;
 
-  QComboBox* cb2= textWin->getCombo2();
+  //if the selected node is an entry
+  if(selected != -1 && isEntry(selected) != -1){
+    comboIndex = cb1->findText(names[selected]);
+    if(comboIndex != -1)
+      {
+	cb1->setCurrentIndex(comboIndex);
+      }
+    else
+      {
+	comboIndex = 0;
+      }
+    QComboBox* cb2= textWin->getCombo2();
+    namesFromEntry(names[selected], cb2);
+  }
+  else {
+    QComboBox* cb2= textWin->getCombo2();
+    char* str = (char*) calloc(200,sizeof(char));
+    strcpy(str,cb1->currentText());        
+    namesFromEntry(str, cb2);
+    free(str); // FREE MEM
+  }
 
-  int first = -1;
+  char* e = (char*) calloc(200, sizeof(char));
+  strcpy(e, textWin->getCombo1()->itemText(comboIndex));
 
-  for(int i=0; i<NUM_OF_NAMES; i++)
-    {
-      //if(dataN[0][i][NUM_OF_TAGS])
-	{
-	  if(first == -1)
-	    {
-	      first = i;
-	    }
-	  cb2->addItem(names[i]);
-	}
-    }
+  char* n = (char*) calloc(200, sizeof(char));
+  strcpy(n, textWin->getCombo2()->itemText(0));
 
-  (cb2->model())->sort(0,Qt::AscendingOrder);
-
-  QComboBox* cb3= textWin->getCombo3();
-  
-  for(it=tagsUsed.begin(); it!=tagsUsed.end(); it++)
-    {
-      if(hasEdgeBetween(0,first,*it))
-	{
-	  cb3->addItem(tags[*it]);
-	}
-    }
-  
-  (cb3->model())->sort(0,Qt::AscendingOrder);
-
+  tagsFromNameEntry(e, n, textWin->getCombo3());
+     
   inter->Disable();
-
+      
   //show the tag window
   textWin->exec();
 
@@ -5181,7 +6246,7 @@ void Graph::showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb)
       
       int cnt = lineNum[ind];
       
-      char* filename = "/var/tmp/data.txt";
+      char* filename = "../ORLANDO-git/tmp/data.txt";
 
       FILE* file;
       //vaiables to get the file read in to a buffer
@@ -5215,44 +6280,69 @@ void Graph::showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb)
 	      line = strtok(NULL,"\n");
 	    }
 
-	  tb->setHtml(line);
-	  if(nm != NULL)
-	    {		 
-	      if(tb->find(nm))
-		{
-		  //printf(nm);
-		  //fflush(stdout);
-		}
-	      else
-		{
-		  char* nm1 = strdup(nm);
-		  char* str = strtok(nm, ",");
-		  
-		  if(str != NULL)
-		    {
-		      char* str2 = strtok(NULL, ",/0");
-		      char* str3 = (char*) alloca(1000* sizeof(char));
-		      char* str4 = (char*) alloca(1000* sizeof(char));
+	  tb->setText(line);
 
-		      if(str2 != NULL)
-			{
-			  str3 = strcat(str2," ");
-			  str4 = strcat(str3,str);
-			}
-		      
-		      if(!tb->find(str4))
-			{
-			  str2 = strtok(str2, " ");
-			  str2 = strtok(NULL, " \n");
-			  tb->find(str);
-			}
-		    }
-		}	      
-	    }
+	  int secondSelectionStart = 0;
+
+	  if(strcmp(tg,"WHOLE ENTRY") != 0)
+	    {
+
+	      QString* str = new QString();
+	      str->append('<');
+	      str->append(tg);
+	      str->append(".*");
+	      str->append("<NAME STANDARD=");
+	      str->append('"');
+	      str->append(nm);
+	      str->append('"');
+	      str->append(".*");
+	      str->append("</");
+	      str->append(tg);
+	      str->append('>');
+	      
+	      QRegExp* regEx = new QRegExp();
+	      regEx->setPattern(*str);
+	      
+	      QTextCharFormat* format = new QTextCharFormat();
+	      format->setBackground(QBrush(QColor(0,255,0,100)));
+	      
+	      QTextCursor* cursor = new QTextCursor();
+	      *cursor = tb->document()->find(*regEx, 0);
+	      cursor->setCharFormat(format->toCharFormat());
+
+	      tb->setTextCursor(*cursor);    
+	      
+	      secondSelectionStart = cursor->selectionStart();
+
+	    }	  
 	  
+	  QString* str2 = new QString();
+	  str2->append("<NAME STANDARD=");
+	  str2->append('"');
+	  str2->append(nm);
+	  str2->append('"');
+
+	  QRegExp* regEx2 = new QRegExp();
+	  regEx2->setPattern(*str2);
+
+	  QTextCharFormat* format2 = new QTextCharFormat();
+	  format2->setBackground(QBrush(QColor(255,0,0,100)));
+
+	  QTextCursor* cursor2 = new QTextCursor();
+	  *cursor2 = tb->document()->find(*regEx2, secondSelectionStart);
+	  cursor2->setCharFormat(format2->toCharFormat());
+
+	  tb->setTextCursor(*cursor2);
+	  
+
 	  free(buffer);
 	}
     }
+  else{
+    printf("file problem");
+    fflush(stdout);
+  }
+
 }
 
 //find the index of the node from a name nm
@@ -5341,7 +6431,7 @@ bool Graph::includeByTime(char* stdName)
 		  file.getline(line, 1000);
 		}
 	    }
-	  
+	  free(line); // FREE MEM
 	  file.close();
 	}
       
@@ -5393,7 +6483,7 @@ bool Graph::includeLine(char* line)
 
   fstream fl;
 
-  fl.open("/var/tmp/orlando.inc");
+  fl.open("../ORLANDO-git/tmp/orlando.inc");
 
   if(fl.is_open())
     {      
@@ -5468,6 +6558,7 @@ bool Graph::includeLine(char* line)
 		}
 	      first = false;
 	    }
+	free(ln); // FREE MEM
 	}while(!fl.eof());
       fl.close();
     }
@@ -5477,7 +6568,7 @@ bool Graph::includeLine(char* line)
   b = false;
   first = true;
   
-  fl.open("/var/tmp/orlando.exc");
+  fl.open("../ORLANDO-git/tmp/orlando.exc");
 
   if(fl.is_open())
     {
@@ -5551,6 +6642,8 @@ bool Graph::includeLine(char* line)
 		}
 	      first = false;
 	    }
+
+	free(ln); // FREE MEM
 	}while(!fl.eof());
       fl.close();
       }
@@ -5573,7 +6666,7 @@ bool Graph::includeLine(char* line)
 void Graph::include(char* s)
 {
   //create file
-  ofstream file("/var/tmp/orlando.inc");
+  ofstream file("../ORLANDO-git/tmp/orlando.inc");
 
   int i =0;
 
@@ -5608,7 +6701,7 @@ void Graph::include(char* s)
 //exclude the words that are in the string s
 void Graph::exclude(char* s)
 {
-  ofstream file("/var/tmp/orlando.exc");
+  ofstream file("../ORLANDO-git/tmp/orlando.exc");
 
   if(s != NULL)
     {      
@@ -5633,11 +6726,13 @@ void Graph::exclude(char* s)
 	      strcat(exclWords,str);
 	    }
 
-	  
+	  free(str); // FREE MEM
 	  str = (char*) calloc(1000, sizeof(char));
 	  str = strtok(NULL, ", ");
 
 	} while(str != NULL);
+
+	free(str); // FREE MEM
     }
 }
 
@@ -5735,36 +6830,37 @@ void Graph::deselect(int a, int b)
 }
 
 //save a screenshot of the graph
-void Graph::saveScreenshot(char* filename, int filetype)
-{
-  vtkImageWriter* writer = vtkPNGWriter::New();
-  vtkWindowToImageFilter* imageFilter = vtkWindowToImageFilter::New();
+void Graph::saveScreenshot(char* filename, int filetype, int magnification)
+{  
+
+  vtkSmartPointer<vtkImageWriter> writer;
 
   window->Render();
-  imageFilter->SetInput(window);
 
   switch(filetype)
     {
-    case PNG: 
-      writer = vtkPNGWriter::New();      
-      break;
-    
     case JPG: 
-      writer = vtkJPEGWriter::New();
+      writer = vtkSmartPointer<vtkJPEGWriter>::New();
       break;
     
     case BMP: 
-      writer = vtkBMPWriter::New(); 
+      writer = vtkSmartPointer<vtkBMPWriter>::New(); 
       break;
     
     case TIF: 
-      writer = vtkTIFFWriter::New(); 
+      writer = vtkSmartPointer<vtkTIFFWriter>::New();
       break;
+    default:
+      writer = vtkSmartPointer<vtkPNGWriter>::New();
     }
 
-  writer->SetFileName(filename);
+  vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+  windowToImageFilter->SetInput(window);
+  windowToImageFilter->SetMagnification(magnification); //set the resolution of the output image
+  windowToImageFilter->Update();
 
-  writer->SetInput(imageFilter->GetOutput());
+  writer->SetFileName(filename);
+  writer->SetInput(windowToImageFilter->GetOutput());
   writer->Update();
   writer->Write();
 }

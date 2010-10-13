@@ -7,6 +7,12 @@ Edge::Edge()
 {
   node1 = -1;
   node2 = -1;
+
+  for(int i=0; i<NUM_OF_TAGS_C+1; i++)
+    {
+      tags[i] = false;
+    }
+  
 }
 
 //constructor
@@ -17,7 +23,7 @@ Edge::Edge(int nd1, int nd2, list<int> tgs)
   
   tagList=tgs;
 
-  for(int i=0; i<NUM_OF_TAGS+1; i++)
+  for(int i=0; i<NUM_OF_TAGS_C+1; i++)
     {
       tags[i] = false;
     }

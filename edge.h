@@ -4,7 +4,7 @@
 #include <list>
 #include <stdio.h>
 
-#define NUM_OF_TAGS 25
+#define NUM_OF_TAGS_C 1000
 
 using namespace std;
 
@@ -30,7 +30,7 @@ private:
   //global variables
   int node1;
   int node2;
-  bool tags[NUM_OF_TAGS+1];
+  bool tags[NUM_OF_TAGS_C+1];
   list<int> tagList;
 
 };

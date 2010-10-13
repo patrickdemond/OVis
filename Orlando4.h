@@ -36,6 +36,7 @@ public:
   void setUserStyle(userStyle* st);
   void setGraph(Graph* gra);
   void setVisualizationText(char* text);
+  void enableMenuItems(char mode);
 
 public slots:
 
@@ -45,6 +46,7 @@ public slots:
   virtual void fileSave();
   virtual void fileExit();
   virtual void saveScreenshot();
+  virtual void clearGraph();
   virtual void popUpTags();
   virtual void popUpText();
   virtual void search();
@@ -68,10 +70,24 @@ protected slots:
 private:
 
   //global variables
+  Graph* graph;
+  userStyle* style;    
+
+//file menu variables
+  QAction* a_fileOpen;
+  QAction* a_fileLoad;
+  QAction* a_fileSave;
+  QAction* a_fileExit;
+  QAction* a_editScreenshot;
+  QAction* a_editClearGraph; 
   QAction* a_names;
   QAction* a_names2;
-  Graph* graph;
-  userStyle* style;  
+  QAction* a_names3;
+  QAction* a_names4;
+  QAction* a_names5;
+  QAction* a_path;
+  QAction* a_tags;
+  QAction* a_text;
 };
 
 #endif

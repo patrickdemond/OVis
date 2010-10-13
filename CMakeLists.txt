@@ -3,6 +3,10 @@ PROJECT(test)
 
 SET(VTK_DIR /usr/lib64/vtk-5.4)
 
+if(APPLE)
+  SET(VTK_DIR /Users/Jokanee/Develop/VTKBuild)
+ENDIF(APPLE)
+
 FIND_PACKAGE(VTK REQUIRED)
 IF(NOT VTK_DIR)
   MESSAGE(FATAL_ERROR "Please set VTK_DIR.")
@@ -32,9 +36,9 @@ INCLUDE_DIRECTORIES(
 
 IF(DESIRED_QT_VERSION MATCHES 4)
 
-SET(OrlandoSrcs ${OrlandoSrcs} Orlando4.cpp Tags.cpp Path.cpp Words.cpp WordHelp.cpp Text.cpp Font.cpp)
-SET(UIS uiOrlando4.ui tags.ui path.ui words.ui wordHelp.ui text.ui font.ui)
-SET (OrlandoHeaders Orlando4.h Tags.h Path.h Words.h WordHelp.h Text.h Font.h)
+SET(OrlandoSrcs ${OrlandoSrcs} Orlando4.cpp Tags.cpp Path.cpp Words.cpp WordHelp.cpp Text.cpp Font.cpp Screenshot.cpp)
+SET(UIS uiOrlando4.ui tags.ui path.ui words.ui wordHelp.ui text.ui font.ui screenshot.ui)
+SET (OrlandoHeaders Orlando4.h Tags.h Path.h Words.h WordHelp.h Text.h Font.h Screenshot.h)
 QT4_WRAP_UI(UIHeaders ${UIS})
 QT4_WRAP_CPP(MOCSrcs ${OrlandoHeaders} )
 ADD_DEFINITIONS(-DQT_GUI_LIBS -DQT_CORE_LIB -DQT3_SUPPORT)
@@ -53,13 +57,13 @@ IF (${CMAKE_BUILD_TOOL} MATCHES "devenv")
   SET (TagSrcs ${TagSrcs} ${UIS})
 ENDIF (${CMAKE_BUILD_TOOL} MATCHES "devenv")
 
-ADD_EXECUTABLE(tst MACOSX_BUNDLE ${OrlandoSrcs} ${UISrcs} ${MOCSrcs})
+ADD_EXECUTABLE(orlandoVision MACOSX_BUNDLE ${OrlandoSrcs} ${UISrcs} ${MOCSrcs})
 
-SET_TARGET_PROPERTIES(tst PROPERTIES SKIP_BUILD_RPATH ON COMPILE_FLAGS -pg  LINK_FLAGS -pg)
+SET_TARGET_PROPERTIES(orlandoVision PROPERTIES SKIP_BUILD_RPATH ON) # COMPILE_FLAGS -pg  LINK_FLAGS -pg)
 
 #COMPILE_FLAGS -pg  LINK_FLAGS -pg
 
-TARGET_LINK_LIBRARIES( tst
+TARGET_LINK_LIBRARIES( orlandoVision
   QVTK
   ${QT_LIBRARIES}
   vtkRendering

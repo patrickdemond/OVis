@@ -73,7 +73,7 @@ void Name::clearFileSpots()
 {
   fileSpots.clear();
   int i = 0;
-  for(int i=0; i<NUM_OF_TAGS; i++)
+  for(int i=0; i<NUM_OF_TAGS_C; i++)
     {
       tags[i] = false;
     }

@@ -59,6 +59,7 @@ private:
   bool search;    //bool for Search on or off
   bool act;       //bool for Graph  on or off
   bool dim;       //bool for 3D mouse on or off
+  bool shift;     //bool for indicating whether the shift key is currently pressed
   vtkInteractorStyleJoystickCamera *joyCam; 
   QVTKInteractor *inter;
   vtkRenderWindow *wind;

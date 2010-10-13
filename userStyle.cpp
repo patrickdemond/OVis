@@ -13,6 +13,7 @@ userStyle::userStyle(QVTKInteractor* interact, vtkRenderWindow* window, Graph* g
   toggle = false;
   search = false;
   path = false;
+  shift = false;
   
   //set global variables to passed in objects
   gra = grap;
@@ -52,7 +53,7 @@ void userStyle::setToggle(bool nw)
   gra->toggle(0,0);
   
   //draw selected node
-  gra->select();
+  gra->select(shift);
 
   //render window
   gra->renderWin();     
@@ -84,7 +85,7 @@ void userStyle::setHighlight(bool nw)
   //gra->drawHighlighted();
 
   //draw selected node
-  gra->select();
+  gra->select(false);
 
   //render window
   gra->renderWin();
@@ -152,8 +153,8 @@ void userStyle::setGraph(bool nw)
   path = false;
 
  //draw selected node
-  gra->select();
-     
+  gra->select(false);
+   
   if(gra->getMode() != 'p')
     {
       //render window
@@ -222,11 +223,32 @@ void userStyle::OnTimer()
 //Function to do nothing when key is down
 void userStyle::OnKeyDown()
 {
+  
+  inter->Disable();
+
+
+  if(string(inter->GetKeySym()) == "Shift_L")
+  {
+    shift = true;
+  }
+
+  inter->Enable();
+
 }
 
 //Function to do nothing when key is up
 void userStyle::OnKeyUp()
 {
+
+  inter->Disable();
+
+  if(string(inter->GetKeySym()) == "Shift_L")
+  {
+    shift = false;
+  }
+
+  inter->Enable();
+
 }
 
 //Function to do nothing when key is released
@@ -256,9 +278,27 @@ void userStyle::OnLeftButtonDown()
 
   //get mouse coordinates
   inter->GetEventPosition(x, y);
+
   
   //turn name on/off at position
   gra->nameOnOff(true,x,y);
+
+  if(shift)
+  {
+	//SELECTED is set in nodeatpos in graph.cpp
+      //int* to hold window size
+      int* coords;
+      
+      //get window size
+      coords = wind->GetSize();
+
+ // Need to temporary selected node like "nodeAtPos" to correctly add it to the selected list.
+ gra->nodeAtPosNoSelect(x,y);
+ gra->shiftSelect(shift);   
+ 
+  }
+  else
+  {
 
   //if path is off
   if(!path)
@@ -275,7 +315,7 @@ void userStyle::OnLeftButtonDown()
 	  //set toggle for mouse position
 	  gra->toggle(x,y);
 	  //draw selected node
-	  gra->select();
+	  gra->select(shift);
 	}
       //if graph mode is enabled select node and display node information
       else if(act)
@@ -283,7 +323,7 @@ void userStyle::OnLeftButtonDown()
 	  //display the node information at mouse coordinates
 	  gra->displayNdInfo(x,y);
 	  //draw selected node
-	  gra->select();	
+	  gra->select(shift);	
 	}
       //if highlight is on
       else if(highlight)
@@ -291,10 +331,10 @@ void userStyle::OnLeftButtonDown()
 	  //highlight at the mouse coordinates
 	  gra->highlight(x,y);
 	  //draw selected node
-	  gra->select();
+	  gra->select(shift);
 	}
     }
-
+  }
   //enable user interaction
   inter->Enable();
 }
@@ -321,7 +361,7 @@ void userStyle::OnMiddleButtonDown()
       gra->toggle(x,y);
 
       //draw selected node
-      gra->select();
+      gra->select(false);
     }
   //if graph mode is on move the node
   else if(act)
@@ -339,7 +379,7 @@ void userStyle::OnMiddleButtonDown()
       gra->displayNdInfo(x,y);
 
       //draw selected node
-      gra->select();
+      gra->select(false);
     }
 
   //turn path to false
@@ -376,7 +416,7 @@ void userStyle::OnMiddleButtonUp()
       gra->toggle(x,y);
 
       //draw selected node
-      gra->select();
+      gra->select(false);
     }
   //if graph mode is on change the position of the node
   else if(act)
@@ -402,7 +442,7 @@ void userStyle::OnMiddleButtonUp()
       gra->redrawGraph();
 
       //draw selected node
-      gra->select();
+      gra->select(false);
     }
 
   //enable user interaction

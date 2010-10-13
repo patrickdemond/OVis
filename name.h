@@ -9,7 +9,7 @@
 #include <cmath>
 #include <list>
 
-#define NUM_OF_TAGS 25
+#define NUM_OF_TAGS_C 1000
 
 using namespace std;
 
@@ -37,7 +37,7 @@ class Name
   void clearFileSpots();
   int keyNum;
   list<int> fileSpots;
-  bool tags[NUM_OF_TAGS]; 
+  bool tags[NUM_OF_TAGS_C]; 
 };
 
 #endif

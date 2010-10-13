@@ -17,6 +17,7 @@ Tags::Tags(QWidget* parent)
   connect(toolButton, SIGNAL(pressed()), this, SLOT(loadCols()));
   connect(toolButton_2, SIGNAL(pressed()), this, SLOT(saveCols()));
   connect(listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(changeSelPal(QListWidgetItem*)));
+  connect(checkBox, SIGNAL(clicked()), this, SLOT(checkUncheckAll()));
 
   //turn on extended selection for the list
   //listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -27,6 +28,26 @@ Tags::Tags(QWidget* parent)
   listWidget->setPalette(pal);*/
 
 };
+
+void Tags::checkUncheckAll()
+{
+  bool checked = checkBox->isChecked();
+
+  if(checked)
+    {
+      for(int i=0; i<listWidget->count(); i++)
+	{
+	  (listWidget->item(i))->setCheckState(Qt::Checked);
+	}
+    }
+  else 
+    {
+      for(int i=0; i<listWidget->count(); i++)
+	{
+	  (listWidget->item(i))->setCheckState(Qt::Unchecked);
+	}
+    }
+}
 
 void Tags::changeSelPal(QListWidgetItem* tagToChange)
 {  

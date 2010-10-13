@@ -2,7 +2,7 @@
 #define GRAPH_H
 
 #define NUM_OF_NAMES_C 30000
-#define NUM_OF_TAGS 25
+#define NUM_OF_TAGS_C 1000
 #define ARIAL 0
 #define COURIER 1
 #define TIMES 2
@@ -71,6 +71,7 @@
 #include "vtkMatrix4x4.h"
 #include "vtkCaptionActor2D.h"
 #include "vtkLinearTransform.h"
+#include "vtkSmartPointer.h"
 #include "node.h"
 #include "name.h"
 #include "edge.h"
@@ -82,6 +83,10 @@
 #include <QPushButton>
 #include <QtGui>
 #include <QProgressBar>
+#include <QRegExp>
+#include <QString>
+#include <QTextCursor>
+#include <QTextCharFormat>
 
 using namespace std;
 
@@ -90,6 +95,7 @@ class Graph
 
 public:
   Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label, QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind);
+  void initTags();
   void saveFile(char* filename);
   void loadFile(char* filename);
   void loadXML(char* filename);
@@ -101,8 +107,14 @@ public:
   void loadExc(char* filename);
   void saveNamesOn(char* filename);
   void loadNamesOn(char* filename);
+  void saveLineNum(char* filename);
+  void loadLineNum(char* filename);
   void saveTagsUsed(char* filename);
   void loadTagsUsed(char* filename);
+  void saveEntries(char* filename);
+  void loadEntries(char* filename);
+  void saveFormatting(char* filename);
+  void loadFormatting(char* filename);
   void saveTogOn(char* filename);
   void loadTogOn(char* filename);
   void saveTogCon(char* filename);
@@ -111,7 +123,9 @@ public:
   void loadTagsOn(char* filename);
   void SaveNodePos(char* filename);
   void GetNodePos(char* filename);
-  int nodeAtPos(int a, int b, bool setSel);
+  void clearGraph();
+  int nodeAtPos(int a, int b, bool setSel); 
+  int nodeAtPosNoSelect(int a, int b);
   void moveNode(int a, int b);
   void changeToPos(int a, int b);
   bool findAllPaths(int startNode, int nodeToFind, list<int> pth, int cutoff, bool display);
@@ -141,7 +155,8 @@ public:
   void drawText(float dt, char* nam, int offset, bool col);
   void textSetUp();
   void rendSetUp();
-  void select();
+  void select(bool shift);
+  void shiftSelect(bool shift);
   void turnOnOffTag(int tagNum);
   void display();
   void resetSearch();
@@ -157,6 +172,7 @@ public:
   void destroyName();
   void highlightNode(int x, int y);
   void allNamesOn(bool all);
+  void selectedNodesOn();
   void allNamesOff(bool nw);
   void nameOnOff(bool on, int a, int b);
   void nameOnOff(bool on, char* nm);
@@ -211,7 +227,7 @@ public:
   void redrawNameTags();
   void deselect(int x, int y);
   void setTitleText();
-  void saveScreenshot(char* filename, int filetype);
+  void saveScreenshot(char* filename, int filetype, int magnification);
 
 private:  
   int lineNum[NUM_OF_NAMES_C];
@@ -228,6 +244,7 @@ private:
   char mode;
   char prevMode;
   char* orlandoDataName;
+  int NUM_OF_TAGS;
   int NUM_OF_NAMES;
   bool found;
   bool donePth[NUM_OF_NAMES_C];
@@ -248,10 +265,10 @@ private:
   int length;
   bool con[NUM_OF_NAMES_C][NUM_OF_NAMES_C];
   bool ndCon[NUM_OF_NAMES_C];
-  char* tags [NUM_OF_TAGS+1];
+  char* tags [NUM_OF_TAGS_C+1];
   bool toggleConnected[NUM_OF_NAMES_C];
   list<int> toggledOn;
-  bool tagOn[NUM_OF_TAGS+1];
+  bool tagOn[NUM_OF_TAGS_C+1];
   int ndToMove;
   char* names[NUM_OF_NAMES_C];
   char searchString[1000];
@@ -266,7 +283,9 @@ private:
   int y;
   int z;
   int selected;
+  int shiftSelected;
   int oldSelected;
+  list<int> selectedNodes;
   Node* graph1[NUM_OF_NAMES_C];
   int* stInd;  int* endInd;
   int* nameInd;
@@ -297,7 +316,7 @@ private:
   vtkPolyDataMapper* mapper1;
   vtkLineSource* line1;  
   vtkPolyDataMapper* mapper2;
-  double tagCols[NUM_OF_TAGS+1][3];
+  double tagCols[NUM_OF_TAGS_C+1][3];
   bool onlyEntries;
   bool captionBold;
   bool captionItalic;
