@@ -8,19 +8,19 @@
 #include "vtkRenderWindowInteractor.h"
 #include "vtkRenderWindow.h"
 #include <stdio.h>
-#include "graph.h"
+#include "ovGraph.h"
 
 using namespace std;
 
-class userStyle : public vtkInteractorStyleJoystickCamera
+class ovUserStyle : public vtkInteractorStyleJoystickCamera
 {
 
 public:
   //constructor
-  userStyle(QVTKInteractor* interact, vtkRenderWindow* window, Graph* grap);
+  ovUserStyle( QVTKInteractor* interact, vtkRenderWindow* window, ovGraph* grap );
 
   //destructor
-  ~userStyle();
+  ~ovUserStyle();
 
   //event methods
   void OnTimer();
@@ -38,10 +38,10 @@ public:
   void OnMouseWheelBackward();
 
   //set bools
-  void setGraph(bool nw);
+  void setGraph( bool nw );
   void setCamera();
-  void setHighlight(bool nw);
-  void setToggle(bool nw);
+  void setHighlight( bool nw );
+  void setToggle( bool nw );
 
   //get bools
   bool getGraph();
@@ -52,7 +52,7 @@ public:
   
 private:
   //global variables
-  Graph* gra;
+  ovGraph* gra;
   bool highlight; //bool for highlight on or off
   bool path;      //bool for path on or off
   bool toggle;    //bool for Toggle on or off

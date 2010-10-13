@@ -4,45 +4,45 @@
 #include <list>
 #include <stdio.h>
 #include "vtkActor.h"
-#include "edge.h"
+#include "ovEdge.h"
 
 using namespace std;
 
-class Node
+class ovNode
 {
 
 public:
   //constructor
-  Node();
+  ovNode();
   //destructor
-  ~Node();
+  ~ovNode();
   //constructor with int k as key
-  Node(int k);
-  void SetKey(int i);
-  bool operator==(const Node &a);
-  void setCenter(int i,int j, int k);
+  ovNode( int k );
+  void SetKey( int i );
+  bool operator==( const ovNode &a );
+  void setCenter( int i, int j, int k );
   int getX() const;
   int getY() const;
   int getZ() const;
-  void addChild(Edge e);
+  void addChild( ovEdge e );
   int numOfChildren();
   int getKey() const;
   bool visited();
-  void setVisited(bool b);
-  list<Edge> getChildren();
+  void setVisited( bool b );
+  list<ovEdge> getChildren();
   void resetChildren();
   int connectivity();
   void resetConnectivity();
   vtkActor* getSphereActor();
   list<vtkActor*> getEdgeActors();
-  void setSphereActor(vtkActor* vtkA);
+  void setSphereActor( vtkActor* vtkA );
   void resetEdgeActors();
-  void addEdgeActor(vtkActor* vtkA);
-  void removeEdgeActor(vtkActor* vtkA);
+  void addEdgeActor( vtkActor* vtkA );
+  void removeEdgeActor( vtkActor* vtkA );
 
 private:
   //global variables
-  list<Edge> children;
+  list<ovEdge> children;
   list<vtkActor*> vtkActorEdges;
   vtkActor* vtkAct;
   int x;

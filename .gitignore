@@ -1,11 +1,2 @@
 *~
 #*
-*.cxx
-ui_*
-*.cmake
-gmon.out
-CMakeFiles
-Makefile
-CMakeCache.txt
-tst
-Resources

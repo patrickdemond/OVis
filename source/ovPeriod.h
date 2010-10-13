@@ -3,26 +3,25 @@
 
 #include <list>
 #include <stdio.h>
-#include "date.h"
+#include "ovDate.h"
 
 using namespace std;
 
-class Period
+class ovPeriod
 {
 
 public:
   //constructor
-  Period(char* p);
+  ovPeriod( char* p );
   //destructor
-  ~Period();
-  Date* getStartDate();
-  Date* getEndDate();
+  ~ovPeriod();
+  ovDate* getStartDate();
+  ovDate* getEndDate();
   char* getTitle();
 
 private:
-  //global variables
-  Date* startDate;
-  Date* endDate;
+  ovDate* startDate;
+  ovDate* endDate;
   char* title;
 };
 

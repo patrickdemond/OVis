@@ -1,49 +1,49 @@
-#include "period.h"
+#include "ovPeriod.h"
 
 //using namespace std;
 
 //constructor
-Period::Period(char* p)
+ovPeriod::ovPeriod( char* p )
 {
-  printf("\n\n\n");
-  fflush(stdout);
+  printf( "\n\n\n" );
+  fflush( stdout );
 
-  strtok(p, "\"");
-  char* str1 = strtok(NULL, "\""); 
-  strtok(NULL, "\"");
+  strtok( p, "\"" );
+  char* str1 = strtok( NULL, "\"" ); 
+  strtok( NULL, "\"" );
 
-  char* str2 = strtok(NULL, "\">");
+  char* str2 = strtok( NULL, "\">" );
 
-  char* str3 = strtok(NULL, "><");
+  char* str3 = strtok( NULL, "><" );
 
-  title = strdup(str3);
+  title = strdup( str3 );
 
-  /*printf("title: ");
-  printf(str3);
-  printf(title);
-  fflush(stdout);*/
+  /*printf( "title: " );
+  printf( str3 );
+  printf( title );
+  fflush( stdout );*/
 
-  startDate = new Date(str1, true);
-  endDate = new Date(str2, false);
+  startDate = new ovDate( str1, true );
+  endDate = new ovDate( str2, false );
 }
 
 //destructor
-Period::~Period()
+ovPeriod::~ovPeriod()
 {
-  free(title);
+  free( title );
 }
 
-Date* Period::getStartDate()
+ovDate* ovPeriod::getStartDate()
 {
   return startDate;
 }
 
-Date* Period::getEndDate()
+ovDate* ovPeriod::getEndDate()
 {
   return endDate;
 }
 
-char* Period::getTitle()
+char* ovPeriod::getTitle()
 {
   return title;
 }

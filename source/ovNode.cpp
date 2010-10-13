@@ -1,19 +1,19 @@
-#include "node.h"
+#include "ovNode.h"
 
 //using namespace std;
 
 //constructor
-Node::Node()
+ovNode::ovNode()
 {
 }
 
 //destructor
-Node::~Node()
+ovNode::~ovNode()
 {
 }
 
 //constructor with int k for the key
-Node::Node(int k)
+ovNode::ovNode( int k )
 {
   key = k;
   con = true;
@@ -21,19 +21,19 @@ Node::Node(int k)
   
 }
 
-void Node::SetKey(int i)
+void ovNode::SetKey( int i )
 {
   key = i;
 }
 
 //returns whether the node has been visited
-bool Node::visited()
+bool ovNode::visited()
 {
   return visit;
 }
 
 //set visited to assigned value b
-void Node::setVisited(bool b)
+void ovNode::setVisited( bool b )
 {
   visit = b;
 }
@@ -41,26 +41,26 @@ void Node::setVisited(bool b)
 //check to see if the node is equal
 //if equal return true
 //else return false
-bool Node::operator==(const Node &a)
+bool ovNode::operator==( const ovNode &a )
 {
-  if(a.getKey() == key)
+  if( a.getKey() == key )
     {
-      if( a.getX() == x)
-	{
-	  if(a.getY() == y)
-	    {
-	      if(a.getZ() == z)
-		{
-		  return true;
-		}
-	    }
-	}
+      if( a.getX() == x )
+  {
+    if( a.getY() == y )
+      {
+        if( a.getZ() == z )
+    {
+      return true;
+    }
+      }
+  }
     }
   return false;
 }
 
-//set the center of the node to i,j,k
-void Node::setCenter( int i, int j, int k)
+//set the center of the node to i, j, k
+void ovNode::setCenter( int i, int j, int k )
 {
   x = i;
   y = j;
@@ -68,58 +68,58 @@ void Node::setCenter( int i, int j, int k)
 }
     
 //return the x coordinate of the center
-int Node::getX() const
+int ovNode::getX() const
 {
   return x;
 }
     
 //return the y coordinate of the center
-int Node::getY() const
+int ovNode::getY() const
 {
   return y;
 }
 
 //return the z coordinate of the center
-int Node::getZ() const
+int ovNode::getZ() const
 {
   return z;
 }
 
 //add the child ch to node's children 
-void Node::addChild(Edge ch)
+void ovNode::addChild( ovEdge ch )
 {
   con = true;
-  children.push_back(ch);
+  children.push_back( ch );
 }
 
 //return the number of children
-int Node::numOfChildren()
+int ovNode::numOfChildren()
 {
   return children.size();
 }
 
 //return the key
-int Node::getKey() const
+int ovNode::getKey() const
     {
-	return key;
+  return key;
     }
 
 //return the list of children
-list<Edge> Node::getChildren()
+list<ovEdge> ovNode::getChildren()
 {
   return children;
 }
 
 //reset the children
-void Node::resetChildren()
+void ovNode::resetChildren()
 {
   children.clear();
 }
 
 //return the number of nodes connected to the node 
-int Node::connectivity()
+int ovNode::connectivity()
 {
-  if(con)
+  if( con )
     {
       return numOfChildren();
     }
@@ -128,39 +128,39 @@ int Node::connectivity()
 }
 
 //reset connectivity
-void Node::resetConnectivity()
+void ovNode::resetConnectivity()
 {
   con = false;
 }
 
-vtkActor* Node::getSphereActor()
+vtkActor* ovNode::getSphereActor()
 {
   return vtkAct;
 }
 
-list<vtkActor*> Node::getEdgeActors()
+list<vtkActor*> ovNode::getEdgeActors()
 {
   return vtkActorEdges;
 }
 
-void Node::setSphereActor(vtkActor* vtkA)
+void ovNode::setSphereActor( vtkActor* vtkA )
 {
   vtkAct = vtkA;
 }
 
-void Node::resetEdgeActors()
+void ovNode::resetEdgeActors()
 {
   vtkActorEdges.clear();
 }
 
-void Node::addEdgeActor(vtkActor* vtkA)
+void ovNode::addEdgeActor( vtkActor* vtkA )
 {
-  vtkActorEdges.push_back(vtkA);
+  vtkActorEdges.push_back( vtkA );
 }
 
-void Node::removeEdgeActor(vtkActor* vtkA)
+void ovNode::removeEdgeActor( vtkActor* vtkA )
 {
-  vtkActorEdges.remove(vtkA);
+  vtkActorEdges.remove( vtkA );
 }
 
 

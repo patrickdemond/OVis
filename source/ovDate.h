@@ -8,17 +8,17 @@
 
 using namespace std;
 
-class Date
+class ovDate
 {
 
 public:
   //constructors
-  Date(int yr, int mnth, int dy);
-  Date(char* dt, bool start);
+  ovDate( int yr, int mnth, int dy );
+  ovDate( char* dt, bool start );
   //destructor
-  ~Date();
-  bool lessThan(Date* dt);
-  bool greaterThan(Date* dt);
+  ~ovDate();
+  bool lessThan( ovDate* dt );
+  bool greaterThan( ovDate* dt );
   int GetYear();
   int GetMonth();
   int GetDay();

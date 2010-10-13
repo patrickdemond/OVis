@@ -1,166 +1,167 @@
 #include <qapplication.h>
 #include <qfiledialog.h>
-#include "Tags.h"
-#include "graph.h"
+#include "ovQTags.h"
+
+#include "source/ovGraph.h"
 
 //tag constructor
-Tags::Tags(QWidget* parent)
-  : QDialog(parent)
+ovQTags::ovQTags( QWidget* parent )
+  : QDialog( parent )
 {
   //set up the user interface
-  setupUi(this);
+  setupUi( this );
 
   //connect the signals to the new slots
-  connect(buttonBox, SIGNAL(accepted()), this, SLOT(tagOk()));
-  connect(buttonBox, SIGNAL(rejected()), this, SLOT(tagCancel()));
-  connect(listWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(changeTagCol(QListWidgetItem*)));
-  connect(toolButton, SIGNAL(pressed()), this, SLOT(loadCols()));
-  connect(toolButton_2, SIGNAL(pressed()), this, SLOT(saveCols()));
-  connect(listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(changeSelPal(QListWidgetItem*)));
-  connect(checkBox, SIGNAL(clicked()), this, SLOT(checkUncheckAll()));
+  connect( buttonBox, SIGNAL( accepted() ), this, SLOT( tagOk() ));
+  connect( buttonBox, SIGNAL( rejected() ), this, SLOT( tagCancel() ));
+  connect( listWidget, SIGNAL( itemDoubleClicked( QListWidgetItem* )), this, SLOT( changeTagCol( QListWidgetItem* )) );
+  connect( toolButton, SIGNAL( pressed() ), this, SLOT( loadCols() ));
+  connect( toolButton_2, SIGNAL( pressed() ), this, SLOT( saveCols() ));
+  connect( listWidget, SIGNAL( itemClicked( QListWidgetItem* )), this, SLOT( changeSelPal( QListWidgetItem* )) );
+  connect( checkBox, SIGNAL( clicked() ), this, SLOT( checkUncheckAll() ));
 
   //turn on extended selection for the list
-  //listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  //listWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
 
   /*  QPalette pal = listWidget->palette();
-  pal.setBrush(QPalette::Highlight, Qt::gray);
-  //pal.setAlpha(10);
-  listWidget->setPalette(pal);*/
+  pal.setBrush( QPalette::Highlight, Qt::gray );
+  //pal.setAlpha( 10 );
+  listWidget->setPalette( pal );*/
 
 };
 
-void Tags::checkUncheckAll()
+void ovQTags::checkUncheckAll()
 {
   bool checked = checkBox->isChecked();
 
-  if(checked)
+  if( checked )
     {
-      for(int i=0; i<listWidget->count(); i++)
-	{
-	  (listWidget->item(i))->setCheckState(Qt::Checked);
-	}
+      for( int i=0; i<listWidget->count(); i++ )
+  {
+    ( listWidget->item( i ))->setCheckState( Qt::Checked );
+  }
     }
   else 
     {
-      for(int i=0; i<listWidget->count(); i++)
-	{
-	  (listWidget->item(i))->setCheckState(Qt::Unchecked);
-	}
+      for( int i=0; i<listWidget->count(); i++ )
+  {
+    ( listWidget->item( i ))->setCheckState( Qt::Unchecked );
+  }
     }
 }
 
-void Tags::changeSelPal(QListWidgetItem* tagToChange)
+void ovQTags::changeSelPal( QListWidgetItem* tagToChange )
 {  
   /*//QPalette pal = listWidget->palette();
   
-  int index = listWidget->row(tagToChange);
-			      
-  double* oldCol = graph->getColor(index);
+  int index = listWidget->row( tagToChange );
+            
+  double* oldCol = graph->getColor( index );
   
   //QColor* col = new QColor();
-  //col->setRed((int)(oldCol[0]*255));
-  //col->setGreen((int)(oldCol[1]*255));
-  //col->setBlue((int)(oldCol[2]*255));
+  //col->setRed( (int )( oldCol[0]*255 ));
+  //col->setGreen( (int )( oldCol[1]*255 ));
+  //col->setBlue( (int )( oldCol[2]*255 ));
   //col->setAlpha();
-  //pal.setBrush(QPalette::HighlightedText, *col);
-  //listWidget->setPalette(pal);
+  //pal.setBrush( QPalette::HighlightedText, *col );
+  //listWidget->setPalette( pal );
   
-  listWidget->setStyleSheet("*{selection-background-color: rgb(" + QString::number(oldCol[0]*255) + "," + QString::number(oldCol[1]*255) + "," + QString::number(oldCol[2]*255) + ")}");
+  listWidget->setStyleSheet( "*{selection-background-color: rgb( " + QString::number( oldCol[0]*255 ) + ", " + QString::number( oldCol[1]*255 ) + ", " + QString::number( oldCol[2]*255 ) + " )}" );
   */
 
-  if(tagToChange->checkState())
+  if( tagToChange->checkState() )
     {
-      tagToChange->setCheckState(Qt::Unchecked);
+      tagToChange->setCheckState( Qt::Unchecked );
     }
   else
     {
-      tagToChange->setCheckState(Qt::Checked);
+      tagToChange->setCheckState( Qt::Checked );
     }
 }
 
-void Tags::changeTagCol(QListWidgetItem* tagToChange)
+void ovQTags::changeTagCol( QListWidgetItem* tagToChange )
 {
-  int index = listWidget->row(tagToChange);
+  int index = listWidget->row( tagToChange );
 
-  double* oldCol = graph->getColor(index);
+  double* oldCol = graph->getColor( index );
   
   QColor* tagCol = new QColor();
-  tagCol->setRed((int)(oldCol[0]*255));
-  tagCol->setGreen((int)(oldCol[1]*255));
-  tagCol->setBlue((int)(oldCol[2]*255));
+  tagCol->setRed( (int )( oldCol[0]*255 ));
+  tagCol->setGreen( (int )( oldCol[1]*255 ));
+  tagCol->setBlue( (int )( oldCol[2]*255 ));
   
-  QColor col = QColorDialog::getColor(*tagCol, this);
+  QColor col = QColorDialog::getColor( *tagCol, this );
 
-  if(col.red() != col.blue() != col.green() != 0)
+  if( col.red() != col.blue() != col.green() != 0 )
     {
-      graph->setNewTagCol(index, col.red(), col.green(), col.blue());
-      tagToChange->setBackgroundColor(col);
+      graph->setNewTagCol( index, col.red(), col.green(), col.blue() );
+      tagToChange->setBackgroundColor( col );
 
       
     }
 }
 
-void Tags::loadCols()
+void ovQTags::loadCols()
 {
-  QString str = QFileDialog::getOpenFileName(this, tr("Open File"), "Resources", tr("Tag Colour Files (*.tagCols)"));
+  QString str = QFileDialog::getOpenFileName( this, tr( "Open File" ), "resources", tr( "Tag Colour Files ( *.tagCols )" ));
 
-  if(str != "")
+  if( str != "" )
     {
-      char* fname = (char*) calloc(1000, sizeof(char));
-      sprintf(fname, str);
-      graph->setDefaultColors(fname);
+      char* fname = ( char* ) calloc( 1000, sizeof( char ));
+      sprintf( fname, str );
+      graph->setDefaultColors( fname );
     }
 
-  for(int i=0; i<listWidget->count(); i++)
+  for( int i=0; i<listWidget->count(); i++ )
     {
-      double* col = graph->getColor(i);
+      double* col = graph->getColor( i );
   
       QColor* tagCol = new QColor();
-      tagCol->setRed((int)(col[0]*255));
-      tagCol->setGreen((int)(col[1]*255));
-      tagCol->setBlue((int)(col[2]*255));
+      tagCol->setRed( (int )( col[0]*255 ));
+      tagCol->setGreen( (int )( col[1]*255 ));
+      tagCol->setBlue( (int )( col[2]*255 ));
 
-      (listWidget->item(i))->setBackground(*tagCol);
+      ( listWidget->item( i ))->setBackground( *tagCol );
     }
 }
 
-void Tags::saveCols()
+void ovQTags::saveCols()
 {
-  QString str = QFileDialog::getSaveFileName(this, tr("Save File"), "Resources", tr("Tag Colour Files (*.tagCols)"));
+  QString str = QFileDialog::getSaveFileName( this, tr( "Save File" ), "resources", tr( "Tag Colour Files ( *.tagCols )" ));
 
-  if(str != "")
+  if( str != "" )
     {
-      char* fname = (char*) calloc(1000, sizeof(char));
-      sprintf(fname, str);
-      if(strstr(fname, ".tagCols") == NULL)
-	{
-	  strcat(fname, ".tagCols");
-	}
+      char* fname = ( char* ) calloc( 1000, sizeof( char ));
+      sprintf( fname, str );
+      if( strstr( fname, ".tagCols" ) == NULL )
+  {
+    strcat( fname, ".tagCols" );
+  }
 
-      graph->saveTagColors(fname);
+      graph->saveTagColors( fname );
     }
 }
 
 //return tag list widget
-QListWidget* Tags::getTagList()
+QListWidget* ovQTags::getTagList()
 {
   return listWidget;
 }
 
 //set the graph
-void Tags::setGraph(Graph* g)
+void ovQTags::setGraph( ovGraph* g )
 {
   graph = g;
 }
 
 //return true if continue is on, false otherwise
-bool Tags::getContinue()
+bool ovQTags::getContinue()
 {
   return continueTrue;
 }
 
 //if cancel is pressed
-void Tags::tagCancel()
+void ovQTags::tagCancel()
 {
   //set continue to false
   continueTrue = false;
@@ -170,7 +171,7 @@ void Tags::tagCancel()
 }
 
 //if ok is pressed
-void Tags::tagOk()
+void ovQTags::tagOk()
 {    
   //list<char*> to hold the tags that are turned on
   list<char*> strs;
@@ -178,30 +179,30 @@ void Tags::tagOk()
 
   QList<QListWidgetItem*> tgs;
 
-  for(int i=0; i<listWidget->count(); i++)
+  for( int i=0; i<listWidget->count(); i++ )
     {
-      if(listWidget->item(i)->checkState())
-	{
-	  tgs.push_back(listWidget->item(i));
-	}
+      if( listWidget->item( i )->checkState() )
+  {
+    tgs.push_back( listWidget->item( i ));
+  }
     }
 
   //iterator to go through list
   QList<QListWidgetItem*>::iterator it;
 
   //for the selected items in the list
-  for(it=tgs.begin(); it!=tgs.end(); it++)
+  for( it=tgs.begin(); it!=tgs.end(); it++ )
     {
       //char* to hold item
-      char* str = (char*) calloc(1000, sizeof(char));
+      char* str = ( char* ) calloc( 1000, sizeof( char ));
       //print text of item to string
-      sprintf(str, (*it)->text());
+      sprintf( str, ( *it )->text() );
       //push string into list
-      strs.push_back(str);   
+      strs.push_back( str );   
       }
 
   //set tags to the strings
-  graph->setTags(strs);
+  graph->setTags( strs );
 
   //set continue to true
   continueTrue = true;

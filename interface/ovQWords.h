@@ -1,16 +1,17 @@
 #ifndef PATH_H
 #define PATH_H
 
-#include "ui_words.h"
+#include "ui_ovQWords.h"
 #include <iostream>
 #include "QVTKWidget.h"
-#include "graph.h"
-#include "WordHelp.h"
-#include "period.h"
-#include "date.h"
+#include "ovQWordHelp.h"
+
+#include "source/ovGraph.h"
+#include "source/ovPeriod.h"
+#include "source/ovDate.h"
 
 //dialog for tag selection
-class Words : public QDialog, private Ui_WordsDialog
+class ovQWords : public QDialog, private Ui_WordsDialog
 {
   Q_OBJECT
 
@@ -18,17 +19,17 @@ public:
   
   //constructor
   
-  Words(Graph* g,QWidget* parent = 0);
+  ovQWords( ovGraph* g, QWidget* parent = 0 );
   //destructor
-  ~Words(){};
+  ~ovQWords(){};
 
   //functions
   QWidget* getParent();
-  void checkDates(Date* dt1, Date* dt2);
+  void checkDates( ovDate* dt1, ovDate* dt2 );
   void setUpCombo1();
   void setUpCombo2();
-  void getHistorical(char* filename);
-  void getMonarch(char* filename);
+  void getHistorical( char* filename );
+  void getMonarch( char* filename );
 
 public slots:
 
@@ -36,8 +37,8 @@ public slots:
   virtual void wordsCancel();
   virtual void wordsOk();
   virtual void wordHelp();
-  virtual void setIndex1(int i);
-  virtual void setIndex2(int i);
+  virtual void setIndex1( int i );
+  virtual void setIndex2( int i );
 
 protected:
 
@@ -46,11 +47,11 @@ protected slots:
 private:
 
   //global variables
-  Graph* graph;
+  ovGraph* graph;
   int index1;
   int index2;
-  list<Period*> historical;
-  list<Period*> monarch;
+  list<ovPeriod*> historical;
+  list<ovPeriod*> monarch;
 };
 
 #endif

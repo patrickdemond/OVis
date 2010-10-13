@@ -1,20 +1,20 @@
 #include <qapplication.h>
 #include <qfiledialog.h>
-#include "WordHelp.h"
+#include "ovQWordHelp.h"
 
 //tag constructor
-WordHelp::WordHelp(QWidget* parent)
-  : QDialog(parent)
+ovQWordHelp::ovQWordHelp( QWidget* parent )
+  : QDialog( parent )
 {
   //set up the user interface
-  setupUi(this);
+  setupUi( this );
 
   //connect the signals to the new slots
-  connect(pushButton, SIGNAL(pressed()), this, SLOT(wordHelpOk()));
+  connect( pushButton, SIGNAL( pressed() ), this, SLOT( wordHelpOk() ));
 };
 
 //if ok is pressed
-void WordHelp::wordHelpOk()
+void ovQWordHelp::wordHelpOk()
 { 
   //hide this widget
   this->hide();

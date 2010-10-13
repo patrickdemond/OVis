@@ -13,7 +13,7 @@
 
 using namespace std;
 
-class Name
+class ovName
 {
  private:
   //global variables
@@ -21,15 +21,15 @@ class Name
 
  public: 
   //constructor
-  Name();
+  ovName();
   
   //destructor
-  ~Name();
+  ~ovName();
 
-  void setKeyNum(int i);
-  void setKey(char* k);
-  void addFileSpot(int fs);
-  void checkTag(int ln1, int ln2, int tagNum);
+  void setKeyNum( int i );
+  void setKey( char* k );
+  void addFileSpot( int fs );
+  void checkTag( int ln1, int ln2, int tagNum );
   int getKeyNum();
   char* getKey();
   list<int> getFileSpots();

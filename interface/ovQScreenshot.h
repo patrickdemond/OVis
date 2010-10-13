@@ -1,20 +1,21 @@
 #ifndef SCREENSHOT_H
 #define SCREENSHOT_H
 
-#include "ui_screenshot.h"
+#include "ui_ovQScreenshot.h"
 #include "QVTKWidget.h"
-#include "graph.h"
+
+#include "source/ovGraph.h"
 
 //dialog for screenshot selection
-class Screenshot : public QDialog, private Ui_screenshotDialog
+class ovQScreenshot : public QDialog, private Ui_screenshotDialog
 {
   Q_OBJECT
 
  public:
   //constructor
-  Screenshot(QWidget* parent = 0);
+  ovQScreenshot( QWidget* parent = 0 );
   //destructor
-  ~Screenshot(){};  
+  ~ovQScreenshot(){};  
 
   int getMagnification();
 

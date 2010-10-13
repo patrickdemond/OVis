@@ -1,35 +1,36 @@
 #ifndef TAGS_H
 #define TAGS_H
 
-#include "ui_tags.h"
+#include "ui_ovQTags.h"
 #include "QVTKWidget.h"
-#include "graph.h"
+
+#include "source/ovGraph.h"
 
 //dialog for tag selection
-class Tags : public QDialog, private Ui_Dialog
+class ovQTags : public QDialog, private Ui_Dialog
 {
   Q_OBJECT
 
 public:
   
   //constructor
-  Tags(QWidget* parent = 0);
+  ovQTags( QWidget* parent = 0 );
   //destructor
-  ~Tags(){};
+  ~ovQTags(){};
 
   //functions
   QListWidget* getTagList();
   bool getContinue();
-  void setGraph(Graph* g);
+  void setGraph( ovGraph* g );
   
 
 public slots:
   
-  virtual void changeSelPal(QListWidgetItem* tagToChange);
+  virtual void changeSelPal( QListWidgetItem* tagToChange );
   virtual void checkUncheckAll();
   virtual void loadCols();
   virtual void saveCols();
-  virtual void changeTagCol(QListWidgetItem* tagToChange);
+  virtual void changeTagCol( QListWidgetItem* tagToChange );
   //slots for ok and cancel
   virtual void tagCancel();
   virtual void tagOk();
@@ -42,7 +43,7 @@ private:
 
   //global variables
   bool continueTrue;
-  Graph* graph;
+  ovGraph* graph;
 
 };
 

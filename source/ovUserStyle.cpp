@@ -1,11 +1,11 @@
-#include "userStyle.h"
+#include "ovUserStyle.h"
 #include "vtkCommand.h"
 #include <qapplication.h>
 #include <qfiledialog.h>
 #include "QVTKWidget.h"
 
-//constructor for userStyle
-userStyle::userStyle(QVTKInteractor* interact, vtkRenderWindow* window, Graph* grap)
+//constructor for ovUserStyle
+ovUserStyle::ovUserStyle( QVTKInteractor* interact, vtkRenderWindow* window, ovGraph* grap )
 {
   //set the bool variables to false
   act = false;
@@ -20,40 +20,40 @@ userStyle::userStyle(QVTKInteractor* interact, vtkRenderWindow* window, Graph* g
   wind = window;
   inter = interact;
   
-  //set the interaction style to userStyle
-  inter->SetInteractorStyle(this);
+  //set the interaction style to ovUserStyle
+  inter->SetInteractorStyle( this );
   
   //initialize timers
   UseTimersOn();
-  SetTimerDuration(1000);
+  SetTimerDuration( 1000 );
 }  
 
-//destructor for userStyle
-userStyle::~userStyle()
+//destructor for ovUserStyle
+ovUserStyle::~ovUserStyle()
 {
 
 }  
 
 //Turns toggle mode on
 //If nw is true reset toggle and set toggle to true, else set toggle to true
-void userStyle::setToggle(bool nw)
+void ovUserStyle::setToggle( bool nw )
 {
   inter->Disable();
 
   //if nw true
-  if(nw && !gra->getLoad())
+  if( nw && !gra->getLoad() )
     {
       //reset toggle
       gra->toggleOn();
     }      
   //set toggle to true
-  gra->setToggle(true);
+  gra->setToggle( true );
   
   //toggle with no real coordinates
-  gra->toggle(0,0);
+  gra->toggle( 0, 0 );
   
   //draw selected node
-  gra->select(shift);
+  gra->select( shift );
 
   //render window
   gra->renderWin();     
@@ -69,23 +69,23 @@ void userStyle::setToggle(bool nw)
 
 //Turns on highlight mode
 //If nw is true turn highlight on and highlight, else highlight
-void userStyle::setHighlight(bool nw)
+void ovUserStyle::setHighlight( bool nw )
 {
   inter->Disable();
 
   //if nw true
-  if(nw) //&& !gra->getLoad())
+  if( nw ) //&& !gra->getLoad() )
     {
       //turn on highlight in graph
       gra->highlightOn();
     }      
 
   //highlight with no real coordinates
-  gra->highlight(0,0);
+  gra->highlight( 0, 0 );
   //gra->drawHighlighted();
 
   //draw selected node
-  gra->select(false);
+  gra->select( false );
 
   //render window
   gra->renderWin();
@@ -100,51 +100,51 @@ void userStyle::setHighlight(bool nw)
 }
 
 //Return true if highlight is on, false otherwise
-bool userStyle::getHighlight()
+bool ovUserStyle::getHighlight()
 {
   return highlight;
 }
 
 //Return true if toggle is on, false otherwise
-bool userStyle::getToggle()
+bool ovUserStyle::getToggle()
 {
   return toggle;
 }
 
 //Return true if graph is on, false otherwise
-bool userStyle::getGraph()
+bool ovUserStyle::getGraph()
 {
   return act;
 }
 
 //Return true if path is on, false otherwise
-bool userStyle::getPath()
+bool ovUserStyle::getPath()
 {
   return path;
 }
 
 //Return true if camera is on, false otherwise
-bool userStyle::getCamera()
+bool ovUserStyle::getCamera()
 {
-  return (!act&&!toggle);
+  return ( !act&&!toggle );
 }
 
 //Turns on graph mode
-void userStyle::setGraph(bool nw)
+void ovUserStyle::setGraph( bool nw )
 {
   inter->Disable();
 
-  if(nw)
+  if( nw )
     {
       //redraw the graph
       gra->redrawGraph();  
     }
 
   //display nd info with no real coordinates
-  gra->displayNdInfo(0,0);
+  gra->displayNdInfo( 0, 0 );
  
   //set toggle to false
-  gra->setToggle(false);
+  gra->setToggle( false );
 
   //change bools
   toggle = false;
@@ -153,9 +153,9 @@ void userStyle::setGraph(bool nw)
   path = false;
 
  //draw selected node
-  gra->select(false);
+  gra->select( false );
    
-  if(gra->getMode() != 'p')
+  if( gra->getMode() != 'p' )
     {
       //render window
       gra->renderWin();
@@ -165,7 +165,7 @@ void userStyle::setGraph(bool nw)
 }
 
 //Turn camera mode on
-void userStyle::setCamera()
+void ovUserStyle::setCamera()
 {
   //change bools
   toggle = false;
@@ -173,7 +173,7 @@ void userStyle::setCamera()
 }
 
 //On mouse move event
-void userStyle::OnMouseMove()
+void ovUserStyle::OnMouseMove()
 {
   //disable user interaction
   inter->Disable();
@@ -182,12 +182,12 @@ void userStyle::OnMouseMove()
   int x;
   int y;
   //get mouse coordinates
-  inter->GetEventPosition(x, y);
+  inter->GetEventPosition( x, y );
 
  //destroy name
   gra->destroyName();
 
-  gra->highlightNode(x,y);
+  gra->highlightNode( x, y );
 
   //start the timer
   StartTimer(); 
@@ -199,7 +199,7 @@ void userStyle::OnMouseMove()
   vtkInteractorStyleJoystickCamera::OnMouseMove();
 }
 
-void userStyle::OnTimer()
+void ovUserStyle::OnTimer()
 {
   //disable user interaction
   inter->Disable();
@@ -208,10 +208,10 @@ void userStyle::OnTimer()
   int x;
   int y;
   //get mouse coordinates
-  inter->GetEventPosition(x,y);
+  inter->GetEventPosition( x, y );
 
   //show name at coordinates
-  gra->showName(x,y);
+  gra->showName( x, y );
 
   //enable user interaction 
   inter->Enable();
@@ -221,13 +221,13 @@ void userStyle::OnTimer()
 }
 
 //Function to do nothing when key is down
-void userStyle::OnKeyDown()
+void ovUserStyle::OnKeyDown()
 {
   
   inter->Disable();
 
 
-  if(string(inter->GetKeySym()) == "Shift_L")
+  if( string( inter->GetKeySym() ) == "Shift_L" )
   {
     shift = true;
   }
@@ -237,12 +237,12 @@ void userStyle::OnKeyDown()
 }
 
 //Function to do nothing when key is up
-void userStyle::OnKeyUp()
+void ovUserStyle::OnKeyUp()
 {
 
   inter->Disable();
 
-  if(string(inter->GetKeySym()) == "Shift_L")
+  if( string( inter->GetKeySym() ) == "Shift_L" )
   {
     shift = false;
   }
@@ -252,22 +252,22 @@ void userStyle::OnKeyUp()
 }
 
 //Function to do nothing when key is released
-void userStyle::OnKeyRelease()
+void ovUserStyle::OnKeyRelease()
 {
 }
 
 //Function to do nothing when char on
-void userStyle::OnChar()
+void ovUserStyle::OnChar()
 {
 }
 
-//when key pressed check which key is pressed and if necessary do commands required (NOTHING)
-void userStyle::OnKeyPress()
+//when key pressed check which key is pressed and if necessary do commands required ( NOTHING )
+void ovUserStyle::OnKeyPress()
 { 
 }
 
 //when left button is clicked
-void userStyle::OnLeftButtonDown()
+void ovUserStyle::OnLeftButtonDown()
 {
   //turn off user interaction
   inter->Disable();
@@ -277,15 +277,15 @@ void userStyle::OnLeftButtonDown()
   int y;
 
   //get mouse coordinates
-  inter->GetEventPosition(x, y);
+  inter->GetEventPosition( x, y );
 
   
   //turn name on/off at position
-  gra->nameOnOff(true,x,y);
+  gra->nameOnOff( true, x, y );
 
-  if(shift)
+  if( shift )
   {
-	//SELECTED is set in nodeatpos in graph.cpp
+  //SELECTED is set in nodeatpos in graph.cpp
       //int* to hold window size
       int* coords;
       
@@ -293,15 +293,15 @@ void userStyle::OnLeftButtonDown()
       coords = wind->GetSize();
 
  // Need to temporary selected node like "nodeAtPos" to correctly add it to the selected list.
- gra->nodeAtPosNoSelect(x,y);
- gra->shiftSelect(shift);   
+ gra->nodeAtPosNoSelect( x, y );
+ gra->shiftSelect( shift );   
  
   }
   else
   {
 
   //if path is off
-  if(!path)
+  if( !path )
     {
       //int* to hold window size
       int* coords;
@@ -310,29 +310,29 @@ void userStyle::OnLeftButtonDown()
       coords = wind->GetSize();
 
       //if toggle is on
-      if(toggle)
-	{
-	  //set toggle for mouse position
-	  gra->toggle(x,y);
-	  //draw selected node
-	  gra->select(shift);
-	}
+      if( toggle )
+  {
+    //set toggle for mouse position
+    gra->toggle( x, y );
+    //draw selected node
+    gra->select( shift );
+  }
       //if graph mode is enabled select node and display node information
-      else if(act)
-	{      
-	  //display the node information at mouse coordinates
-	  gra->displayNdInfo(x,y);
-	  //draw selected node
-	  gra->select(shift);	
-	}
+      else if( act )
+  {      
+    //display the node information at mouse coordinates
+    gra->displayNdInfo( x, y );
+    //draw selected node
+    gra->select( shift );  
+  }
       //if highlight is on
-      else if(highlight)
-	{
-	  //highlight at the mouse coordinates
-	  gra->highlight(x,y);
-	  //draw selected node
-	  gra->select(shift);
-	}
+      else if( highlight )
+  {
+    //highlight at the mouse coordinates
+    gra->highlight( x, y );
+    //draw selected node
+    gra->select( shift );
+  }
     }
   }
   //enable user interaction
@@ -340,46 +340,46 @@ void userStyle::OnLeftButtonDown()
 }
 
 //when middle button is clicked
-void userStyle::OnMiddleButtonDown()
+void ovUserStyle::OnMiddleButtonDown()
 {
   //disable user interaction
   inter->Disable();
 
  //if toggle  mode is on move the node
-  if(toggle)
+  if( toggle )
     {
       //ints to hold mouse coordinates
       int x;
       int y;
       //Get mouse coordinates
-      inter->GetEventPosition(x, y);
+      inter->GetEventPosition( x, y );
 
       //move node at mouse coordinates
-      gra->moveNode(x,y);
+      gra->moveNode( x, y );
 
       //toggle at the mouse coordinates
-      gra->toggle(x,y);
+      gra->toggle( x, y );
 
       //draw selected node
-      gra->select(false);
+      gra->select( false );
     }
   //if graph mode is on move the node
-  else if(act)
+  else if( act )
     {
       //ints to hold mouse coordinates
       int x;
       int y;
       //Get mouse coordinates
-      inter->GetEventPosition(x, y);
+      inter->GetEventPosition( x, y );
 
       //move node at mouse coordinates
-      gra->moveNode(x,y);
+      gra->moveNode( x, y );
 
       //display node information at mouse coordinates
-      gra->displayNdInfo(x,y);
+      gra->displayNdInfo( x, y );
 
       //draw selected node
-      gra->select(false);
+      gra->select( false );
     }
 
   //turn path to false
@@ -390,59 +390,59 @@ void userStyle::OnMiddleButtonDown()
 }
 
 //when middle button is lifted up
-void userStyle::OnMiddleButtonUp()
+void ovUserStyle::OnMiddleButtonUp()
 {
   //disable user interaction
   inter->Disable();
 
   //if toggle mode is enabled change the position of the node
-  if(toggle)
+  if( toggle )
     {
-      if(path)
-	{
-	  gra->setMode('t');
-	}
+      if( path )
+  {
+    gra->setMode( 't' );
+  }
 
       //ints to hold mouse coordinates
       int x;
       int y;
       //get mouse position
-      inter->GetEventPosition(x, y);
+      inter->GetEventPosition( x, y );
 
       //change node to move to new position
-      gra->changeToPos(x,y);
+      gra->changeToPos( x, y );
 
       //toggle position
-      gra->toggle(x,y);
+      gra->toggle( x, y );
 
       //draw selected node
-      gra->select(false);
+      gra->select( false );
     }
   //if graph mode is on change the position of the node
-  else if(act)
+  else if( act )
     {
-      if(path)
-	{
-	  gra->setMode('g');
-	}
+      if( path )
+  {
+    gra->setMode( 'g' );
+  }
 
       //ints to hold mouse coordinates
       int x;
       int y;
       //get mouse coordinates
-      inter->GetEventPosition(x, y);
+      inter->GetEventPosition( x, y );
 
       //change node to move to the new position
-      gra->changeToPos(x,y);
+      gra->changeToPos( x, y );
 
       //display node information at mouse position
-      gra->displayNdInfo(x,y);
+      gra->displayNdInfo( x, y );
 
       //redraw the graph
       gra->redrawGraph();
 
       //draw selected node
-      gra->select(false);
+      gra->select( false );
     }
 
   //enable user interaction
@@ -450,7 +450,7 @@ void userStyle::OnMiddleButtonUp()
 }
 
 //when right button is clicked
-void userStyle::OnRightButtonDown()
+void ovUserStyle::OnRightButtonDown()
 {
   //disable user interaction
   inter->Disable();
@@ -460,15 +460,15 @@ void userStyle::OnRightButtonDown()
   int y;
   
   //get mouse coordinates
-  inter->GetEventPosition(x,y);
+  inter->GetEventPosition( x, y );
 
-  gra->nameOnOff(false,x,y);
+  gra->nameOnOff( false, x, y );
 
   //if graph mode is enabled find the path
-  if(act)
+  if( act )
     {
       //find path at coordinates
-      //gra->findPath(x,y); 
+      //gra->findPath( x, y ); 
 
       //draw selected node
       //gra->select();
@@ -476,9 +476,9 @@ void userStyle::OnRightButtonDown()
       //turn path to true
       //path = true;   
     }
-  else if(toggle | highlight)
+  else if( toggle | highlight )
     {    
-      gra->deselect(x,y);
+      gra->deselect( x, y );
     }
   
   //enable user interaction
@@ -486,11 +486,11 @@ void userStyle::OnRightButtonDown()
 }
 
 //do nothing when mouse wheel is moved forward
-void userStyle::OnMouseWheelForward()
+void ovUserStyle::OnMouseWheelForward()
 {
 }
 
 //do nothing when mouse wheel is moved backward
-void userStyle::OnMouseWheelBackward()
+void ovUserStyle::OnMouseWheelBackward()
 {
 }

@@ -1,22 +1,23 @@
 #ifndef ORLANDO_H
 #define ORLANDO_H
 
-#include "ui_uiOrlando4.h"
+#include "ui_ovQMainWindow.h"
 #include "vtkRenderWindow.h"
 #include "QVTKWidget.h"
-#include "graph.h"
-#include "userStyle.h"
-#include "Font.h"
+#include "ovQFont.h"
 
-class Orlando : public QMainWindow, private Ui_MainWindow
+#include "source/ovGraph.h"
+#include "source/ovUserStyle.h"
+
+class ovQMainWindow : public QMainWindow, private Ui_MainWindow
 {
   Q_OBJECT
 
 public:
   //constructor
-  Orlando(QWidget* parent = 0);
+  ovQMainWindow( QWidget* parent = 0 );
   //destructor
-  ~Orlando(){};
+  ~ovQMainWindow(){};
 
   //get widgets
   vtkRenderWindow* getWindow2();
@@ -33,10 +34,10 @@ public:
   QProgressBar* getProgressBar();
 
   //set variables
-  void setUserStyle(userStyle* st);
-  void setGraph(Graph* gra);
-  void setVisualizationText(char* text);
-  void enableMenuItems(char mode);
+  void setUserStyle( ovUserStyle* st );
+  void setGraph( ovGraph* gra );
+  void setVisualizationText( char* text );
+  void enableMenuItems( char mode );
 
 public slots:
 
@@ -52,10 +53,10 @@ public slots:
   virtual void search();
   virtual void graphButton();
   virtual void toggleMode();
-  virtual void graphMode(bool draw);
+  virtual void graphMode( bool draw );
   virtual void cameraMode();
   virtual void highlightMode();
-  virtual void doubleClick(QListWidgetItem* item);
+  virtual void doubleClick( QListWidgetItem* item );
   virtual void nameTagsOn();
   virtual void allNameTagsOn();
   virtual void nameTagsOff();
@@ -70,8 +71,8 @@ protected slots:
 private:
 
   //global variables
-  Graph* graph;
-  userStyle* style;    
+  ovGraph* graph;
+  ovUserStyle* style;    
 
 //file menu variables
   QAction* a_fileOpen;

@@ -1,17 +1,18 @@
 #ifndef FONT_H
 #define FONT_H
 
-#include "ui_font.h"
+#include "ui_ovQFont.h"
 #include "QVTKWidget.h"
 #include <QComboBox>
-#include "graph.h"
+
+#include "source/ovGraph.h"
 
 #define NUM_FONTS 3
 #define NUM_FONT_STYLES 4
 #define NUM_SIZES 20 
 
 //dialog for tag selection
-class Font: public QDialog, private Ui_FontDialog
+class ovQFont: public QDialog, private Ui_FontDialog
 {
   Q_OBJECT
 
@@ -19,9 +20,9 @@ public:
   
   //constructor
   
-  Font(QWidget* parent = 0, Graph* grap = 0);
+  ovQFont( QWidget* parent = 0, ovGraph* grap = 0 );
   //destructor
-  ~Font(){};
+  ~ovQFont(){};
 
   //functions
   void setupComboBoxes();
@@ -31,9 +32,9 @@ public slots:
   //slots for ok and cancel
   virtual void okToGo();
   virtual void cancel();
-  virtual void changeFont(int index);
-  virtual void changeFontStyle(int index);
-  virtual void changeFontSize(int sz);
+  virtual void changeFont( int index );
+  virtual void changeFontStyle( int index );
+  virtual void changeFontSize( int sz );
   virtual void changeFontColour();
 
 protected:
@@ -43,7 +44,7 @@ protected slots:
 private:
 
   //global variables
-  Graph* graph;
+  ovGraph* graph;
   char* fonts[NUM_FONTS];
   char* fontStyles[NUM_FONT_STYLES];
   int sizes[NUM_SIZES];

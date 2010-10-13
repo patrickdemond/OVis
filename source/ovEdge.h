@@ -8,23 +8,23 @@
 
 using namespace std;
 
-class Edge
+class ovEdge
 {
 
 public:
   //constructor
-  Edge();
-  Edge(int nd1, int nd2, list<int> tgs);
+  ovEdge();
+  ovEdge( int nd1, int nd2, list<int> tgs );
   //destructor
-  ~Edge();
-  void SetNode1(int n1);
-  void SetNode2(int n2);
+  ~ovEdge();
+  void SetNode1( int n1 );
+  void SetNode2( int n2 );
   int GetNode1();
   int GetNode2();
-  bool HasTag(int i);
+  bool HasTag( int i );
   list<int> GetTags();
-  void AddTags(list<int> tgs);
-  void AddTag(int i);
+  void AddTags( list<int> tgs );
+  void AddTag( int i );
 
 private:
   //global variables

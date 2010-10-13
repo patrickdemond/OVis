@@ -1,79 +1,79 @@
-#include "name.h"
+#include "ovName.h"
 
 //constructor
-Name::Name()
+ovName::ovName()
 {
 }
 
 //destructor
-Name::~Name()
+ovName::~ovName()
 {
 }
 
 //set key number to i
-void Name::setKeyNum(int i)
+void ovName::setKeyNum( int i )
 {
   keyNum = i;
 }  
 
 //set key to k
-void Name::setKey(char* k)
+void ovName::setKey( char* k )
 {
-  key = strdup(k);
+  key = strdup( k );
   clearFileSpots();
 }
 
 //add file spot
-void Name::addFileSpot(int fs)
+void ovName::addFileSpot( int fs )
 {
-  fileSpots.push_front(fs);  
+  fileSpots.push_front( fs );  
 }
 
-//check if the name is between ln1 and ln2 (between the tag)
-void Name::checkTag(int ln1, int ln2, int tagNum)
+//check if the name is between ln1 and ln2 ( between the tag )
+void ovName::checkTag( int ln1, int ln2, int tagNum )
 {
   list<int>::iterator it;
   
-  for(it=fileSpots.begin(); it!=fileSpots.end(); it++)
+  for( it=fileSpots.begin(); it!=fileSpots.end(); it++ )
     {
-      if(ln1 >= *it && ln2 <= *it)
-	{
-	  tags[tagNum] = true;
-	}
+      if( ln1 >= *it && ln2 <= *it )
+  {
+    tags[tagNum] = true;
+  }
     }
     
 }
 
 //return key num
-int Name::getKeyNum()
+int ovName::getKeyNum()
 {
   return keyNum;
 }
 
 //return key
-char* Name::getKey()
+char* ovName::getKey()
 {
   return key;
 }
 
 //return filespots
-list<int> Name::getFileSpots()
+list<int> ovName::getFileSpots()
 {
   return fileSpots;
 }
 
 //return tags
-bool* Name::getTags()
+bool* ovName::getTags()
 {
   return tags;
 }
 
 //clear filespots
-void Name::clearFileSpots()
+void ovName::clearFileSpots()
 {
   fileSpots.clear();
   int i = 0;
-  for(int i=0; i<NUM_OF_TAGS_C; i++)
+  for( int i=0; i<NUM_OF_TAGS_C; i++ )
     {
       tags[i] = false;
     }

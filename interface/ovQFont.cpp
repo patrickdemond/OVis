@@ -1,15 +1,15 @@
 #include <qapplication.h>
 #include <qfiledialog.h>
-#include "Font.h"
+#include "ovQFont.h"
 
 #include "vtkProperty2D.h"
 
 //tag constructor
-Font::Font(QWidget* parent, Graph* grap)
-  : QDialog(parent)
+ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
+  : QDialog( parent )
 {
   //set up the user interface
-  setupUi(this);
+  setupUi( this );
 
   graph = grap;
 
@@ -27,23 +27,23 @@ Font::Font(QWidget* parent, Graph* grap)
   int capSize = graph->getCaptionSize();
   size = capSize;
 
-  for(int i=0; i<NUM_SIZES; i++)
+  for( int i=0; i<NUM_SIZES; i++ )
     {
       sizes[i] = sz;
 
-      if(sz == capSize)
-	{
-	  index = i;
-	}
+      if( sz == capSize )
+  {
+    index = i;
+  }
       
       sz+=2;      
     }
 
   setupComboBoxes();
 
-  comboBox_3->setCurrentIndex(index);
+  comboBox_3->setCurrentIndex( index );
 
-  col = new QColor(graph->getCaptionRed(),graph->getCaptionGreen(),graph->getCaptionBlue());
+  col = new QColor( graph->getCaptionRed(), graph->getCaptionGreen(), graph->getCaptionBlue() );
 
   inter = qvtkWidget->GetInteractor();
   //inter->Disable();
@@ -51,20 +51,20 @@ Font::Font(QWidget* parent, Graph* grap)
   fontWin = qvtkWidget->GetRenderWindow();
 
   rend = vtkRenderer::New();
-  rend->SetBackground(0.2,0.2,0.2);
-  rend->SetViewport(0.0, 0.0, 1.0, 1.0);
+  rend->SetBackground( 0.2, 0.2, 0.2 );
+  rend->SetViewport( 0.0, 0.0, 1.0, 1.0 );
   
   caption = vtkCaptionActor2D::New();
-  caption->SetAttachmentPoint(-0.8,-0.1,0.0);
-  caption->SetPadding(0);
-  caption->SetCaption("AaBbCc 123");
+  caption->SetAttachmentPoint( -0.8, -0.1, 0.0 );
+  caption->SetPadding( 0 );
+  caption->SetCaption( "AaBbCc 123" );
   caption->BorderOff();
   
-  caption->GetTextActor()->SetTextScaleMode(vtkTextActor::TEXT_SCALE_MODE_NONE);
+  caption->GetTextActor()->SetTextScaleMode( vtkTextActor::TEXT_SCALE_MODE_NONE );
 
   prop = caption->GetTextActor()->GetTextProperty();
   
-  if(graph->getCaptionBold())
+  if( graph->getCaptionBold() )
     {
       prop->BoldOn();
       bold = true;
@@ -75,7 +75,7 @@ Font::Font(QWidget* parent, Graph* grap)
       bold = false;
     }
 
-  if(graph->getCaptionItalic())
+  if( graph->getCaptionItalic() )
     {
       prop->ItalicOn();
       italic = true;
@@ -86,111 +86,111 @@ Font::Font(QWidget* parent, Graph* grap)
       italic = false;
     }
 
-  if(bold)
+  if( bold )
     {
-      if(italic)
-	{
-	  comboBox_2->setCurrentIndex(3);
-	}
+      if( italic )
+  {
+    comboBox_2->setCurrentIndex( 3 );
+  }
       else
-	{
-	  comboBox_2->setCurrentIndex(1);
-	}
+  {
+    comboBox_2->setCurrentIndex( 1 );
+  }
     }
-  else if(italic)
+  else if( italic )
     {
-      comboBox_2->setCurrentIndex(2);
+      comboBox_2->setCurrentIndex( 2 );
     }
   else
     {
-      comboBox_2->setCurrentIndex(0);
+      comboBox_2->setCurrentIndex( 0 );
     }
 
   int x = col->red();
   int y = col->green();
   int z = col->blue();
 
-  prop->SetFontSize(graph->getCaptionSize());
+  prop->SetFontSize( graph->getCaptionSize() );
 
   prop->ShadowOff();
-  prop->SetColor(x/255.0,y/255.0,z/255.0);
+  prop->SetColor( x/255.0, y/255.0, z/255.0 );
   
-  switch(graph->getCaptionFont())
+  switch( graph->getCaptionFont() )
     {
     case ARIAL:
       prop->SetFontFamilyToArial();
       font = ARIAL;
-      comboBox->setCurrentIndex(ARIAL);
+      comboBox->setCurrentIndex( ARIAL );
       break;
     case COURIER:
       prop->SetFontFamilyToCourier();
       font = COURIER;
-      comboBox->setCurrentIndex(COURIER);
+      comboBox->setCurrentIndex( COURIER );
       break;
     case TIMES:
       prop->SetFontFamilyToTimes();
       font = TIMES;
-      comboBox->setCurrentIndex(TIMES);
+      comboBox->setCurrentIndex( TIMES );
       break;
     }
   
-  rend->AddActor(caption);
+  rend->AddActor( caption );
 
-  fontWin->AddRenderer(rend);
+  fontWin->AddRenderer( rend );
 
   fontWin->Render();
 
-  pushButton->setStyleSheet("* { background-color: rgb(" + QString::number(x) + "," + QString::number(y) + "," + QString::number(z) + ")}");
+  pushButton->setStyleSheet( "* { background-color: rgb( " + QString::number( x ) + ", " + QString::number( y ) + ", " + QString::number( z ) + " )}" );
 
   //connect the signals to the new slots
-  connect(comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(changeFont(int)));
-  connect(comboBox_2, SIGNAL(currentIndexChanged(int)), this, SLOT(changeFontStyle(int)));
-  connect(comboBox_3, SIGNAL(currentIndexChanged(int)), this, SLOT(changeFontSize(int)));
-  connect(pushButton, SIGNAL(pressed()), this, SLOT(changeFontColour()));
-  connect(buttonBox, SIGNAL(accepted()), this, SLOT(okToGo()));
-  connect(buttonBox, SIGNAL(rejected()), this, SLOT(cancel()));
+  connect( comboBox, SIGNAL( currentIndexChanged( int )), this, SLOT( changeFont( int )) );
+  connect( comboBox_2, SIGNAL( currentIndexChanged( int )), this, SLOT( changeFontStyle( int )) );
+  connect( comboBox_3, SIGNAL( currentIndexChanged( int )), this, SLOT( changeFontSize( int )) );
+  connect( pushButton, SIGNAL( pressed() ), this, SLOT( changeFontColour() ));
+  connect( buttonBox, SIGNAL( accepted() ), this, SLOT( okToGo() ));
+  connect( buttonBox, SIGNAL( rejected() ), this, SLOT( cancel() ));
 }
 
 //changes the font colour
-void Font::changeFontColour()
+void ovQFont::changeFontColour()
 {
-   QColor col2 = QColorDialog::getColor(*col, this);
+   QColor col2 = QColorDialog::getColor( *col, this );
 
    int x = col2.red();
    int y = col2.green();
    int z = col2.blue();
   
-   pushButton->setStyleSheet("* { background-color: rgb(" + QString::number(x) + "," + QString::number(y) + "," + QString::number(z) + ")}");
+   pushButton->setStyleSheet( "* { background-color: rgb( " + QString::number( x ) + ", " + QString::number( y ) + ", " + QString::number( z ) + " )}" );
 
-   col->setRed(col2.red());
-   col->setGreen(col2.green());
-   col->setBlue(col2.blue());
+   col->setRed( col2.red() );
+   col->setGreen( col2.green() );
+   col->setBlue( col2.blue() );
    
-   prop->SetColor(col->red()/255.0,col->green()/255.0,col->blue()/255.0);
+   prop->SetColor( col->red()/255.0, col->green()/255.0, col->blue()/255.0 );
    
    fontWin->Render();
 }
 
 //changes the font to the index
 //0-ARIAL, 1-COURIER, 2-TIMES
-void Font::changeFont(int index)
+void ovQFont::changeFont( int index )
 {
-  switch(index)
+  switch( index )
     {
       //arial
       case 0:
-	prop->SetFontFamilyToArial();
-	break;
+  prop->SetFontFamilyToArial();
+  break;
     
       //courier
       case 1:
-	prop->SetFontFamilyToCourier();
-	break;
+  prop->SetFontFamilyToCourier();
+  break;
     
       //times;
       case 2:
-	prop->SetFontFamilyToTimes();
-	break;
+  prop->SetFontFamilyToTimes();
+  break;
     }
   
   font = index;
@@ -200,51 +200,51 @@ void Font::changeFont(int index)
 
 //changes the font style to the index
 //0-normal 1-bold 2-italic 3-bold & italic
-void Font::changeFontStyle(int index)
+void ovQFont::changeFontStyle( int index )
 {
-  switch(index)
+  switch( index )
     {
       //normal
       case 0:
-	prop->BoldOff();
-	prop->ItalicOff();
-	bold = false;
-	italic = false;
-	break;
+  prop->BoldOff();
+  prop->ItalicOff();
+  bold = false;
+  italic = false;
+  break;
     
       //bold
       case 1:
-	prop->BoldOn();
-	prop->ItalicOff();
-	bold = true;
-	italic = false;
-	break;
+  prop->BoldOn();
+  prop->ItalicOff();
+  bold = true;
+  italic = false;
+  break;
     
       //italic
       case 2:
-	prop->ItalicOn();
-	prop->BoldOff();
-	bold = false;
-	italic = true;
-	break;
-	
+  prop->ItalicOn();
+  prop->BoldOff();
+  bold = false;
+  italic = true;
+  break;
+  
       //bold italic
       case 3:
-	prop->BoldOn();
-	prop->ItalicOn();
-	bold = true;
-	italic = true;
-	break;
+  prop->BoldOn();
+  prop->ItalicOn();
+  bold = true;
+  italic = true;
+  break;
     }
 
   fontWin->Render();
 }
 
 //change the font size to the sz passed in 
-void Font::changeFontSize(int sz)
+void ovQFont::changeFontSize( int sz )
 {
   int i = sz*2 + 4;
-  prop->SetFontSize(i);
+  prop->SetFontSize( i );
 
   size = i;
 
@@ -252,45 +252,45 @@ void Font::changeFontSize(int sz)
 }
 
 //set up the combo boxes
-void Font::setupComboBoxes()
+void ovQFont::setupComboBoxes()
 {
-  for(int i=0; i<NUM_FONTS; i++)
+  for( int i=0; i<NUM_FONTS; i++ )
     {
-      comboBox->addItem(fonts[i]);
+      comboBox->addItem( fonts[i] );
     }
 
-  for(int i=0; i<NUM_FONT_STYLES; i++)
+  for( int i=0; i<NUM_FONT_STYLES; i++ )
     {
-      comboBox_2->addItem(fontStyles[i]);
+      comboBox_2->addItem( fontStyles[i] );
     }
 
-  for(int i=0; i<NUM_SIZES; i++)
+  for( int i=0; i<NUM_SIZES; i++ )
     {
-      char* tmp = (char*) calloc(10,sizeof(char));
-      sprintf(tmp, "%i", sizes[i]);
-      comboBox_3->addItem(tmp);
+      char* tmp = ( char* ) calloc( 10, sizeof( char ));
+      sprintf( tmp, "%i", sizes[i] );
+      comboBox_3->addItem( tmp );
     }
 }
 
 //
-void Font::okToGo()
+void ovQFont::okToGo()
 {
-  printf("DONE");
-  fflush(stdout);
+  printf( "DONE" );
+  fflush( stdout );
 
-  graph->setCaptionColour(col->red(), col->green(), col->blue());
-  graph->setCaptionBold(bold);
-  graph->setCaptionItalic(italic);
-  graph->setCaptionSize(size);
-  graph->setCaptionFont(font);
+  graph->setCaptionColour( col->red(), col->green(), col->blue() );
+  graph->setCaptionBold( bold );
+  graph->setCaptionItalic( italic );
+  graph->setCaptionSize( size );
+  graph->setCaptionFont( font );
 
   graph->redrawNameTags();
 
-  this->done(1);
+  this->done( 1 );
 }
  
-void Font::cancel()
+void ovQFont::cancel()
 {  
-  this->done(1);
+  this->done( 1 );
 }
  

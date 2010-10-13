@@ -1,54 +1,54 @@
-#include "userStyleTags.h"
+#include "ovUserStyleTags.h"
 
 #define nodeFile "/home/jberberi/Desktop/ORLANDO/test.nodes"
 
-//constructor for userStyleTags
-userStyleTags::userStyleTags(QVTKInteractor* interact, vtkRenderWindow* window, Graph* grap)
+//constructor for ovUserStyleTags
+ovUserStyleTags::ovUserStyleTags( QVTKInteractor* interact, vtkRenderWindow* window, ovGraph* grap )
 {
   //set the global variables to those passed in
   gra = grap;
   wind = window;
   inter = interact;
 
-  //set the interactor style of the QVTKInteractor to userStyleTags
-  inter->SetInteractorStyle(this);
+  //set the interactor style of the QVTKInteractor to ovUserStyleTags
+  inter->SetInteractorStyle( this );
 }  
 
-//destructor for userStyleTags
-userStyleTags::~userStyleTags()
+//destructor for ovUserStyleTags
+ovUserStyleTags::~ovUserStyleTags()
 {
   //delete global variables
   inter->Delete();
 }  
 
 //when the mouse moves make sure the 3D mouse moves if enabled
-void userStyleTags::OnMouseMove()
+void ovUserStyleTags::OnMouseMove()
 {
 }
 
-void userStyleTags::OnKeyDown()
+void ovUserStyleTags::OnKeyDown()
 {
 }
 
-void userStyleTags::OnKeyUp()
+void ovUserStyleTags::OnKeyUp()
 {
 }
 
-void userStyleTags::OnKeyRelease()
+void ovUserStyleTags::OnKeyRelease()
 {
 }
 
-void userStyleTags::OnChar()
+void ovUserStyleTags::OnChar()
 {
 }
 
 //when key pressed check which key is pressed and if necessary do commands required
-void userStyleTags::OnKeyPress()
+void ovUserStyleTags::OnKeyPress()
 { 
 }
 
 //when left button is clicked check which tag is clicked and turn it on/off
-void userStyleTags::OnLeftButtonDown()
+void ovUserStyleTags::OnLeftButtonDown()
 {
   //disable user input
   inter->Disable();
@@ -56,7 +56,7 @@ void userStyleTags::OnLeftButtonDown()
   //get mouse position
   int x;
   int y;
-  inter->GetEventPosition(x, y);
+  inter->GetEventPosition( x, y );
 
   //get window size
   int* coords;
@@ -68,11 +68,11 @@ void userStyleTags::OnLeftButtonDown()
   int d = coords[1];
 
   //get the coordinate keeping in mind the window size
-  a = ((float)a/c)*800.0;
-  b = ((float)b/d)*600.0;
+  a = ( (float )a/c )*800.0;
+  b = ( (float )b/d )*600.0;
 
   //call the tag touched function in the Graph class to turn on/off tag
-  gra->tagTouched((int)a,(int)b);
+  gra->tagTouched( (int )a, ( int )b );
 
   //rerender the window
   wind->Render();
@@ -82,24 +82,24 @@ void userStyleTags::OnLeftButtonDown()
 }
 
 //when middle button is clicked
-void userStyleTags::OnMiddleButtonDown()
+void ovUserStyleTags::OnMiddleButtonDown()
 {
 }
 
 //when middle button is lifted up
-void userStyleTags::OnMiddleButtonUp()
+void ovUserStyleTags::OnMiddleButtonUp()
 { 
 }
 
 //when middle button is clicked
-void userStyleTags::OnRightButtonDown()
+void ovUserStyleTags::OnRightButtonDown()
 { 
 }
 
-void userStyleTags::OnMouseWheelForward()
+void ovUserStyleTags::OnMouseWheelForward()
 { 
 }
 
-void userStyleTags::OnMouseWheelBackward()
+void ovUserStyleTags::OnMouseWheelBackward()
 { 
 }

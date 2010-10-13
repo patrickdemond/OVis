@@ -1,69 +1,83 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(test)
+CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
+PROJECT( ovis )
 
-SET(VTK_DIR /usr/lib64/vtk-5.4)
+# Set the version
+SET( OVIS_VERSION_MAJOR 0 )
+SET( OVIS_VERSION_MINOR 1 )
+SET( OVIS_VERSION_PATCH 0 )
 
-if(APPLE)
-  SET(VTK_DIR /Users/Jokanee/Develop/VTKBuild)
-ENDIF(APPLE)
+# We need VTK
+FIND_PACKAGE( VTK REQUIRED )
+IF( NOT VTK_DIR )
+  MESSAGE( FATAL_ERROR "Please set VTK_DIR." )
+ENDIF( NOT VTK_DIR )
+INCLUDE( ${VTK_USE_FILE} )
 
-FIND_PACKAGE(VTK REQUIRED)
-IF(NOT VTK_DIR)
-  MESSAGE(FATAL_ERROR "Please set VTK_DIR.")
-ENDIF(NOT VTK_DIR)
-INCLUDE(${VTK_USE_FILE})
+# We need QT4
+SET( QT_MIN_VERSION 4.0.0 )
+FIND_PACKAGE( Qt4 )
+IF( NOT QT_USE_FILE )
+  MESSAGE( FATAL_ERROR "ovis requires QT version 4" )
+ENDIF( NOT QT_USE_FILE )
+INCLUDE( ${QT_USE_FILE} )
 
-# use what QVTK built with
-SET(QT_MOC_EXECUTABLE ${VTK_QT_MOC_EXECUTABLE} CACHE FILEPATH "")
-SET(QT_UIC_EXECUTABLE ${VTK_QT_UIC_EXECUTABLE} CACHE FILEPATH "")
-SET(QT_QMAKE_EXECUTABLE ${VTK_QT_QMAKE_EXECUTABLE} CACHE FILEPATH "")
-SET(DESIRED_QT_VERSION ${VTK_DESIRED_QT_VERSION} CACHE FILEPATH "")
-FIND_PACKAGE(Qt)
-IF(QT_USE_FILE)
-  INCLUDE(${QT_USE_FILE})
-ELSE(QT_USE_FILE)
-  SET(QT_LIBRARIES   ${QT_QT_LIBRARY})
-ENDIF(QT_USE_FILE)
+SET( OVIS_SOURCE
+  source/ovDate.cpp
+  source/ovEdge.cpp
+  source/ovGraph.cpp
+  source/ovName.cpp
+  source/ovNode.cpp
+  source/ovPeriod.cpp
+  source/ovUserStyle.cpp
+  source/ovUserStyleTags.cpp
+  interface/ovQFont.cpp
+  interface/ovQMainWindow.cpp
+  interface/ovQPath.cpp
+  interface/ovQScreenshot.cpp
+  interface/ovQTags.cpp
+  interface/ovQText.cpp
+  interface/ovQWords.cpp
+  interface/ovQWordHelp.cpp
+)
 
-SET (OrlandoSrcs graph.cpp node.cpp userStyle.cpp name.cpp userStyleTags.cpp edge.cpp date.cpp period.cpp)
+SET( OVIS_UIS
+  interface/ovQFont.ui
+  interface/ovQMainWindow.ui
+  interface/ovQPath.ui
+  interface/ovQScreenshot.ui
+  interface/ovQTags.ui
+  interface/ovQText.ui
+  interface/ovQWords.ui
+  interface/ovQWordHelp.ui
+)
 
-# Use the include path and library for Qt that is used by VTK.
+SET( OVIS_HEADERS
+  interface/ovQFont.h
+  interface/ovQMainWindow.h
+  interface/ovQPath.h
+  interface/ovQScreenshot.h
+  interface/ovQTags.h
+  interface/ovQText.h
+  interface/ovQWords.h
+  interface/ovQWordHelp.h
+)
+
+# Wrap QT files
+QT4_WRAP_UI( UIHeaders ${OVIS_UIS} )
+QT4_WRAP_CPP( MOCSrcs ${OVIS_HEADERS} )
+ADD_DEFINITIONS( -DQT_GUI_LIBS -DQT_CORE_LIB -DQT3_SUPPORT )
+SET_SOURCE_FILES_PROPERTIES( ${OVIS_SOURCE} PROPERTIES OBJECT_DEPENDS "${UIHeaders}" )
+
+# Use the include path and library for Qt
 INCLUDE_DIRECTORIES(
   ${QT_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-IF(DESIRED_QT_VERSION MATCHES 4)
+ADD_EXECUTABLE( ovis ${OVIS_SOURCE} ${OVIS_UISrcs} ${MOCSrcs} )
 
-SET(OrlandoSrcs ${OrlandoSrcs} Orlando4.cpp Tags.cpp Path.cpp Words.cpp WordHelp.cpp Text.cpp Font.cpp Screenshot.cpp)
-SET(UIS uiOrlando4.ui tags.ui path.ui words.ui wordHelp.ui text.ui font.ui screenshot.ui)
-SET (OrlandoHeaders Orlando4.h Tags.h Path.h Words.h WordHelp.h Text.h Font.h Screenshot.h)
-QT4_WRAP_UI(UIHeaders ${UIS})
-QT4_WRAP_CPP(MOCSrcs ${OrlandoHeaders} )
-ADD_DEFINITIONS(-DQT_GUI_LIBS -DQT_CORE_LIB -DQT3_SUPPORT)
-SET_SOURCE_FILES_PROPERTIES(${OrlandoSrcs} PROPERTIES OBJECT_DEPENDS "${UIHeaders}")
-
-ENDIF(DESIRED_QT_VERSION MATCHES 4)
-
-# It's nice to have the ui in the windows project file...just double click on it
-# and designer comes up on that ui file :)
-IF (${CMAKE_BUILD_TOOL} MATCHES "msdev")
-  SET (OrlandoSrcs ${OrlandoSrcs} ${UIS})
-  SET (TagSrcs ${TagSrcs} ${UIS})
-ENDIF (${CMAKE_BUILD_TOOL} MATCHES "msdev")
-IF (${CMAKE_BUILD_TOOL} MATCHES "devenv")
-  SET (OrlandoSrcs ${OrlandoSrcs} ${UIS})
-  SET (TagSrcs ${TagSrcs} ${UIS})
-ENDIF (${CMAKE_BUILD_TOOL} MATCHES "devenv")
-
-ADD_EXECUTABLE(orlandoVision MACOSX_BUNDLE ${OrlandoSrcs} ${UISrcs} ${MOCSrcs})
-
-SET_TARGET_PROPERTIES(orlandoVision PROPERTIES SKIP_BUILD_RPATH ON) # COMPILE_FLAGS -pg  LINK_FLAGS -pg)
-
-#COMPILE_FLAGS -pg  LINK_FLAGS -pg
-
-TARGET_LINK_LIBRARIES( orlandoVision
+TARGET_LINK_LIBRARIES( ovis
   QVTK
   ${QT_LIBRARIES}
   vtkRendering
@@ -71,3 +85,14 @@ TARGET_LINK_LIBRARIES( orlandoVision
   vtkIO
   vtkCommon
 )
+
+# Make the resources directory and copy files
+MAKE_DIRECTORY( ${CMAKE_CURRENT_BINARY_DIR}/resources )
+FILE( GLOB resources RELATIVE
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/* )
+FOREACH( resource ${resources} )
+  CONFIGURE_FILE(
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/${resource}"
+    "${CMAKE_CURRENT_BINARY_DIR}/resources/${resource}" COPYONLY )
+ENDFOREACH( resource )

@@ -8,19 +8,19 @@
 #include "vtkRenderWindowInteractor.h"
 #include "vtkRenderWindow.h"
 #include <stdio.h>
-#include "graph.h"
+#include "ovGraph.h"
 #include "QVTKWidget.h"
 
 using namespace std;
 
-class userStyleTags : public vtkInteractorStyleJoystickCamera
+class ovUserStyleTags : public vtkInteractorStyleJoystickCamera
 {
 
 public:
   //constructor
-  userStyleTags(QVTKInteractor* interact, vtkRenderWindow* window, Graph* grap);
+  ovUserStyleTags( QVTKInteractor* interact, vtkRenderWindow* window, ovGraph* grap );
   //destructor
-  ~userStyleTags();
+  ~ovUserStyleTags();
 
   //interaction events
   void OnMouseMove();
@@ -38,7 +38,7 @@ public:
 
 private:
   //global variables
-  Graph* gra;
+  ovGraph* gra;
   vtkInteractorStyleJoystickCamera *joyCam; 
   QVTKInteractor *inter;
   vtkRenderWindow *wind;

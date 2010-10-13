@@ -12,7 +12,7 @@
 #define TIF 3
 
 #include <qapplication.h>
-#include "ui_uiOrlando4.h"
+#include "ui_ovQMainWindow.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string>
@@ -72,9 +72,9 @@
 #include "vtkCaptionActor2D.h"
 #include "vtkLinearTransform.h"
 #include "vtkSmartPointer.h"
-#include "node.h"
-#include "name.h"
-#include "edge.h"
+#include "ovNode.h"
+#include "ovName.h"
+#include "ovEdge.h"
 #include "QVTKWidget.h"
 #include <QAbstractItemModel>
 #include <QListWidget>
@@ -90,133 +90,133 @@
 
 using namespace std;
 
-class Graph 
+class ovGraph 
 {
 
 public:
-  Graph(vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label, QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind);
+  ovGraph( vtkRenderWindow* wind, QVTKInteractor* interact, QListWidget* lst, QLabel* label, QLineEdit* line, QWidget* widge, QPushButton* button, QLabel* lab1, QLabel* lab2, vtkRenderWindow* wind2, QVTKInteractor* interact2, QProgressBar* pBar, QListWidget* tagLst, QWidget* mainWind, QWidget* tagWind );
   void initTags();
-  void saveFile(char* filename);
-  void loadFile(char* filename);
-  void loadXML(char* filename);
+  void saveFile( char* filename );
+  void loadFile( char* filename );
+  void loadXML( char* filename );
   void renderWin();
   void drawGraph();
-  void saveInc(char* filename);
-  void loadInc(char* filename);
-  void saveExc(char* filename);
-  void loadExc(char* filename);
-  void saveNamesOn(char* filename);
-  void loadNamesOn(char* filename);
-  void saveLineNum(char* filename);
-  void loadLineNum(char* filename);
-  void saveTagsUsed(char* filename);
-  void loadTagsUsed(char* filename);
-  void saveEntries(char* filename);
-  void loadEntries(char* filename);
-  void saveFormatting(char* filename);
-  void loadFormatting(char* filename);
-  void saveTogOn(char* filename);
-  void loadTogOn(char* filename);
-  void saveTogCon(char* filename);
-  void loadTogCon(char* filename);
-  void saveTagsOn(char* filename);
-  void loadTagsOn(char* filename);
-  void SaveNodePos(char* filename);
-  void GetNodePos(char* filename);
+  void saveInc( char* filename );
+  void loadInc( char* filename );
+  void saveExc( char* filename );
+  void loadExc( char* filename );
+  void saveNamesOn( char* filename );
+  void loadNamesOn( char* filename );
+  void saveLineNum( char* filename );
+  void loadLineNum( char* filename );
+  void saveTagsUsed( char* filename );
+  void loadTagsUsed( char* filename );
+  void saveEntries( char* filename );
+  void loadEntries( char* filename );
+  void saveFormatting( char* filename );
+  void loadFormatting( char* filename );
+  void saveTogOn( char* filename );
+  void loadTogOn( char* filename );
+  void saveTogCon( char* filename );
+  void loadTogCon( char* filename );
+  void saveTagsOn( char* filename );
+  void loadTagsOn( char* filename );
+  void SaveNodePos( char* filename );
+  void GetNodePos( char* filename );
   void clearGraph();
-  int nodeAtPos(int a, int b, bool setSel); 
-  int nodeAtPosNoSelect(int a, int b);
-  void moveNode(int a, int b);
-  void changeToPos(int a, int b);
-  bool findAllPaths(int startNode, int nodeToFind, list<int> pth, int cutoff, bool display);
-  bool findIfPath(int startNode, int nodeToFind, int cutoff);
-  void findPath(int a, int b);
-  void findPathBtw(char* x, char* y);
-  int findNodes(int a, list<int> path, int b, int graph2[]);
+  int nodeAtPos( int a, int b, bool setSel ); 
+  int nodeAtPosNoSelect( int a, int b );
+  void moveNode( int a, int b );
+  void changeToPos( int a, int b );
+  bool findAllPaths( int startNode, int nodeToFind, list<int> pth, int cutoff, bool display );
+  bool findIfPath( int startNode, int nodeToFind, int cutoff );
+  void findPath( int a, int b );
+  void findPathBtw( char* x, char* y );
+  int findNodes( int a, list<int> path, int b, int graph2[] );
   void highlightOn();
-  void highlight(int a, int b);
+  void highlight( int a, int b );
   void drawHighlighted();
   void toggleOn();
-  void toggle(int a, int b);
+  void toggle( int a, int b );
   void drawToggled();
   void redrawGraph();
-  void displayPathInfo(int a, int b, list<int> path);
-  void displayNdInfo(int a, int b);
-  bool empty(int graph2[]);
-  void GetEntry(char* filename);
+  void displayPathInfo( int a, int b, list<int> path );
+  void displayNdInfo( int a, int b );
+  bool empty( int graph2[] );
+  void GetEntry( char* filename );
   void includeOnlyEntries();
-  int isEntry(int n);
-  void printPath(list<int> path);
+  int isEntry( int n );
+  void printPath( list<int> path );
   void windowSetup();
   void drawEdges();
   void drawKeys();
-  void drawKey(float a, float b, float c, float d, double* col, char* nam, bool on);
-  void tagTouched(int x, int y);
-  void drawText(float dt, char* nam, int offset, bool col);
+  void drawKey( float a, float b, float c, float d, double* col, char* nam, bool on );
+  void tagTouched( int x, int y );
+  void drawText( float dt, char* nam, int offset, bool col );
   void textSetUp();
   void rendSetUp();
-  void select(bool shift);
-  void shiftSelect(bool shift);
-  void turnOnOffTag(int tagNum);
+  void select( bool shift );
+  void shiftSelect( bool shift );
+  void turnOnOffTag( int tagNum );
   void display();
   void resetSearch();
-  void search(char* key);
+  void search( char* key );
   void done();
-  double *getColor(int dt);
-  char* stristr(char* strToSearch, char* searchStr);
+  double *getColor( int dt );
+  char* stristr( char* strToSearch, char* searchStr );
   vtkRenderWindow* getWindow();
   vtkRenderWindowInteractor* getInteractor();
-  void setSelected(char* sel);
-  void setToggle(bool tog);
-  void showName(int x, int y);
+  void setSelected( char* sel );
+  void setToggle( bool tog );
+  void showName( int x, int y );
   void destroyName();
-  void highlightNode(int x, int y);
-  void allNamesOn(bool all);
+  void highlightNode( int x, int y );
+  void allNamesOn( bool all );
   void selectedNodesOn();
-  void allNamesOff(bool nw);
-  void nameOnOff(bool on, int a, int b);
-  void nameOnOff(bool on, char* nm);
+  void allNamesOff( bool nw );
+  void nameOnOff( bool on, int a, int b );
+  void nameOnOff( bool on, char* nm );
   void initNames();
   void changeInteractorToGraph();
   void changeInteractorToCamera();
   bool isInteractGraph();
   void tagChoices();
-  void setTags(list<char*> lst);
+  void setTags( list<char*> lst );
   void popUpPath();
-  void initialize(char* filename);
-  void setMode(char a);
+  void initialize( char* filename );
+  void setMode( char a );
   char getMode();
   bool getLoad();
   void tagWindowOn();
   void textWindowOn();
-  void namesFromEntry(char* en, QComboBox* cb);
-  void tagsFromNameEntry(char* en, char* nm, QComboBox* cb);
-  void showXMLEntry(char* en, char* nm, char* tg, QTextBrowser* tb);
-  int findIndexFromName(char* nm);
-  bool includeLine(char* ln);
-  void include(char* s);
-  void exclude(char* s);
-  void setEntriesOnly(bool b);
-  list<char*> wordCases(char* s);
-  void drawEdge(int stInd, int endInd, bool alpha, int tag);
-  vtkActor* drawNode(int ind, bool alpha, vtkActor* actor, double colR, double colG, double colB);
-  void drawEdgesForNode(int ind, bool alpha);
+  void namesFromEntry( char* en, QComboBox* cb );
+  void tagsFromNameEntry( char* en, char* nm, QComboBox* cb );
+  void showXMLEntry( char* en, char* nm, char* tg, QTextBrowser* tb );
+  int findIndexFromName( char* nm );
+  bool includeLine( char* ln );
+  void include( char* s );
+  void exclude( char* s );
+  void setEntriesOnly( bool b );
+  list<char*> wordCases( char* s );
+  void drawEdge( int stInd, int endInd, bool alpha, int tag );
+  vtkActor* drawNode( int ind, bool alpha, vtkActor* actor, double colR, double colG, double colB );
+  void drawEdgesForNode( int ind, bool alpha );
   void drawFadedEdges();
   void resetGraphCons();
-  void removeEdgesForNode(int nd);
-  void removeNode(int nd);
-  bool hasEdgeBetween(int nd1, int nd2, int tag);
-  void includeDatesBtw(int bY, int bM, int bD, int dY, int dM, int dD);
-  bool includeByTime(char* stdName);
-  void saveTagColors(char* filename);
-  void setDefaultColors(char* filename);
-  void setNewTagCol(int ind, int r, int g, int b);
+  void removeEdgesForNode( int nd );
+  void removeNode( int nd );
+  bool hasEdgeBetween( int nd1, int nd2, int tag );
+  void includeDatesBtw( int bY, int bM, int bD, int dY, int dM, int dD );
+  bool includeByTime( char* stdName );
+  void saveTagColors( char* filename );
+  void setDefaultColors( char* filename );
+  void setNewTagCol( int ind, int r, int g, int b );
   void mergeEdges();
-  void setCaptionItalic(bool b);
-  void setCaptionBold(bool b);
-  void setCaptionSize(int sz);
-  void setCaptionFont(int fnt);
-  void setCaptionColour(int r, int g, int b);
+  void setCaptionItalic( bool b );
+  void setCaptionBold( bool b );
+  void setCaptionSize( int sz );
+  void setCaptionFont( int fnt );
+  void setCaptionColour( int r, int g, int b );
   bool getCaptionItalic();
   bool getCaptionBold();
   int getCaptionSize();
@@ -225,9 +225,9 @@ public:
   int getCaptionGreen();
   int getCaptionBlue(); 
   void redrawNameTags();
-  void deselect(int x, int y);
+  void deselect( int x, int y );
   void setTitleText();
-  void saveScreenshot(char* filename, int filetype, int magnification);
+  void saveScreenshot( char* filename, int filetype, int magnification );
 
 private:  
   int lineNum[NUM_OF_NAMES_C];
@@ -286,7 +286,7 @@ private:
   int shiftSelected;
   int oldSelected;
   list<int> selectedNodes;
-  Node* graph1[NUM_OF_NAMES_C];
+  ovNode* graph1[NUM_OF_NAMES_C];
   int* stInd;  int* endInd;
   int* nameInd;
   QPushButton* searchButton;

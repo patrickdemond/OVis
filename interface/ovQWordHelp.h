@@ -1,11 +1,11 @@
 #ifndef WORDHELP_H
 #define WORDHELP_H
 
-#include "ui_wordHelp.h"
+#include "ui_ovQWordHelp.h"
 #include "QVTKWidget.h"
 
 //dialog for tag selection
-class WordHelp : public QDialog, private Ui_WordHelpDialog
+class ovQWordHelp : public QDialog, private Ui_WordHelpDialog
 {
   Q_OBJECT
 
@@ -13,9 +13,9 @@ public:
   
   //constructor
   
-  WordHelp(QWidget* parent = 0);
+  ovQWordHelp( QWidget* parent = 0 );
   //destructor
-  ~WordHelp(){};
+  ~ovQWordHelp(){};
 
 public slots:
 
