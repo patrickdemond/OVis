@@ -21,7 +21,14 @@ IF( NOT QT_USE_FILE )
 ENDIF( NOT QT_USE_FILE )
 INCLUDE( ${QT_USE_FILE} )
 
+# We need LibXML2
+FIND_PACKAGE( LibXml2 )
+IF( NOT LIBXML2_FOUND )
+  MESSAGE( FATAL_ERROR "ovis requires LibXML2" )
+ENDIF( NOT LIBXML2_FOUND )
+
 SET( OVIS_SOURCE
+  ovis.cpp
   source/ovDate.cpp
   source/ovEdge.cpp
   source/ovGraph.cpp
@@ -71,6 +78,7 @@ SET_SOURCE_FILES_PROPERTIES( ${OVIS_SOURCE} PROPERTIES OBJECT_DEPENDS "${UIHeade
 # Use the include path and library for Qt
 INCLUDE_DIRECTORIES(
   ${QT_INCLUDE_DIR}
+  ${LIBXML2_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -80,6 +88,7 @@ ADD_EXECUTABLE( ovis ${OVIS_SOURCE} ${OVIS_UISrcs} ${MOCSrcs} )
 TARGET_LINK_LIBRARIES( ovis
   QVTK
   ${QT_LIBRARIES}
+  ${LIBXML2_LIBRARIES}
   vtkRendering
   vtkGraphics
   vtkIO
