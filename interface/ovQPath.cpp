@@ -2,8 +2,6 @@
 #include <qfiledialog.h>
 #include "ovQPath.h"
 
-#include "source/ovGraph.h"
-
 //tag constructor
 ovQPath::ovQPath( QWidget* parent )
   : QDialog( parent )
@@ -40,12 +38,6 @@ QComboBox* ovQPath::getCombo2()
   return comboBox_2;
 }
 
-//set the graph
-void ovQPath::setGraph( ovGraph* g )
-{
-  graph = g;
-}
-
 //if cancel is pressed
 void ovQPath::pathCancel()
 {
@@ -65,7 +57,7 @@ void ovQPath::pathOk()
 
   if( str1 != NULL && str2 != NULL )
     {
-      graph->findPathBtw( str1, str2 );
+      //graph->findPathBtw( str1, str2 );
     }
 
   free( str1 );

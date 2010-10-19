@@ -6,9 +6,6 @@
 #include "QVTKWidget.h"
 #include "ovQFont.h"
 
-#include "source/ovGraph.h"
-#include "source/ovUserStyle.h"
-
 class ovQMainWindow : public QMainWindow, private Ui_MainWindow
 {
   Q_OBJECT
@@ -34,8 +31,6 @@ public:
   QProgressBar* getProgressBar();
 
   //set variables
-  void setUserStyle( ovUserStyle* st );
-  void setGraph( ovGraph* gra );
   void setVisualizationText( char* text );
   void enableMenuItems( char mode );
 
@@ -69,10 +64,6 @@ protected:
 protected slots:
 
 private:
-
-  //global variables
-  ovGraph* graph;
-  ovUserStyle* style;    
 
 //file menu variables
   QAction* a_fileOpen;

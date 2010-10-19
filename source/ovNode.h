@@ -1,56 +1,43 @@
-#ifndef NODE_H
-#define NODE_H
+/*=========================================================================
 
-#include <list>
-#include <stdio.h>
-#include "vtkActor.h"
-#include "ovEdge.h"
+  Program:  ovis (OrlandoVision)
+  Module:   ovNode.h
+  Language: C++
 
-using namespace std;
+  Author: Patrick Emond <emondpd@mcmaster.ca>
 
-class ovNode
+=========================================================================*/
+//
+// .NAME ovNode - A mathematical node
+//
+// .SECTION Description
+// This class represents a node in a mathematical graph.  It is connected to
+// other nodes by edges (ovEdge).
+//
+// .SECTION See Also ovEdge
+// 
+
+#ifndef __ovNode_h
+#define __ovNode_h
+
+#include "vtkObject.h"
+#include "../ovUtilities.h"
+
+class ovNode : public vtkObject
 {
-
 public:
-  //constructor
-  ovNode();
-  //destructor
-  ~ovNode();
-  //constructor with int k as key
-  ovNode( int k );
-  void SetKey( int i );
-  bool operator==( const ovNode &a );
-  void setCenter( int i, int j, int k );
-  int getX() const;
-  int getY() const;
-  int getZ() const;
-  void addChild( ovEdge e );
-  int numOfChildren();
-  int getKey() const;
-  bool visited();
-  void setVisited( bool b );
-  list<ovEdge> getChildren();
-  void resetChildren();
-  int connectivity();
-  void resetConnectivity();
-  vtkActor* getSphereActor();
-  list<vtkActor*> getEdgeActors();
-  void setSphereActor( vtkActor* vtkA );
-  void resetEdgeActors();
-  void addEdgeActor( vtkActor* vtkA );
-  void removeEdgeActor( vtkActor* vtkA );
+  vtkTypeRevisionMacro(ovNode, vtkObject);
+  void PrintSelf(ostream &os, vtkIndent indent);
 
+protected:
+  // Description:
+  // Constructor and destructor
+  ovNode() {};
+  ~ovNode() {};
+  
 private:
-  //global variables
-  list<ovEdge> children;
-  list<vtkActor*> vtkActorEdges;
-  vtkActor* vtkAct;
-  int x;
-  int y;
-  int z;
-  bool visit;
-  int key;
-  bool con;
+  ovNode( const ovNode& );  // Not implemented.
+  void operator=( const ovNode& );  // Not implemented.
 };
 
 #endif

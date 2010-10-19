@@ -2,16 +2,21 @@
 #include <qfiledialog.h>
 #include "ovQFont.h"
 
+#include <QColorDialog>
+#include "vtkRenderWindow.h"
+#include "vtkRenderer.h"
+#include "vtkCaptionActor2D.h"
+#include "vtkTextProperty.h"
+#include "vtkTextActor.h"
+
 #include "vtkProperty2D.h"
 
 //tag constructor
-ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
+ovQFont::ovQFont( QWidget* parent )
   : QDialog( parent )
 {
   //set up the user interface
   setupUi( this );
-
-  graph = grap;
 
   fonts[0] = "Arial";
   fonts[1] = "Courier";
@@ -24,7 +29,7 @@ ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
 
   int sz = 4;
   int index = -1;
-  int capSize = graph->getCaptionSize();
+  int capSize = 10; //graph->getCaptionSize();
   size = capSize;
 
   for( int i=0; i<NUM_SIZES; i++ )
@@ -43,7 +48,7 @@ ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
 
   comboBox_3->setCurrentIndex( index );
 
-  col = new QColor( graph->getCaptionRed(), graph->getCaptionGreen(), graph->getCaptionBlue() );
+  col = new QColor( 1, 1, 1 ); //graph->getCaptionRed(), graph->getCaptionGreen(), graph->getCaptionBlue() );
 
   inter = qvtkWidget->GetInteractor();
   //inter->Disable();
@@ -64,7 +69,7 @@ ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
 
   prop = caption->GetTextActor()->GetTextProperty();
   
-  if( graph->getCaptionBold() )
+  if( false ) // graph->getCaptionBold() )
     {
       prop->BoldOn();
       bold = true;
@@ -75,7 +80,7 @@ ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
       bold = false;
     }
 
-  if( graph->getCaptionItalic() )
+  if( false ) // graph->getCaptionItalic() )
     {
       prop->ItalicOn();
       italic = true;
@@ -110,11 +115,11 @@ ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
   int y = col->green();
   int z = col->blue();
 
-  prop->SetFontSize( graph->getCaptionSize() );
+  //prop->SetFontSize( graph->getCaptionSize() );
 
   prop->ShadowOff();
   prop->SetColor( x/255.0, y/255.0, z/255.0 );
-  
+/*
   switch( graph->getCaptionFont() )
     {
     case ARIAL:
@@ -133,7 +138,7 @@ ovQFont::ovQFont( QWidget* parent, ovGraph* grap )
       comboBox->setCurrentIndex( TIMES );
       break;
     }
-  
+*/  
   rend->AddActor( caption );
 
   fontWin->AddRenderer( rend );
@@ -278,13 +283,13 @@ void ovQFont::okToGo()
   printf( "DONE" );
   fflush( stdout );
 
-  graph->setCaptionColour( col->red(), col->green(), col->blue() );
-  graph->setCaptionBold( bold );
-  graph->setCaptionItalic( italic );
-  graph->setCaptionSize( size );
-  graph->setCaptionFont( font );
+  //graph->setCaptionColour( col->red(), col->green(), col->blue() );
+  //graph->setCaptionBold( bold );
+  //graph->setCaptionItalic( italic );
+  //graph->setCaptionSize( size );
+  //graph->setCaptionFont( font );
 
-  graph->redrawNameTags();
+  //graph->redrawNameTags();
 
   this->done( 1 );
 }

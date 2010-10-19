@@ -22,17 +22,18 @@ SET( OVIS_SOURCE
   ovis.cpp
   
   # New ovis code
+  source/ovEdge.cpp
   source/ovXMLReader.cpp
+  source/ovNode.cpp
   
   # Old orlando code
   source/ovDate.cpp
-  source/ovEdge.cpp
-  source/ovGraph.cpp
   source/ovName.cpp
-  source/ovNode.cpp
+  #source/ovNode.cpp
   source/ovPeriod.cpp
   source/ovUserStyle.cpp
   source/ovUserStyleTags.cpp
+
   interface/ovQFont.cpp
   interface/ovQMainWindow.cpp
   interface/ovQPath.cpp

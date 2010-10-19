@@ -6,7 +6,6 @@
 #include "QVTKWidget.h"
 #include "ovQWordHelp.h"
 
-#include "source/ovGraph.h"
 #include "source/ovPeriod.h"
 #include "source/ovDate.h"
 
@@ -19,7 +18,7 @@ public:
   
   //constructor
   
-  ovQWords( ovGraph* g, QWidget* parent = 0 );
+  ovQWords( QWidget* parent = 0 );
   //destructor
   ~ovQWords(){};
 
@@ -47,7 +46,6 @@ protected slots:
 private:
 
   //global variables
-  ovGraph* graph;
   int index1;
   int index2;
   list<ovPeriod*> historical;

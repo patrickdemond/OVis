@@ -4,8 +4,6 @@
 #include "ui_ovQPath.h"
 #include "QVTKWidget.h"
 
-#include "source/ovGraph.h"
-
 //dialog for tag selection
 class ovQPath : public QDialog, private Ui_PathDialog
 {
@@ -23,7 +21,6 @@ public:
   QWidget* getParent();
   QComboBox* getCombo1();
   QComboBox* getCombo2();
-  void setGraph( ovGraph* g );
 
 public slots:
 
@@ -40,7 +37,6 @@ protected slots:
 private:
 
   //global variables
-  ovGraph* graph;
   int index1;
   int index2;  
   QWidget* par;

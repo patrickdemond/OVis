@@ -5,8 +5,6 @@
 #include "QVTKWidget.h"
 #include <QComboBox>
 
-#include "source/ovGraph.h"
-
 //dialog for tag selection
 class ovQText: public QDialog, private Ui_TextDialog
 {
@@ -21,7 +19,6 @@ public:
   ~ovQText(){};
 
   //functions
-  void setGraph( ovGraph* g );
   QComboBox* getCombo1();
   QComboBox* getCombo2();
   QComboBox* getCombo3();
@@ -42,7 +39,6 @@ protected slots:
 private:
 
   //global variables
-  ovGraph* graph;
   char* entry;
   char* name;
   char* tag;

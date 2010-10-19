@@ -2,11 +2,8 @@
 #include <qfiledialog.h>
 #include "ovQWords.h"
 
-#include "source/ovGraph.h"
-
 //tag constructor
-ovQWords::ovQWords( ovGraph* g, QWidget* parent )
-  : QDialog( parent )
+ovQWords::ovQWords( QWidget* parent ) : QDialog( parent )
 {
   //set up the user interface
   setupUi( this );
@@ -24,8 +21,6 @@ ovQWords::ovQWords( ovGraph* g, QWidget* parent )
 
   setUpCombo1();
   setUpCombo2();
-
-  graph = g;
 };
 
 //if cancel is pressed
@@ -99,8 +94,8 @@ void ovQWords::wordsOk()
 
   if( str1 != NULL || str2 != NULL )
     {
-      graph->include( str1 );
-      graph->exclude( str2 );
+      //graph->include( str1 );
+      //graph->exclude( str2 );
     }
 
   free( str1 );
@@ -108,7 +103,7 @@ void ovQWords::wordsOk()
 
   if( checkBox->isChecked() )
     {
-      graph->setEntriesOnly( true );
+      //graph->setEntriesOnly( true );
     }
 
   //hide this widget
@@ -149,7 +144,7 @@ void ovQWords::checkDates( ovDate* dt1, ovDate* dt2 )
   //printf( "CHECKING DATES" );
   //fflush( stdout );
   
-  graph->includeDatesBtw( dt1->GetYear(), dt1->GetMonth(), dt1->GetDay(), dt2->GetYear(), dt2->GetMonth(), dt2->GetDay() );
+  //graph->includeDatesBtw( dt1->GetYear(), dt1->GetMonth(), dt1->GetDay(), dt2->GetYear(), dt2->GetMonth(), dt2->GetDay() );
 }
 
 void ovQWords::getHistorical( char* filename )

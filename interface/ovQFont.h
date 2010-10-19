@@ -5,7 +5,12 @@
 #include "QVTKWidget.h"
 #include <QComboBox>
 
-#include "source/ovGraph.h"
+class QVTKInteractor;
+class vtkRenderWindow;
+class vtkRenderer;
+class vtkCaptionActor2D;
+class vtkTextProperty;
+class QColor;
 
 #define NUM_FONTS 3
 #define NUM_FONT_STYLES 4
@@ -20,7 +25,7 @@ public:
   
   //constructor
   
-  ovQFont( QWidget* parent = 0, ovGraph* grap = 0 );
+  ovQFont( QWidget* parent = 0 );
   //destructor
   ~ovQFont(){};
 
@@ -44,7 +49,6 @@ protected slots:
 private:
 
   //global variables
-  ovGraph* graph;
   char* fonts[NUM_FONTS];
   char* fontStyles[NUM_FONT_STYLES];
   int sizes[NUM_SIZES];

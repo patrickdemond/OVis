@@ -1,8 +1,7 @@
 #include <qapplication.h>
 #include <qfiledialog.h>
+#include <QColorDialog>
 #include "ovQTags.h"
-
-#include "source/ovGraph.h"
 
 //tag constructor
 ovQTags::ovQTags( QWidget* parent )
@@ -83,21 +82,19 @@ void ovQTags::changeTagCol( QListWidgetItem* tagToChange )
 {
   int index = listWidget->row( tagToChange );
 
-  double* oldCol = graph->getColor( index );
+  //double* oldCol = graph->getColor( index );
   
   QColor* tagCol = new QColor();
-  tagCol->setRed( (int )( oldCol[0]*255 ));
-  tagCol->setGreen( (int )( oldCol[1]*255 ));
-  tagCol->setBlue( (int )( oldCol[2]*255 ));
+  tagCol->setRed( (int )( 255 ) ); //oldCol[0]*255 ));
+  tagCol->setGreen( (int )( 255 ) ); //oldCol[1]*255 ));
+  tagCol->setBlue( (int )( 255 ) ); //oldCol[2]*255 ));
   
   QColor col = QColorDialog::getColor( *tagCol, this );
 
   if( col.red() != col.blue() != col.green() != 0 )
     {
-      graph->setNewTagCol( index, col.red(), col.green(), col.blue() );
+      //graph->setNewTagCol( index, col.red(), col.green(), col.blue() );
       tagToChange->setBackgroundColor( col );
-
-      
     }
 }
 
@@ -109,17 +106,17 @@ void ovQTags::loadCols()
     {
       char* fname = ( char* ) calloc( 1000, sizeof( char ));
       sprintf( fname, str );
-      graph->setDefaultColors( fname );
+      //graph->setDefaultColors( fname );
     }
 
   for( int i=0; i<listWidget->count(); i++ )
     {
-      double* col = graph->getColor( i );
+      //double* col = graph->getColor( i );
   
       QColor* tagCol = new QColor();
-      tagCol->setRed( (int )( col[0]*255 ));
-      tagCol->setGreen( (int )( col[1]*255 ));
-      tagCol->setBlue( (int )( col[2]*255 ));
+      tagCol->setRed( (int )( 255 ) ); // col[0]*255 ));
+      tagCol->setGreen( (int )( 255 ) ); // col[1]*255 ));
+      tagCol->setBlue( (int )( 255 ) ); // col[2]*255 ));
 
       ( listWidget->item( i ))->setBackground( *tagCol );
     }
@@ -138,7 +135,7 @@ void ovQTags::saveCols()
     strcat( fname, ".tagCols" );
   }
 
-      graph->saveTagColors( fname );
+      //graph->saveTagColors( fname );
     }
 }
 
@@ -146,12 +143,6 @@ void ovQTags::saveCols()
 QListWidget* ovQTags::getTagList()
 {
   return listWidget;
-}
-
-//set the graph
-void ovQTags::setGraph( ovGraph* g )
-{
-  graph = g;
 }
 
 //return true if continue is on, false otherwise
@@ -174,7 +165,7 @@ void ovQTags::tagCancel()
 void ovQTags::tagOk()
 {    
   //list<char*> to hold the tags that are turned on
-  list<char*> strs;
+  //list<char*> strs;
 
 
   QList<QListWidgetItem*> tgs;
@@ -198,11 +189,11 @@ void ovQTags::tagOk()
       //print text of item to string
       sprintf( str, ( *it )->text() );
       //push string into list
-      strs.push_back( str );   
+      //strs.push_back( str );   
       }
 
   //set tags to the strings
-  graph->setTags( strs );
+  //graph->setTags( strs );
 
   //set continue to true
   continueTrue = true;

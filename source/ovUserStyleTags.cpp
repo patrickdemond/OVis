@@ -3,10 +3,9 @@
 #define nodeFile "/home/jberberi/Desktop/ORLANDO/test.nodes"
 
 //constructor for ovUserStyleTags
-ovUserStyleTags::ovUserStyleTags( QVTKInteractor* interact, vtkRenderWindow* window, ovGraph* grap )
+ovUserStyleTags::ovUserStyleTags( QVTKInteractor* interact, vtkRenderWindow* window )
 {
   //set the global variables to those passed in
-  gra = grap;
   wind = window;
   inter = interact;
 
@@ -72,7 +71,7 @@ void ovUserStyleTags::OnLeftButtonDown()
   b = ( (float )b/d )*600.0;
 
   //call the tag touched function in the Graph class to turn on/off tag
-  gra->tagTouched( (int )a, ( int )b );
+  //gra->tagTouched( (int )a, ( int )b );
 
   //rerender the window
   wind->Render();

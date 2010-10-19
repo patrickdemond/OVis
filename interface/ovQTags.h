@@ -4,8 +4,6 @@
 #include "ui_ovQTags.h"
 #include "QVTKWidget.h"
 
-#include "source/ovGraph.h"
-
 //dialog for tag selection
 class ovQTags : public QDialog, private Ui_Dialog
 {
@@ -21,8 +19,6 @@ public:
   //functions
   QListWidget* getTagList();
   bool getContinue();
-  void setGraph( ovGraph* g );
-  
 
 public slots:
   
@@ -43,8 +39,6 @@ private:
 
   //global variables
   bool continueTrue;
-  ovGraph* graph;
-
 };
 
 #endif

@@ -19,12 +19,6 @@ ovQText::ovQText( QWidget* parent )
   textBrowser->setTextFormat( Qt::PlainText );
 };
 
-//set the graph
-void ovQText::setGraph( ovGraph* g )
-{
-  graph = g;
-}
-
 QComboBox* ovQText::getCombo1()
 {
   return comboBox;
@@ -79,7 +73,7 @@ void ovQText::showText()
     tag = "Whole Entry";
   }
 
-  graph->showXMLEntry( entry, name, tag, textBrowser );
+  //graph->showXMLEntry( entry, name, tag, textBrowser );
 }
 
 void ovQText::entrySel( QString str )
@@ -89,7 +83,7 @@ void ovQText::entrySel( QString str )
 
   if( st != NULL )
     {
-      graph->namesFromEntry( st, comboBox_2 );
+      //graph->namesFromEntry( st, comboBox_2 );
       
       entry = ( char* ) calloc( 1000, sizeof( char ));
       entry = st;
@@ -103,7 +97,7 @@ void ovQText::nameSel( QString str )
   
   if( st != NULL )
     {
-      graph->tagsFromNameEntry( entry, st, comboBox_3 );
+      //graph->tagsFromNameEntry( entry, st, comboBox_3 );
       
       name = ( char* ) calloc( 1000, sizeof( char ));
       name = st;

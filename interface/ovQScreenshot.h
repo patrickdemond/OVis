@@ -4,8 +4,6 @@
 #include "ui_ovQScreenshot.h"
 #include "QVTKWidget.h"
 
-#include "source/ovGraph.h"
-
 //dialog for screenshot selection
 class ovQScreenshot : public QDialog, private Ui_screenshotDialog
 {

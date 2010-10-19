@@ -1,38 +1,43 @@
-#ifndef EDGE_H
-#define EDGE_H
+/*=========================================================================
 
-#include <list>
-#include <stdio.h>
+  Program:  ovis (OrlandoVision)
+  Module:   ovEdge.h
+  Language: C++
 
-#define NUM_OF_TAGS_C 1000
+  Author: Patrick Emond <emondpd@mcmaster.ca>
 
-using namespace std;
+=========================================================================*/
+//
+// .NAME ovEdge - A mathematical node
+//
+// .SECTION Description
+// This class represents a node in a mathematical graph.  It is connected to
+// other nodes by edges (ovEdge).
+//
+// .SECTION See Also ovEdge
+// 
 
-class ovEdge
+#ifndef __ovEdge_h
+#define __ovEdge_h
+
+#include "vtkObject.h"
+#include "../ovUtilities.h"
+
+class ovEdge : public vtkObject
 {
-
 public:
-  //constructor
-  ovEdge();
-  ovEdge( int nd1, int nd2, list<int> tgs );
-  //destructor
-  ~ovEdge();
-  void SetNode1( int n1 );
-  void SetNode2( int n2 );
-  int GetNode1();
-  int GetNode2();
-  bool HasTag( int i );
-  list<int> GetTags();
-  void AddTags( list<int> tgs );
-  void AddTag( int i );
+  vtkTypeRevisionMacro(ovEdge, vtkObject);
+  void PrintSelf(ostream &os, vtkIndent indent);
 
+protected:
+  // Description:
+  // Constructor and destructor
+  ovEdge() {};
+  ~ovEdge() {};
+  
 private:
-  //global variables
-  int node1;
-  int node2;
-  bool tags[NUM_OF_TAGS_C+1];
-  list<int> tagList;
-
+  ovEdge( const ovEdge& );  // Not implemented.
+  void operator=( const ovEdge& );  // Not implemented.
 };
 
 #endif

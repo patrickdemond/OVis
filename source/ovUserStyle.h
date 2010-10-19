@@ -7,8 +7,8 @@
 #include "vtkInteractorStyle.h"
 #include "vtkRenderWindowInteractor.h"
 #include "vtkRenderWindow.h"
+#include "QVTKWidget.h"
 #include <stdio.h>
-#include "ovGraph.h"
 
 using namespace std;
 
@@ -17,7 +17,7 @@ class ovUserStyle : public vtkInteractorStyleJoystickCamera
 
 public:
   //constructor
-  ovUserStyle( QVTKInteractor* interact, vtkRenderWindow* window, ovGraph* grap );
+  ovUserStyle( QVTKInteractor* interact, vtkRenderWindow* window );
 
   //destructor
   ~ovUserStyle();
@@ -52,7 +52,6 @@ public:
   
 private:
   //global variables
-  ovGraph* gra;
   bool highlight; //bool for highlight on or off
   bool path;      //bool for path on or off
   bool toggle;    //bool for Toggle on or off

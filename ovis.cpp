@@ -1,18 +1,20 @@
-/*
- * Main application file which launches ovis
- * Author: Patrick D. Emond <emondpd@mcmaster.ca>
- */
+/*=========================================================================
+
+  Program:  ovis (OrlandoVision)
+  Module:   ovis.cpp
+  Language: C++
+
+  Author: Patrick Emond <emondpd@mcmaster.ca>
+
+=========================================================================*/
+//
+// .SECTION Description
+// The main function which launches the application.
+//
 
 #include <QApplication>
 #include "interface/ovQMainWindow.h"
 #include "interface/ovQTags.h"
-#include "source/ovGraph.h"
-
-// STL headers and typedefs
-#include <vtksys/stl/map>
-#include <vtksys/stl/string>
-
-typedef vtksys_stl::string ovString;
 
 // main function
 int main( int argc, char** argv )
@@ -25,36 +27,11 @@ int main( int argc, char** argv )
 
   ovQTags tagWindow;
 
-  // create the graph
-  ovGraph* graph = new ovGraph(
-    mainWindow.getWindow(),
-    mainWindow.getInteractor(),
-    mainWindow.getList(),
-    mainWindow.getLabel(),
-    mainWindow.getLineEdit(),
-    mainWindow.getWidget(),
-    mainWindow.getButton(),
-    mainWindow.getLabel1(),
-    mainWindow.getLabel2(),
-    mainWindow.getWindow2(),
-    mainWindow.getInteractor2(),
-    mainWindow.getProgressBar(),
-    tagWindow.getTagList(),
-    &mainWindow,
-    &tagWindow
-  );
-
   // set main widget for the application to the main window
   application.setMainWidget( &mainWindow );  
   
   // show the main window
   mainWindow.show();
-
-  // set the graph in the main window
-  mainWindow.setGraph( graph );
-
-  list<char*> tagList;
-  graph->setTags( tagList );
 
   // return the result of the executed application
   return application.exec();

@@ -4,8 +4,6 @@
 #include "ovQWords.h"
 #include "ovQScreenshot.h"
 
-#include "source/ovGraph.h"
-
 ovQMainWindow::ovQMainWindow( QWidget* parent )
   : QMainWindow( parent )
 {
@@ -154,7 +152,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
 // Clears the visuals and main data for the graph without instantiating anything new
 void ovQMainWindow::clearGraph()
 {
-  graph->clearGraph();
+  //graph->clearGraph();
 }
 
 
@@ -223,19 +221,19 @@ void ovQMainWindow::saveScreenshot()
 
       if( str.contains( ".png" ))
   {
-    graph->saveScreenshot( fname, PNG, mag );
+    //graph->saveScreenshot( fname, PNG, mag );
   }
       else if( str.contains( ".jpg" ))
   {
-    graph->saveScreenshot( fname, JPG, mag );
+    //graph->saveScreenshot( fname, JPG, mag );
   } 
       else if( str.contains( ".bmp" ))
   {
-    graph->saveScreenshot( fname, BMP, mag );
+    //graph->saveScreenshot( fname, BMP, mag );
   }
       else if( str.contains( ".tif" ))
   {
-    graph->saveScreenshot( fname, TIF, mag );
+    //graph->saveScreenshot( fname, TIF, mag );
   }
     }
 }
@@ -247,7 +245,7 @@ void ovQMainWindow::setVisualizationText( char* text )
 
 void ovQMainWindow::setLabelProperties()
 {      
-  ovQFont* fntWin = new ovQFont( this, graph );
+  ovQFont* fntWin = new ovQFont( this );
       
   ( getInteractor() )->Disable();
   
@@ -271,42 +269,36 @@ void ovQMainWindow::doubleClick( QListWidgetItem* item )
   //get item's string
   sprintf( str, item->text() ); 
   //set selected to string
-  graph->setSelected( str );
+  //graph->setSelected( str );
   //determine what name tag to show
-  graph->nameOnOff( true, str );
+  //graph->nameOnOff( true, str );
   //free string
   free( str );
   
   //if toggle is on
-  if( style->getToggle() )
-    {
-      //set toggle
-      style->setToggle( false );
-    }
-  //if hightight it on
-  else if( style->getHighlight() )
-    {
-      //set highlight
-      style->setHighlight( false );
-    }
-  //if graph is on
-  else
-    {
-      //set graph
-      style->setGraph( false );
-    }
+//  if( style->getToggle() )
+//    {
+//      //set toggle
+//      style->setToggle( false );
+//    }
+//  //if hightight it on
+//  else if( style->getHighlight() )
+//    {
+//      //set highlight
+//      style->setHighlight( false );
+//    }
+//  //if graph is on
+//  else
+//    {
+//      //set graph
+//      style->setGraph( false );
+//    }
 }
 
 //Return progress bar
 QProgressBar* ovQMainWindow::getProgressBar()
 {
   return progressBar;
-}
-
-//Set the graph to gra
-void ovQMainWindow::setGraph( ovGraph* gra )
-{
-  graph = gra;
 }
 
 //return widget
@@ -371,7 +363,7 @@ void ovQMainWindow::fileSave()
     {
       char* fname = ( char* ) calloc( 1000, sizeof( char ));
       sprintf( fname, str );
-      graph->saveFile( fname );
+      //graph->saveFile( fname );
     }
 }
 
@@ -385,7 +377,7 @@ void ovQMainWindow::fileOpen()
     {
       char* fname = ( char* ) calloc( 1000, sizeof( char ));
       sprintf( fname, str );
-      graph->loadFile( fname );
+      //graph->loadFile( fname );
     }
 }
 
@@ -397,12 +389,12 @@ void ovQMainWindow::fileLoad()
 
   if( str != "" )
     {
-      ovQWords wd( graph );
+      ovQWords wd;
       wd.exec();
 
       char* fname = ( char* ) calloc( 1000, sizeof( char ));
       sprintf( fname, str );
-      graph->loadXML( fname );
+      //graph->loadXML( fname );
     }
 }
 
@@ -414,18 +406,18 @@ void ovQMainWindow::fileExit()
 
 void ovQMainWindow::popUpTags()
 {
-  graph->tagWindowOn();
+  //graph->tagWindowOn();
 }
 
 void ovQMainWindow::popUpText()
 {
-  graph->textWindowOn();
+  //graph->textWindowOn();
 }
 
 //when name tags menu item is pressed
 void ovQMainWindow::nameTagsOn()
 {
-  graph->selectedNodesOn(); //Turns only selected nodes on
+  //graph->selectedNodesOn(); //Turns only selected nodes on
   
   a_names->setChecked( true );
   a_names2->setChecked( false );
@@ -434,7 +426,7 @@ void ovQMainWindow::nameTagsOn()
 void ovQMainWindow::allNameTagsOn()
 {
   // turns on all name tags
-  graph->allNamesOn( true );  
+  //graph->allNamesOn( true );  
   a_names->setChecked( true );
   a_names2->setChecked( false );
 }
@@ -444,14 +436,14 @@ void ovQMainWindow::nameTagsOff()
   progressBar->setValue( 0 );  
 
   //turn all names off
-  graph->allNamesOff( true );
+  //graph->allNamesOff( true );
   a_names->setChecked( false );
   a_names2->setChecked( true );
 }
 
 void ovQMainWindow::nameTagsClear()
 {
-  graph->allNamesOff( false );
+  //graph->allNamesOff( false );
 }
 
 //return label 1
@@ -474,15 +466,9 @@ void ovQMainWindow::search()
   //get searchbox's string
   sprintf( str, lineEdit->text() );
   //search the string
-  graph->search( str );
+  //graph->search( str );
   //free string
   free( str );
-}
-
-//set user style to st
-void ovQMainWindow::setUserStyle( ovUserStyle* st )
-{
-  style = st;
 }
 
 //when camera mode button is pressed
@@ -490,7 +476,7 @@ void ovQMainWindow::cameraMode()
 {
 
   // Set the Graph's Mode to Camera
-  graph->setMode( 'c' );
+  //graph->setMode( 'c' );
 
   toolButton->setAutoRaise( false );
   toolButton_2->setAutoRaise( false );
@@ -498,9 +484,9 @@ void ovQMainWindow::cameraMode()
   toolButton_4->setAutoRaise( false );
   
   //change interactor to camera
-  graph->changeInteractorToCamera();
+  //graph->changeInteractorToCamera();
   //set camera to true in user style
-  style->setCamera();
+  //style->setCamera();
 }
 
 //when toggle mode button is pressed
@@ -508,47 +494,47 @@ void ovQMainWindow::toggleMode()
 {
 
   // Set the Graph's Mode to Toggle
-  graph->setMode( 't' );
+  //graph->setMode( 't' );
 
   toolButton->setAutoRaise( true );
   toolButton_2->setAutoRaise( false );
   toolButton_3->setAutoRaise( false );
   toolButton_4->setAutoRaise( false );
 
-  graph->resetGraphCons();
+  //graph->resetGraphCons();
 
   //if camera mode is on change it to graph mode
-  graph->changeInteractorToGraph();
+  //graph->changeInteractorToGraph();
   
   //set toggle to true in user style
-  style->setToggle( true );
+  //style->setToggle( true );
 }
 
 //when graph mode button is pressed
 void ovQMainWindow::graphMode( bool draw )
 {
   // Set the Graph Mode to Graph
-  graph->setMode( 'g' );
+  //graph->setMode( 'g' );
 
   toolButton->setAutoRaise( false );
   toolButton_2->setAutoRaise( true );
   toolButton_3->setAutoRaise( false );
   toolButton_4->setAutoRaise( false );
 
-  graph->resetGraphCons();
+  //graph->resetGraphCons();
 
   //change it to graph mode
-  graph->changeInteractorToGraph();
+  //graph->changeInteractorToGraph();
 
   //set graph to true
-  style->setGraph( draw );
+  //style->setGraph( draw );
 }
 
 //when highlight mode button is pressed
 void ovQMainWindow::highlightMode()
 { 
   // Set the Graph Mode to Highlight 
-  graph->setMode( 'h' );
+  //graph->setMode( 'h' );
  
   ( getInteractor() )->Disable();
 
@@ -557,13 +543,13 @@ void ovQMainWindow::highlightMode()
   toolButton_3->setAutoRaise( false );
   toolButton_4->setAutoRaise( true );
 
-  graph->resetGraphCons();
+  //graph->resetGraphCons();
 
   //change it to graph mode
-  graph->changeInteractorToGraph();
+  //graph->changeInteractorToGraph();
   
   //set highlight to true in user style
-  style->setHighlight( true );
+  //style->setHighlight( true );
   
   ( getInteractor() )->Enable();
 }
@@ -571,7 +557,7 @@ void ovQMainWindow::highlightMode()
 void ovQMainWindow::findPath()
 {
   progressBar->setValue( 0 );
-  graph->popUpPath();
+  //graph->popUpPath();
 }
 
 // Turns menu items on
