@@ -566,13 +566,6 @@ void ovGraph::loadFile( char* filename )
         
       // close the file
       file.close();
-  
-      //free( line ); 
-      //free( Name1 );
-      //free( EntryNum1 );
-      //free( Name2 );
-      //free( EntryNum2 ); 
-      //free( tags );
     }
     // else give error message
     else
@@ -950,7 +943,7 @@ void ovGraph::saveInc( char* filename )
   ofstream file( filename );
   fstream fl;
 
-  fl.open( "../ORLANDO-git/tmp/orlando.inc" );
+  fl.open( "tmp/orlando.inc" );
 
   do
     {   
@@ -959,7 +952,7 @@ void ovGraph::saveInc( char* filename )
       
       file << line << "\n";
 
-      free( line ); // FREE MEM
+      free( line );
 
     }while( !fl.eof() );
 
@@ -971,7 +964,7 @@ void ovGraph::saveInc( char* filename )
 void ovGraph::loadInc( char* filename )
 {  
   // create file
-  ofstream file( "../ORLANDO-git/tmp/orlando.inc" );
+  ofstream file( "tmp/orlando.inc" );
   fstream fl;
 
   fl.open( filename );
@@ -998,7 +991,7 @@ void ovGraph::saveExc( char* filename )
   ofstream file( filename );
   fstream fl;
 
-  fl.open( "../ORLANDO-git/tmp/orlando.exc" );
+  fl.open( "tmp/orlando.exc" );
 
   do
     {   
@@ -1007,7 +1000,7 @@ void ovGraph::saveExc( char* filename )
       
       file << line << "\n";
 
-  free( line ); // FREE MEM
+  free( line );
       
     }while( !fl.eof() );
 
@@ -1019,7 +1012,7 @@ void ovGraph::saveExc( char* filename )
 void ovGraph::loadExc( char* filename )
 {  
   // create file
-  ofstream file( "../ORLANDO-git/tmp/orlando.exc" );
+  ofstream file( "tmp/orlando.exc" );
   fstream fl;
 
   fl.open( filename );
@@ -1075,7 +1068,7 @@ void ovGraph::loadNamesOn( char* filename )
     selectedNodes.push_back( i );
       }
 
-    free( line ); // FREE MEM
+    free( line );
   }
       file.close();
     }
@@ -1207,7 +1200,7 @@ void ovGraph::loadTogOn( char* filename )
     toggledOn.push_back( atoi( line ));
     file.getline( line, 1000 );
   }
-      free( line ); // FREE MEM
+      free( line );
       file.close();
     }
   // else give error message
@@ -1245,7 +1238,7 @@ void ovGraph::loadTogCon( char* filename )
 
     toggleConnected[i] = atoi( line );
 
-    free( line ); // FREE MEM
+    free( line );
   }
       file.close();
     }
@@ -4775,7 +4768,7 @@ void ovGraph::setDefaultColors( char* filename )
         file.getline( line, 1000 );
 
         tagCols[i][j] = atof( line );
-        free( line ); // FREE MEM
+        free( line );
       }
   }
       file.close();
@@ -5151,97 +5144,83 @@ void ovGraph::resetSearch()
 // Parse the file with filename to get all names in the file
 void ovGraph::GetEntry( char* filename )
 {
-
-  stInd = ( int* ) calloc( NUM_OF_NAMES_C+NUM_OF_NAMES_C+NUM_OF_TAGS+100, sizeof( int ));
-  endInd = ( int* ) calloc( NUM_OF_NAMES_C+NUM_OF_NAMES_C+NUM_OF_TAGS+100, sizeof( int ));
-  nameInd = ( int* ) calloc( NUM_OF_NAMES_C+NUM_OF_NAMES_C, sizeof( int ));
-
   orlandoDataName = filename;
   entries.clear();
 
- // create a file
+  // create a file
   fstream fil;
-  ofstream tempFile( "../ORLANDO-git/tmp/data.txt" );
+  ofstream tempFile( "tmp/data.txt" );
 
   // open the file
   fil.open( filename );
   
   // if the file opens properly
   if( fil.is_open() )
-    {  
-      
-     char* line = ( char* ) calloc( 1000, sizeof( char ));
-      fil.getline( line, 1000 );
+  {  
+    char* line = ( char* ) calloc( 1000, sizeof( char ));
+    fil.getline( line, 1000 );
 
-  // Finds the beginning of the file based on the "<ORLANDO>" tag  
-  while( strstr( line, "<ORLANDO" ) == NULL )
-  {
-
-    // Skips blank space, or headers
-    if( line!= NULL )
-    {  
-      free( line );
-      line = NULL;
-    }
-    else
+    // Finds the beginning of the file based on the "<ORLANDO>" tag  
+    while( strstr( line, "<ORLANDO" ) == NULL )
     {
-       free( line ); // FREE MEM
-    }
-
-    line = ( char* ) calloc( 1000, sizeof( char ));
-        fil.getline( line, 1000 );
-
+      // Skips blank space, or headers
+      if( line!= NULL )
+      {  
+        free( line );
+        line = NULL;
+      }
+      else
+      {
+        free( line );
       }
 
+      line = ( char* ) calloc( 1000, sizeof( char ));
+      fil.getline( line, 1000 );
+    }
 
-  while( !fil.eof() )
-  {
-    if( line != NULL )
+    while( !fil.eof() )
+    {
+      if( line != NULL )
       {
         free( line );
         line = NULL;
       }
       else
-     {
-        free( line ); // FREE MEM
-     }
+      {
+        free( line );
+      }
       
-    // Writes entire XML file to a temp file that includes seperation markers
-    line = ( char* ) calloc( 10000000, sizeof( char ));
-    fil.getline( line, 10000000 );
-    char* str = strtok( line, "^" );
-    tempFile << str << "\n";
-    
-  }
+      // Writes entire XML file to a temp file that includes seperation markers
+      line = ( char* ) calloc( 10000000, sizeof( char ));
+      fil.getline( line, 10000000 );
+      char* str = strtok( line, "^" );
+      tempFile << str << "\n";
+    }
 
-  if( line != NULL )
-  {
-    free( line );
-    line = NULL;
-  }
-  else
-  {
-    free( line ); // FREE MEM
-  }
+    if( line != NULL )
+    {
+      free( line );
+      line = NULL;
+    }
+    else
+    {
+      free( line );
+    }
 
     // Adds marker to end of file
-      tempFile << "^" << endl;
+    tempFile << "^" << endl;
+    tempFile.close();
 
-      tempFile.close();
+    if( tagsUsed.empty() )
+    {
+      list<char*> emptyList;
+      setTags( emptyList );
+    }
 
-      if( tagsUsed.empty() )
-  {
-    list<char*> emptyList;
-    setTags( emptyList );
-  }
-
-      filename = "../ORLANDO-git/tmp/data.txt";
-    }  
+    filename = "tmp/data.txt";
+  }  
   // else give error message
   else cerr << "Unable to open file" << endl;
-
-
-
 
   // file to hold the file
   FILE* file;
@@ -5257,9 +5236,7 @@ void ovGraph::GetEntry( char* filename )
   // variables to hold the entry id
   char* entryID;
   int entryIDNum;
-
   int numNames = 0;
-  // int numOfEntries = 8;
   
   // create a list for the names
   list<ovName> nms;
@@ -5267,332 +5244,310 @@ void ovGraph::GetEntry( char* filename )
   // open file for reading
   file = fopen( filename, "rb" );
 
-
   // if the file opens with no problems
-  if( file != NULL )
-    {
-
-      // obtain file size:
-      fseek ( file , 0 , SEEK_END );
-      lSize = ftell ( file );
-      rewind ( file );
-
-      // allocate memory to contain the whole file:
-      buffer = ( char* ) malloc ( sizeof( char )*lSize );
-      if ( buffer == NULL ) {fputs ( "Memory error", stderr ); exit ( 2 );}
-      
-      // copy the file into the buffer:
-      result = fread ( buffer, 1, lSize, file );
-      if ( result != lSize ) {fputs ( "Reading error", stderr ); exit ( 3 );}
-
-      // get the first line
-      char* line = strtok( buffer, "\n" );
-
-
-      // get the rest of the file
-      char* restOfFile = strtok( NULL, "^" );
-
-      int lineN = 0;
-
-  
-      while( restOfFile != NULL )
-  {      
-
-
-    lineN++;
-    
-    int prog = ( int ) ( (( (float )lSize-strlen( restOfFile ))/lSize )*40 ); // Calculates progress
-    
-    printf( "\r[  %i%]", prog ); // Updates textual progress bar
+  if( NULL == file )
+  {
+    printf( "FILE OPEN FAILED: " );
+    printf( filename );
+    printf( "\n" );
     fflush( stdout );
-    progBar->setValue( prog ); // Updates progress bar
+  }
+  else
+  {
+    // obtain file size:
+    fseek ( file , 0 , SEEK_END );
+    lSize = ftell ( file );
+    rewind ( file );
 
-    // duplicate the line
-    char* ptr = strdup( line );
-    // char* to hold name
-    char* name2;
+    // allocate memory to contain the whole file:
+    buffer = ( char* ) malloc ( sizeof( char )*lSize );
+    if ( buffer == NULL ) {fputs ( "Memory error", stderr ); exit ( 2 );}
+      
+    // copy the file into the buffer:
+    result = fread ( buffer, 1, lSize, file );
+    if ( result != lSize ) {fputs ( "Reading error", stderr ); exit ( 3 );}
 
-    // ints to calculate the where the names are in the file
-    int lineLen = strlen( line );
-    int nameSpot = 0;
+    // get the first line
+    char* line = strtok( buffer, "\n" );
 
-    bool includeLn = true;
-
-    // if the line should be included
-    if( includeLine( line ))
-    {
-      // if the line is greater than 0 and does not have the end of file character
-      if( lineLen > 0 && ( strstr( line, "^" ) == NULL ))
-        {
-    // set the entry ID number to number of names
-    entryIDNum = numNames;
-    // find entryID
-    strtok( ptr, "\"" );  
-    // get entry id
-    entryID = strtok( NULL, "\"" );
-        
-    // get the rest of the line
-    char* ptr3 = strtok( NULL, "\n" ); 
-    
-    if( entryID == NULL || !includeByTime( strdup( entryID )) )
+    // get the rest of the file
+    char* restOfFile = strtok( NULL, "^" );
+    int lineN = 0;
+  
+    while( restOfFile != NULL )
+    {      
+      lineN++;
+      int prog = ( int ) ( (( (float )lSize-strlen( restOfFile ))/lSize )*40 ); // Calculates progress
+      
+      printf( "\r[  %i%]", prog ); // Updates textual progress bar
+      fflush( stdout );
+      progBar->setValue( prog ); // Updates progress bar
+  
+      // duplicate the line
+      char* ptr = strdup( line );
+      // char* to hold name
+      char* name2;
+  
+      // ints to calculate the where the names are in the file
+      int lineLen = strlen( line );
+      int nameSpot = 0;
+  
+      bool includeLn = true;
+  
+      // if the line should be included
+      if( includeLine( line ))
       {
-        // restOfFile == NULL;
-        includeLn = false;
-        // printf( "\n\nNOT INCLUDING LINE\n" );
-        // fflush( stdout );
-      }
-
-    else
-      {
-        // increment the number of entries
-        numEntries++;
-    
-        // initialize variables
-        bool unique = true;
-        int keyInt = 0;
-        int m=0;
-        
-        // for the number of names
-        for( int m=0; m<numNames; m++ )
-          {
-      // check if the name has already been used
-      if( strcmp( names[m], entryID ) == 0 )
+        // if the line is greater than 0 and does not have the end of file character
+        if( lineLen > 0 && ( strstr( line, "^" ) == NULL ))
         {
-          // set unique to false
-          unique = false;
-          // set the key to the key already used
-          keyInt = m;      
-        }
-          }
-
-        // if unique
-        if( unique )
-          {
-      // set the name of the entry to the entryID
-      names[entryIDNum] = strdup( entryID );
-      
-      graph1[numNames] = new ovNode();
-      
-      // incrememnt the number of names
-      numNames++;
-          }
-        else
-          {
-      // set the entry id number to key int
-      entryIDNum = keyInt;
-          }
-        
-        // push back the entry id number to the entries list
-        entries.push_back( entryIDNum );
-        
-        lineNum[entryIDNum] = lineN;
-
-        // find names
-        do
-          {        
-      // get the next name
-      ptr3 = strstr( ptr3, "<NAME" );  
-      strtok( ptr3, "\"" );
-      name2 = strtok( NULL, "\"" );
-
-      
-      // get the rest of the line
-      ptr3 = strtok( NULL, "\n" );
-      
-      // if the name is not null and the name is not the entry find the names in the entry
-      if( name2!=NULL && strcmp( name2, entryID ) != 0 )
-        {        
-          // set the name spot to the length of the rest of the line
-          nameSpot = strlen( ptr3 );
+          // set the entry ID number to number of names
+          entryIDNum = numNames;
+          // find entryID
+          strtok( ptr, "\"" );  
+          // get entry id
+          entryID = strtok( NULL, "\"" );
+              
+          // get the rest of the line
+          char* ptr3 = strtok( NULL, "\n" ); 
           
-          // initialize variables
-          unique = true;
-          bool thisEntry = false;
-          keyInt = 0;
-          
-          // for the number of names
-          for( int m=0; m<numNames; m++ )
-            {
-        // check if the names have already been used
-        if( strcmp( names[m], name2 ) == 0 )
+          if( entryID == NULL || !includeByTime( strdup( entryID )) )
           {
-            // set unique to false
-            unique = false;
-            // set keyInt to the key already used
-            keyInt = m;        
+            // restOfFile == NULL;
+            includeLn = false;
+            // printf( "\n\nNOT INCLUDING LINE\n" );
+            // fflush( stdout );
           }
-            }
-          
-          // if not unique
-          if( !unique )
-            {
-        // iterate through the nms list
-        list<ovName>::iterator it;
-        for( it=nms.begin(); it!=nms.end(); it++ )
-          {
-            // if the name is equal to the name in the list
-            if( strcmp( it->getKey(), name2 ) == 0 )
-              {
-          // add the file spot to the name
-          it->addFileSpot( nameSpot );
-          // set this entry to true
-          thisEntry = true;
-              }
-          }
-        
-        // if this entry is true
-        if( !thisEntry )
-          {        
-            // create a new name and add it to the list
-            ovName *nm = new ovName();
-            nm->setKey( name2 );
-            nm->addFileSpot( nameSpot );
-            nm->setKeyNum( keyInt );
-            nms.push_front( *nm );
-          }
-            }
-          // else
           else
-            {
-        // create a new name
-        ovName *nm = new ovName();
-        nm->setKey( name2 );
-        nm->addFileSpot( nameSpot );
-        nm->setKeyNum( numNames );
-        
-        // set the name at the number of names to the name string
-        names[numNames] = strdup( name2 );
-        
-        graph1[numNames] = new ovNode();
-        
-        // increment number of names
-        numNames++;
-        
-        // printf( "number of names: %i \n", numNames );
-        // fflush( stdout );
-        
-        // add the name to the list
-        nms.push_front( *nm );
-            }
-        }
-          }
-        while( ptr3 != NULL );
-        // while the line is not empty
-      
-        // for the number of tags find the tags!
-        for( int t=0; t<NUM_OF_TAGS; t++ )
           {
-      // copy the line to a char*
-      char* ptr2 = ( char* ) calloc( strlen( line )+1, sizeof( char )); 
-      strcpy( ptr2, line );
-      
-      // initialize variables
-      int startTag = 0;
-      int endTag = 0;
-      int ct = 0;
-      
-      do
-        {
-          // char* to hold the tag string
-          char* str = ( char* ) calloc( 100, sizeof( char ));
-          
-          // add an opening bracket onto the tag string
-          strcpy( str, "<" );
-          strcat( str, tags[t] );
-          
-          // find tag in file
-          ptr2 = strstr( ptr2, str );  
-          name2 = strtok( ptr2, ">" );
-          ptr2 = strtok( NULL, "\n" );
-          
-          // if tag is found
-          if( name2 != NULL )
+            // increment the number of entries
+            numEntries++;
+        
+            // initialize variables
+            bool unique = true;
+            int keyInt = 0;
+            int m=0;
+            
+            // for the number of names
+            for( int m=0; m<numNames; m++ )
             {
-        // store the place of the start of the tag in the file
-        startTag = strlen( ptr2 );
-        
-        // add the ending bracket onto the tag string
-        str = ( char* ) calloc( 100, sizeof( char ));
-        strcpy( str, "</" );
-        strcat( str, tags[t] );
-        strcat( str, ">" );
-        
-        // find the end tag in the file
-        ptr2 = strstr( ptr2, str );  
-        name2 = strtok( ptr2, ">" );
-        ptr2 = strtok( NULL, "\n" );
-        
-        // if the tag is found
-        if( name2 != NULL )
-          endTag = strlen( ptr2 );
-        
-        // check the names to see if any appear in between the start tag and end tag
-        list<ovName>::iterator it;
-        for( it=nms.begin(); it!=nms.end(); it++ )
-          {        
-            stInd[entryIDNum+it->getKeyNum()+t+ct] = startTag;
-            endInd[entryIDNum+it->getKeyNum()+t+ct] = endTag;
-            ct++;
-            it->checkTag( startTag, endTag, t );       
-          }
+              // check if the name has already been used
+              if( strcmp( names[m], entryID ) == 0 )
+              {
+                // set unique to false
+                unique = false;
+                // set the key to the key already used
+                keyInt = m;      
+              }
             }
-        free( str ); // FREE MEM
-        }
-      while( ptr2 != NULL );
-      // while the line is not searched through
+
+            // if unique
+            if( unique )
+            {
+              // set the name of the entry to the entryID
+              names[entryIDNum] = strdup( entryID );
+              graph1[numNames] = new ovNode();
       
-      free( ptr2 ); // FREE MEM
+              // incrememnt the number of names
+              numNames++;
+            }
+            else
+            {
+              // set the entry id number to key int
+              entryIDNum = keyInt;
+            }
+        
+            // push back the entry id number to the entries list
+            entries.push_back( entryIDNum );
+            lineNum[entryIDNum] = lineN;
+
+            // find names
+            do
+            {        
+              // get the next name
+              ptr3 = strstr( ptr3, "<NAME" );  
+              strtok( ptr3, "\"" );
+              name2 = strtok( NULL, "\"" );
+      
+              // get the rest of the line
+              ptr3 = strtok( NULL, "\n" );
+      
+              // if the name is not null and the name is not the entry find the names in the entry
+              if( name2!=NULL && strcmp( name2, entryID ) != 0 )
+              {        
+                // set the name spot to the length of the rest of the line
+                nameSpot = strlen( ptr3 );
+          
+                // initialize variables
+                unique = true;
+                bool thisEntry = false;
+                keyInt = 0;
+          
+                // for the number of names
+                for( int m=0; m<numNames; m++ )
+                {
+                  // check if the names have already been used
+                  if( strcmp( names[m], name2 ) == 0 )
+                  {
+                    // set unique to false
+                    unique = false;
+                    // set keyInt to the key already used
+                    keyInt = m;        
+                  }
+                }
+          
+                if( !unique )
+                {
+                  // iterate through the nms list
+                  list<ovName>::iterator it;
+                  for( it=nms.begin(); it!=nms.end(); it++ )
+                  {
+                    // if the name is equal to the name in the list
+                    if( strcmp( it->getKey(), name2 ) == 0 )
+                    {
+                      // add the file spot to the name
+                      it->addFileSpot( nameSpot );
+                      // set this entry to true
+                      thisEntry = true;
+                    }
+                  }
+        
+                  if( !thisEntry )
+                  {        
+                    // create a new name and add it to the list
+                    ovName *nm = new ovName();
+                    nm->setKey( name2 );
+                    nm->addFileSpot( nameSpot );
+                    nm->setKeyNum( keyInt );
+                    nms.push_front( *nm );
+                  }
+                }
+                else
+                {
+                  // create a new name
+                  ovName *nm = new ovName();
+                  nm->setKey( name2 );
+                  nm->addFileSpot( nameSpot );
+                  nm->setKeyNum( numNames );
+        
+                  // set the name at the number of names to the name string
+                  names[numNames] = strdup( name2 );
+                  graph1[numNames] = new ovNode();
+                  numNames++;
+        
+                  // add the name to the list
+                  nms.push_front( *nm );
+                }
+              }
+            }
+            while( ptr3 != NULL );
+            // while the line is not empty
+      
+            // for the number of tags find the tags!
+            for( int t=0; t<NUM_OF_TAGS; t++ )
+            {
+              // copy the line to a char*
+              char* ptr2 = ( char* ) calloc( strlen( line )+1, sizeof( char )); 
+              strcpy( ptr2, line );
+      
+              // initialize variables
+              int startTag = 0;
+              int endTag = 0;
+              int ct = 0;
+      
+              do
+              {
+                // char* to hold the tag string
+                char* str = ( char* ) calloc( 100, sizeof( char ));
+          
+                // add an opening bracket onto the tag string
+                strcpy( str, "<" );
+                strcat( str, tags[t] );
+          
+                // find tag in file
+                ptr2 = strstr( ptr2, str );  
+                name2 = strtok( ptr2, ">" );
+                ptr2 = strtok( NULL, "\n" );
+          
+                // if tag is found
+                if( name2 != NULL )
+                {
+                  // store the place of the start of the tag in the file
+                  startTag = strlen( ptr2 );
+        
+                  // add the ending bracket onto the tag string
+                  str = ( char* ) calloc( 100, sizeof( char ));
+                  strcpy( str, "</" );
+                  strcat( str, tags[t] );
+                  strcat( str, ">" );
+        
+                  // find the end tag in the file
+                  ptr2 = strstr( ptr2, str );  
+                  name2 = strtok( ptr2, ">" );
+                  ptr2 = strtok( NULL, "\n" );
+        
+                  // if the tag is found
+                  if( name2 != NULL )
+                  endTag = strlen( ptr2 );
+        
+                  // check the names to see if any appear in between the start tag and end tag
+                  list<ovName>::iterator it;
+                  for( it=nms.begin(); it!=nms.end(); it++ )
+                  {        
+                    ct++;
+                    it->checkTag( startTag, endTag, t );       
+                  }
+                }
+                free( str );
+              }
+              while( ptr2 != NULL );
+              // while the line is not searched through
+      
+              free( ptr2 );
+            }
           }
-      }
         }
-    }  
+      }  
       
-    if( includeLn )
+      if( includeLn )
       {
-    
         // for all the names 
         list<ovName>::iterator it;
         for( it=nms.begin(); it!=nms.end(); it++ )
-    {
-      // bool to hold tags
-      bool *tgs = it->getTags();
-      
-      list<int> tagList;
-      
-      // for the number of tags
-      for( int j=0; j<NUM_OF_TAGS; j++ )
         {
-          // if the name was nested between the tag push the tag on a list
-          if( tgs[j] )
-      {
-        tagList.push_back( j );
-      }
+          // bool to hold tags
+          bool *tgs = it->getTags();
+          list<int> tagList;
+      
+          // for the number of tags
+          for( int j=0; j<NUM_OF_TAGS; j++ )
+          {
+            // if the name was nested between the tag push the tag on a list
+            if( tgs[j] )
+            {
+              tagList.push_back( j );
+            }
+          }
+      
+          tagList.push_back( NUM_OF_TAGS );
+          ovEdge* e = new ovEdge( entryIDNum, ( *it ).getKeyNum(), tagList );
+          edgeCount++;
+          graph1[entryIDNum]->addChild( *e );
+          graph1[( *it ).getKeyNum()]->addChild( *e );
+      
+          // clear the file spots from the names
+          it->clearFileSpots();
         }
-      
-      tagList.push_back( NUM_OF_TAGS );
-      
-      ovEdge* e = new ovEdge( entryIDNum, ( *it ).getKeyNum(), tagList );
-
-      edgeCount++;
-      
-      graph1[entryIDNum]->addChild( *e );
-      graph1[( *it ).getKeyNum()]->addChild( *e );
-      
-      // clear the file spots from the names
-      it->clearFileSpots();
-    }
       }        
 
-    // clear the names
-    nms.clear();
+      // clear the names
+      nms.clear();
     
-    // free the pointer
-    free( ptr );
-    ptr = 0;        
+      // free the pointer
+      free( ptr );
+      ptr = 0;        
     
-    
-    // if there is still lines left in the file
-    if( restOfFile != NULL )
+      // if there is still lines left in the file
+      if( restOfFile != NULL )
       {
         // get the next line in the file
         line = strtok( restOfFile, "\n" );
@@ -5600,47 +5555,32 @@ void ovGraph::GetEntry( char* filename )
         // store the rest of the file
         restOfFile = strtok( NULL, "^" );
       }
-  }
-  
-      NUM_OF_NAMES = numNames;
-
-      if( onlyEntries )
-  {
-    includeOnlyEntries();
-  }
-
-      mergeEdges();
-
-      setTitleText();
-
-      initNames();
-
-      // free the buffer
-      free( buffer );
-
-      free( stInd );
-      free( endInd );
-      free( nameInd );
-      
-      // close the file
-      fclose( file );
-
-      ovQMainWindow* orl = ( ovQMainWindow* ) orland;
-      orl->enableMenuItems( mode ); 
-
     }
-  // else the file open failed
-  else
+  
+    NUM_OF_NAMES = numNames;
+
+    if( onlyEntries )
     {
-      printf( "FILE OPEN FAILED: " );
-      printf( filename );
-      printf( "\n" );
-      fflush( stdout );
-      }
+      includeOnlyEntries();
+    }
 
-printf( "\r" );
+    mergeEdges();
+    setTitleText();
+    initNames();
+
+    // free the buffer
+    free( buffer );
+      
+    // close the file
+    fclose( file );
+
+    ovQMainWindow* orl = ( ovQMainWindow* ) orland;
+    orl->enableMenuItems( mode ); 
+
+  }
+
+  printf( "\r" );
 }
-
 
 // set the title bar to show what the program is visualizing
 void ovGraph::setTitleText()
@@ -5683,8 +5623,8 @@ void ovGraph::setTitleText()
 
   orl->setVisualizationText( txt );
 
-  free( txt ); // FREE MEM
-  free( per ); // FREE MEM
+  free( txt );
+  free( per );
 }
 
 
@@ -6053,7 +5993,7 @@ void ovGraph::textWindowOn()
     char* str = ( char* ) calloc( 200, sizeof( char ));
     strcpy( str, cb1->currentText() );        
     namesFromEntry( str, cb2 );
-    free( str ); // FREE MEM
+    free( str );
   }
 
   char* e = ( char* ) calloc( 200, sizeof( char ));
@@ -6117,7 +6057,7 @@ void ovGraph::showXMLEntry( char* en, char* nm, char* tg, QTextBrowser* tb )
       
       int cnt = lineNum[ind];
       
-      char* filename = "../ORLANDO-git/tmp/data.txt";
+      char* filename = "tmp/data.txt";
 
       FILE* file;
       // vaiables to get the file read in to a buffer
@@ -6302,7 +6242,7 @@ bool ovGraph::includeByTime( char* stdName )
       file.getline( line, 1000 );
     }
       }
-    free( line ); // FREE MEM
+    free( line );
     file.close();
   }
       
@@ -6354,7 +6294,7 @@ bool ovGraph::includeLine( char* line )
 
   fstream fl;
 
-  fl.open( "../ORLANDO-git/tmp/orlando.inc" );
+  fl.open( "tmp/orlando.inc" );
 
   if( fl.is_open() )
     {      
@@ -6429,7 +6369,7 @@ bool ovGraph::includeLine( char* line )
     }
         first = false;
       }
-  free( ln ); // FREE MEM
+  free( ln );
   }while( !fl.eof() );
       fl.close();
     }
@@ -6439,7 +6379,7 @@ bool ovGraph::includeLine( char* line )
   b = false;
   first = true;
   
-  fl.open( "../ORLANDO-git/tmp/orlando.exc" );
+  fl.open( "tmp/orlando.exc" );
 
   if( fl.is_open() )
     {
@@ -6514,7 +6454,7 @@ bool ovGraph::includeLine( char* line )
         first = false;
       }
 
-  free( ln ); // FREE MEM
+  free( ln );
   }while( !fl.eof() );
       fl.close();
       }
@@ -6537,7 +6477,7 @@ bool ovGraph::includeLine( char* line )
 void ovGraph::include( char* s )
 {
   // create file
-  ofstream file( "../ORLANDO-git/tmp/orlando.inc" );
+  ofstream file( "tmp/orlando.inc" );
 
   int i =0;
 
@@ -6572,7 +6512,7 @@ void ovGraph::include( char* s )
 // exclude the words that are in the string s
 void ovGraph::exclude( char* s )
 {
-  ofstream file( "../ORLANDO-git/tmp/orlando.exc" );
+  ofstream file( "tmp/orlando.exc" );
 
   if( s != NULL )
     {      
@@ -6597,13 +6537,13 @@ void ovGraph::exclude( char* s )
         strcat( exclWords, str );
       }
 
-    free( str ); // FREE MEM
+    free( str );
     str = ( char* ) calloc( 1000, sizeof( char ));
     str = strtok( NULL, ", " );
 
   } while( str != NULL );
 
-  free( str ); // FREE MEM
+  free( str );
     }
 }
 

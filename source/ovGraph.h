@@ -287,8 +287,6 @@ private:
   int oldSelected;
   list<int> selectedNodes;
   ovNode* graph1[NUM_OF_NAMES_C];
-  int* stInd;  int* endInd;
-  int* nameInd;
   QPushButton* searchButton;
   QWidget* orland;
   QLabel* label1;
