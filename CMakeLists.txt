@@ -20,6 +20,11 @@ FIND_PACKAGE( LibXml2 REQUIRED )
 
 SET( OVIS_SOURCE
   ovis.cpp
+  
+  # New ovis code
+  source/ovXMLReader.cpp
+  
+  # Old orlando code
   source/ovDate.cpp
   source/ovEdge.cpp
   source/ovGraph.cpp

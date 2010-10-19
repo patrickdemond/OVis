@@ -8,6 +8,12 @@
 #include "interface/ovQTags.h"
 #include "source/ovGraph.h"
 
+// STL headers and typedefs
+#include <vtksys/stl/map>
+#include <vtksys/stl/string>
+
+typedef vtksys_stl::string ovString;
+
 // main function
 int main( int argc, char** argv )
 {
