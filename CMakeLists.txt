@@ -18,18 +18,20 @@ INCLUDE( ${QT_USE_FILE} )
 # We need LibXML2
 FIND_PACKAGE( LibXml2 REQUIRED )
 
+# Configure the utitlities header
+CONFIGURE_FILE( ${PROJECT_SOURCE_DIR}/ovUtilities.h.in
+                ${PROJECT_BINARY_DIR}/ovUtilities.h @ONLY IMMEDIATE )
+
+# Set up headers and source
 SET( OVIS_SOURCE
   ovis.cpp
   
   # New ovis code
-  source/ovEdge.cpp
-  source/ovXMLReader.cpp
-  source/ovNode.cpp
+  source/ovOrlandoReader.cpp
   
   # Old orlando code
   source/ovDate.cpp
   source/ovName.cpp
-  #source/ovNode.cpp
   source/ovPeriod.cpp
   source/ovUserStyle.cpp
   source/ovUserStyleTags.cpp

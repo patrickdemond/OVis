@@ -12,8 +12,26 @@
 // A utilities header to include typedefs, macros, global functions, etc.
 //
 
-// STL headers and typedefs
-#include <vtksys/stl/map>
-#include <vtksys/stl/string>
+#ifndef __vtkTypedefs_h
+#define __vtkTypedefs_h
 
-typedef vtksys_stl::string ovString;
+#define OVIS_VERSION_MAJOR @OVIS_VERSION_MAJOR@
+#define OVIS_VERSION_MINOR @OVIS_VERSION_MINOR@
+#define OVIS_VERSION_PATCH @OVIS_VERSION_PATCH@
+
+// STL headers and typedefs
+#include <vtkstd/list>
+#include <vtkstd/map>
+#include <vtkstd/string>
+#include <vtkstd/vector>
+
+class ovEdge;
+class ovNode;
+
+typedef vtkstd::vector< ovEdge* > ovEdgeVector;
+typedef vtkstd::map< long, ovNode* > ovNodeHashMap;
+typedef vtkstd::string ovString;
+typedef vtkstd::list< ovString > ovStringList;
+typedef vtkstd::vector< ovString > ovStringVector;
+
+#endif // __vtkTypedefs_h
