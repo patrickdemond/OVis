@@ -1,0 +1,16 @@
+/*=========================================================================
+
+  Program:  ovis (OrlandoVision)
+  Module:   ovUtilities.h
+  Language: C++
+
+  Author: Patrick Emond <emondpd@mcmaster.ca>
+
+=========================================================================*/
+//
+// .SECTION Description
+// A utilities header to include typedefs, macros, global functions, etc.
+//
+
+#ifndef __ovUtilities_h
+
