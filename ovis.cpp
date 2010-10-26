@@ -14,16 +14,12 @@
 
 #include <QApplication>
 #include "interface/ovQMainWindow.h"
-#include "interface/ovQTags.h"
-
-#include "source/ovOrlandoReader.h"
-#include "vtkGraphLayoutView.h"
-#include "vtkGraph.h"
 
 // main function
 int main( int argc, char** argv )
 {
   // we are temporarily disabling the QT user-interface until the new reader/vtkGraph is incorperated
+  /*
   ovOrlandoReader* reader = ovOrlandoReader::New();
   reader->SetFileName(
     "/home/emondpd/files/data/orlando/orlando_2010-08-04/orlando_entries_all_pub_c_2010-08-03.xml" );
@@ -62,15 +58,13 @@ int main( int argc, char** argv )
   reader->Delete();
   view->Delete();
   return 0;
-
+  */
 
   // create application
   QApplication application( argc, argv );
 
   // create main window
   ovQMainWindow mainWindow;
-
-  ovQTags tagWindow;
 
   // set main widget for the application to the main window
   application.setMainWidget( &mainWindow );  

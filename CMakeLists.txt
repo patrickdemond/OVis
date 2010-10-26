@@ -26,46 +26,16 @@ CONFIGURE_FILE( ${PROJECT_SOURCE_DIR}/ovUtilities.h.in
 SET( OVIS_SOURCE
   ovis.cpp
   
-  # New ovis code
   source/ovOrlandoReader.cpp
-  
-  # Old orlando code
-  source/ovDate.cpp
-  source/ovName.cpp
-  source/ovPeriod.cpp
-  source/ovUserStyle.cpp
-  source/ovUserStyleTags.cpp
-
-  interface/ovQFont.cpp
   interface/ovQMainWindow.cpp
-  interface/ovQPath.cpp
-  interface/ovQScreenshot.cpp
-  interface/ovQTags.cpp
-  interface/ovQText.cpp
-  interface/ovQWords.cpp
-  interface/ovQWordHelp.cpp
 )
 
 SET( OVIS_UIS
-  interface/ovQFont.ui
   interface/ovQMainWindow.ui
-  interface/ovQPath.ui
-  interface/ovQScreenshot.ui
-  interface/ovQTags.ui
-  interface/ovQText.ui
-  interface/ovQWords.ui
-  interface/ovQWordHelp.ui
 )
 
 SET( OVIS_HEADERS
-  interface/ovQFont.h
   interface/ovQMainWindow.h
-  interface/ovQPath.h
-  interface/ovQScreenshot.h
-  interface/ovQTags.h
-  interface/ovQText.h
-  interface/ovQWords.h
-  interface/ovQWordHelp.h
 )
 
 # Wrap QT files
@@ -93,15 +63,3 @@ TARGET_LINK_LIBRARIES( ovis
   vtkIO
   vtkCommon
 )
-
-# Make the resources directory and copy files
-MAKE_DIRECTORY( ${CMAKE_CURRENT_BINARY_DIR}/tmp )
-MAKE_DIRECTORY( ${CMAKE_CURRENT_BINARY_DIR}/resources )
-FILE( GLOB resources RELATIVE
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/* )
-FOREACH( resource ${resources} )
-  CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/resources/${resource}"
-    "${CMAKE_CURRENT_BINARY_DIR}/resources/${resource}" COPYONLY )
-ENDFOREACH( resource )

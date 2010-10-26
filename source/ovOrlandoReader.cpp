@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:  ovis (OrlandoVision)
-  Module:   ovOrlandoReader.h
+  Module:   ovOrlandoReader.cpp
   Language: C++
 
   Author: Patrick Emond <emondpd@mcmaster.ca>
@@ -9,6 +9,7 @@
 =========================================================================*/
 #include "ovOrlandoReader.h"
 
+#include "vtkCommand.h"
 #include "vtkDataSetAttributes.h"
 #include "vtkGraph.h"
 #include "vtkInformation.h"
@@ -125,8 +126,20 @@ int ovOrlandoReader::ProcessRequest(
       vtkIdType currentVertexId;
       vtkStdString currentVertexPedigree;
       this->CreateReader();
+      
+      // count how many entries are in the file (for progress reporting)
+      double totalEntries = 0;
+      ovString line;
+      ifstream fileStream( this->FileName.c_str() );
+      if( !fileStream.is_open() )
+      {
+        throw vtkstd::runtime_error( "Unable to stream file." );
+      }
+      
+      while( getline( fileStream,line ) ) if( line.find( "<ENTRY" ) ) totalEntries++;
 
       // process each node, one at a time
+      double numEntries = 0, progress;
       while( this->ParseNode() )
       {
         // This node is an entry (vertex)
@@ -135,6 +148,9 @@ int ovOrlandoReader::ProcessRequest(
         {
           if( this->CurrentNode.IsOpeningElement() )
           {
+            progress = numEntries / totalEntries;
+            this->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
+
             // create a new vertex using the Id (author name) as the pedigree
             currentVertexId = graph->AddVertex();
             pedigreeArray->InsertNextValue( ( char* )( this->CurrentNode.Id ) );
@@ -144,6 +160,7 @@ int ovOrlandoReader::ProcessRequest(
           {
             // no more child vertices for this vertex
             currentVertexId = -1;
+            numEntries++;
           }
         }
         else if( 0 <= currentVertexId )
