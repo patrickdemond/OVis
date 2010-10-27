@@ -108,14 +108,6 @@ void ovOrlandoTagInfo::Finalize()
     vtkstd::sort( this->TagVector.begin(), this->TagVector.end() );
     vtkstd::unique( this->TagVector.begin(), this->TagVector.end() );
     this->Final = true;
-
-    ovStringVector::iterator it;
-    cout << *this << endl;
-    for( it = this->TagVector.begin(); it != this->TagVector.end(); it++ )
-    {
-      cout << it->c_str() << " ";
-    }
-    cout << endl;
   }
 }
 

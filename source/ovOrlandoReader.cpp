@@ -219,20 +219,6 @@ int ovOrlandoReader::ProcessRequest(
       return 0;
     }
    
-/*
-    vtkFieldData* const field_data = this->ReadFieldData();
-    graph->SetFieldData(field_data);
-    field_data->Delete();
-
-    int vertex_count = 0;
-    this->Read(&vertex_count);
-    this->ReadVertexData(graph, vertex_count);
-
-    int edge_count = 0;
-    this->Read(&edge_count);
-    this->ReadEdgeData(graph, edge_count);
-*/
-
     vtkDebugMacro(<< "Read " 
       << graph->GetNumberOfVertices() 
       << " vertices and "
