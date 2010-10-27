@@ -9,6 +9,9 @@
 =========================================================================*/
 #include "ovOrlandoReader.h"
 
+#include "ovOrlandoTagInfo.h"
+
+#include "vtkBitArray.h"
 #include "vtkCommand.h"
 #include "vtkDataSetAttributes.h"
 #include "vtkGraph.h"
@@ -23,8 +26,8 @@
 #include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
 
-vtkCxxRevisionMacro(ovOrlandoReader, "$Revision: 1.4 $");
-vtkStandardNewMacro(ovOrlandoReader);
+vtkCxxRevisionMacro( ovOrlandoReader, "$Revision: 1.4 $" );
+vtkStandardNewMacro( ovOrlandoReader );
 
 // this undef is required on the hp. vtkMutexLock ends up including
 // /usr/inclue/dce/cma_ux.h which has the gall to #define read as cma_read
@@ -106,21 +109,34 @@ int ovOrlandoReader::ProcessRequest(
       0 == outInfo->Get( vtkStreamingDemandDrivenPipeline::UPDATE_PIECE_NUMBER() ) )
   {
     vtkDebugMacro( << "Reading orlando data ...");
+
+    // get the tag info and finalize it since we are about to use it
+    ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
+    tagInfo->Finalize();
     
-    // create and set up a graph
+    // create and set up a graph with pedigree and tag arrays
     vtkSmartPointer< vtkMutableDirectedGraph > graph =
       vtkSmartPointer< vtkMutableDirectedGraph >::New();
-    vtkSmartPointer< vtkStringArray > pedigreeArray =
-      vtkSmartPointer< vtkStringArray >::New();
+    // the pedigree array is used to track vertices by name
+    vtkSmartPointer< vtkStringArray > pedigreeArray = vtkSmartPointer< vtkStringArray >::New();
     graph->GetVertexData()->AddArray( pedigreeArray );
     graph->GetVertexData()->SetPedigreeIds( pedigreeArray );
+    // the tag array is used to keep a list of tags which associates the two vertices
+    vtkSmartPointer< vtkBitArray > tagArray = vtkSmartPointer< vtkBitArray >::New();
+    tagArray->SetNumberOfComponents( tagInfo->GetNumberOfTags() );
+    graph->GetEdgeData()->AddArray( tagArray );
+    graph->GetEdgeData()->SetScalars( tagArray ); // not sure which array type to use here...
     
-    // create a list of association types to track which apply to new edges
-    // when they are added
-    this->AssociationTypes.sort();
-    this->AssociationTypes.unique();
-    ovStringList currentTypes;
-
+    // An array to store the current active tags and mark them all as false to begin with.
+    // Every time we open a tag in the association types vector we will set the tag to true,
+    // and every time the tag closes we will set it back to false.  This array will then be
+    // copied every time we add a new edge.
+    vtkSmartPointer< vtkBitArray > currentTagArray = vtkSmartPointer< vtkBitArray >::New();
+    currentTagArray->SetNumberOfComponents( tagInfo->GetNumberOfTags() );
+    currentTagArray->SetNumberOfTuples( 1 );
+    for( int i = 0; i < tagInfo->GetNumberOfTags(); i++ )
+      currentTagArray->SetComponent( 0, i, false );
+    
     try
     {
       vtkIdType currentVertexId;
@@ -130,13 +146,13 @@ int ovOrlandoReader::ProcessRequest(
       // count how many entries are in the file (for progress reporting)
       double totalEntries = 0;
       ovString line;
-      ifstream fileStream( this->FileName.c_str() );
-      if( !fileStream.is_open() )
-      {
-        throw vtkstd::runtime_error( "Unable to stream file." );
-      }
-      
-      while( getline( fileStream,line ) ) if( line.find( "<ENTRY" ) ) totalEntries++;
+      vtkstd::ifstream fileStream( this->FileName.c_str() );
+      if( !fileStream.is_open() ) throw vtkstd::runtime_error( "Unable to stream file." );
+      // this count may be inaccurate since it doesn't account for spacing (ie: "< ENTRY"),
+      // however, it is nice and fast and if the count is incorrect then the only side effect
+      // is incorrect progress reporting which really isn't so bad (so worth the uncertainty)
+      while( getline( fileStream, line ) ) if( line.find( "<ENTRY" ) ) totalEntries++;
+      fileStream.close();
 
       // process each node, one at a time
       double numEntries = 0, progress;
@@ -173,30 +189,27 @@ int ovOrlandoReader::ProcessRequest(
             // Create an edge from the current vertex to the (possibly) new vertex
             // using the standard (linked author name) to identify it
             graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ) );
-            
-            // TODO: add the current types as properties to this edge
-            currentTypes.sort();
-            currentTypes.unique();
+            tagArray->InsertNextTuple( 0, currentTagArray );
+            currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
           }
-          // This node describes an association type (edge data)
-          else if(
-            binary_search(
-              this->AssociationTypes.begin(),
-              this->AssociationTypes.end(),
-              ( char* )( this->CurrentNode.Name ) ) )
+          // This node describes an association type (edge tag)
+          else
           {
-            vtkStdString name = ( char* )( this->CurrentNode.Name );
-            if( this->CurrentNode.IsOpeningElement() )
-            { // opening element, add the type to the current list
-              currentTypes.push_back( name );
-            }
-            else if( this->CurrentNode.IsClosingElement() )
-            { // closing element, remove the type from the current list
-              currentTypes.remove( name );
+            int index = tagInfo->FindTag( ( char* )( this->CurrentNode.Name ) );
+            if( 0 <= index ) // we found a match
+            {
+              if( this->CurrentNode.IsOpeningElement() )
+              { // opening element, mark the tag as true
+                currentTagArray->SetComponent( 0, index, true );
+              }
+              else if( this->CurrentNode.IsClosingElement() )
+              { // closing element, mark the tag as false
+                currentTagArray->SetComponent( 0, index, false );
+              }
             }
           }
         }
-      }
+      } // end while
 
       this->FreeReader();
     }
@@ -269,20 +282,6 @@ void ovOrlandoReader::SetFileName( ovString fileName )
     this->FileName = fileName;
     this->Modified();
   }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::AddAssociationType( ovString type )
-{
-  this->AssociationTypes.push_back( type );
-  this->Modified();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::RemoveAssociationType( ovString type )
-{
-  this->AssociationTypes.remove( type );
-  this->Modified();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

@@ -20,7 +20,6 @@
 #define OVIS_VERSION_PATCH @OVIS_VERSION_PATCH@
 
 // STL headers and typedefs
-#include <vtkstd/list>
 #include <vtkstd/map>
 #include <vtkstd/string>
 #include <vtkstd/vector>
@@ -31,7 +30,7 @@ class ovNode;
 typedef vtkstd::vector< ovEdge* > ovEdgeVector;
 typedef vtkstd::map< long, ovNode* > ovNodeHashMap;
 typedef vtkstd::string ovString;
-typedef vtkstd::list< ovString > ovStringList;
 typedef vtkstd::vector< ovString > ovStringVector;
+typedef vtkstd::pair< ovStringVector::iterator, ovStringVector::iterator > ovStringVectorRange;
 
 #endif // __vtkTypedefs_h

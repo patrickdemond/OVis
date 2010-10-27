@@ -8,7 +8,7 @@
 
 =========================================================================*/
 //
-// .NAME ovXMLReader - Reads Orlando XML files
+// .NAME ovOrlandoReader - Reads Orlando XML files
 //
 // .SECTION Description
 // This is a source object that reads Orlando XML files.  The output of
@@ -35,19 +35,14 @@ class ovOrlandoReader : public vtkAlgorithm
 {
 public:
   static ovOrlandoReader *New();
-  vtkTypeRevisionMacro(ovOrlandoReader,vtkAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  vtkTypeRevisionMacro( ovOrlandoReader, vtkAlgorithm );
+  void PrintSelf( ostream& os, vtkIndent indent );
 
   // Description:
   // Set/get the file name
   virtual ovString GetFileName() { return this->FileName; }
   virtual void SetFileName( ovString name );
   
-  // Description:
-  // Add/remove association types to track when loading the file.
-  virtual void AddAssociationType( ovString );
-  virtual void RemoveAssociationType( ovString );
-
   // Description:
   // Get the output of this reader.
   vtkGraph *GetOutput() { return this->GetOutput( 0 ); }
@@ -133,11 +128,10 @@ protected:
   ovString FileName;
   xmlTextReader *Reader;
   _ovXMLNode CurrentNode;
-  ovStringList AssociationTypes;
 
 private:
-  ovOrlandoReader(const ovOrlandoReader&);  // Not implemented.
-  void operator=(const ovOrlandoReader&);  // Not implemented.
+  ovOrlandoReader( const ovOrlandoReader& );  // Not implemented.
+  void operator=( const ovOrlandoReader& );  // Not implemented.
 };
 
 #endif

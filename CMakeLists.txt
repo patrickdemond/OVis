@@ -25,8 +25,8 @@ CONFIGURE_FILE( ${PROJECT_SOURCE_DIR}/ovUtilities.h.in
 # Set up headers and source
 SET( OVIS_SOURCE
   ovis.cpp
-  
   source/ovOrlandoReader.cpp
+  source/ovOrlandoTagInfo.cpp
   interface/ovQMainWindow.cpp
 )
 
@@ -63,3 +63,14 @@ TARGET_LINK_LIBRARIES( ovis
   vtkIO
   vtkCommon
 )
+
+# Make the resources directory and copy files
+MAKE_DIRECTORY( ${CMAKE_CURRENT_BINARY_DIR}/resources )
+FILE( GLOB resources RELATIVE
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/* )
+FOREACH( resource ${resources} )
+  CONFIGURE_FILE(
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/${resource}"
+    "${CMAKE_CURRENT_BINARY_DIR}/resources/${resource}" COPYONLY )
+ENDFOREACH( resource )
