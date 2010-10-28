@@ -30,7 +30,8 @@ class ovNode;
 typedef vtkstd::vector< ovEdge* > ovEdgeVector;
 typedef vtkstd::map< long, ovNode* > ovNodeHashMap;
 typedef vtkstd::string ovString;
-typedef vtkstd::vector< ovString > ovStringVector;
-typedef vtkstd::pair< ovStringVector::iterator, ovStringVector::iterator > ovStringVectorRange;
+typedef vtkstd::pair< ovString, int > ovStringIntPair;
+typedef vtkstd::vector< ovStringIntPair > ovStringIntPairVector;
+typedef vtkstd::pair< ovStringIntPairVector::iterator, ovStringIntPairVector::iterator > ovStringIntPairVectorRange;
 
 #endif // __vtkTypedefs_h

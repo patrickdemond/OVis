@@ -31,6 +31,15 @@ class ovOrlandoTagInfo : public vtkObject
 friend class vtkSmartPointer< ovOrlandoTagInfo >;
 public:
   // Description:
+  // Static functions used to sort and compare tags
+  static bool RankedCompareTags( ovStringIntPair a, ovStringIntPair b )
+  { return ( a.first == b.first ) && ( a.second == b.second ); }
+  static bool UnRankedCompareTags( ovStringIntPair a, ovStringIntPair b )
+  { return a.first == b.first; }
+  static bool SortTags( ovStringIntPair a, ovStringIntPair b )
+  { return a.first < b.first; }
+
+  // Description:
   // This method returns the one and only instantiation of the class, use this
   // method to get an object from this class
   static ovOrlandoTagInfo *GetInfo();
@@ -38,8 +47,9 @@ public:
   void PrintSelf( ostream& os, vtkIndent indent );
 
   // Description:
-  // Add association types to track when loading the file.
-  virtual void Add( ovString tag, int rank = 0 );
+  // Add association types to track when loading the file.  The rank parameter
+  // will place the tag into a particular rank, or none if it is 0.
+  virtual void Add( ovString name, int rank = 0 );
 
   // Description:
   // Call this once all tags have been read, this sorts and makes unique the list
@@ -54,7 +64,9 @@ public:
   // Returns the index of a particular tag, or -1 if the tag is not found.
   // By calling this method the tag info object will be finalized, meaning it
   // cannot be changed any further.
-  virtual int FindTag( ovString );
+  // The rank parameter will restrict the search to a particular rank, or if
+  // it is 0 then no rank restriction will be performed.
+  virtual int FindTag( ovString, int rank = 0 );
 
 protected:
   ovOrlandoTagInfo();
@@ -68,7 +80,7 @@ protected:
   static vtkSmartPointer< ovOrlandoTagInfo > Instance;
   
   bool Final;
-  ovStringVector TagVector;
+  ovStringIntPairVector TagVector;
 
 private:
   ovOrlandoTagInfo( const ovOrlandoTagInfo& );  // Not implemented.

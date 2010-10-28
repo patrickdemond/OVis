@@ -87,7 +87,7 @@ void ovOrlandoTagInfo::ReadDefaultTags()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoTagInfo::Add( ovString type, int rank )
+void ovOrlandoTagInfo::Add( ovString name, int rank )
 {
   if( this->Final )
   {
@@ -95,7 +95,8 @@ void ovOrlandoTagInfo::Add( ovString type, int rank )
   }
   else
   {
-    this->TagVector.push_back( type );
+    ovStringIntPair tag( name, rank );
+    this->TagVector.push_back( tag );
     this->Modified();
   }
 }
@@ -105,27 +106,40 @@ void ovOrlandoTagInfo::Finalize()
 {
   if( !this->Final )
   {
-    vtkstd::sort( this->TagVector.begin(), this->TagVector.end() );
-    vtkstd::unique( this->TagVector.begin(), this->TagVector.end() );
+    vtkstd::sort(
+      this->TagVector.begin(),
+      this->TagVector.end(),
+      ovOrlandoTagInfo::SortTags );
+    vtkstd::unique(
+      this->TagVector.begin(),
+      this->TagVector.end(),
+      ovOrlandoTagInfo::UnRankedCompareTags );
     this->Final = true;
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int ovOrlandoTagInfo::FindTag( ovString tag )
+int ovOrlandoTagInfo::FindTag( ovString name, int rank )
 {
   int index = -1; // assume the tag isn't present
   
   // make sure to finalize before searching
   this->Finalize();
-
-  ovStringVectorRange range = vtkstd::equal_range(
-    this->TagVector.begin(), this->TagVector.end(), tag );
+  
+  ovStringIntPair tag( name, rank );
+  ovStringIntPairVectorRange range = 
+    vtkstd::equal_range(
+      this->TagVector.begin(), this->TagVector.end(), tag,
+      ovOrlandoTagInfo::SortTags );
   
   // if the range is 0 (ends are equal) then the tag wasn't found
   if( range.first != range.second )
   {
-    index = static_cast< int >( range.first - this->TagVector.begin() );
+    // make sure rank matches, if necessary
+    if( 0 == rank || rank == range.first->second )
+    {
+      index = static_cast< int >( range.first - this->TagVector.begin() );
+    }
   }
 
   return index;
