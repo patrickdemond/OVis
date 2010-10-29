@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:  ovis (OrlandoVision)
-  Module:   ovTypedefs.h
+  Module:   ovUtilities.h
   Language: C++
 
   Author: Patrick Emond <emondpd@mcmaster.ca>
@@ -12,8 +12,8 @@
 // A utilities header to include typedefs, macros, global functions, etc.
 //
 
-#ifndef __vtkTypedefs_h
-#define __vtkTypedefs_h
+#ifndef __vtkUtilities_h
+#define __vtkUtilities_h
 
 #define OVIS_VERSION_MAJOR @OVIS_VERSION_MAJOR@
 #define OVIS_VERSION_MINOR @OVIS_VERSION_MINOR@
@@ -30,8 +30,23 @@ class ovNode;
 typedef vtkstd::vector< ovEdge* > ovEdgeVector;
 typedef vtkstd::map< long, ovNode* > ovNodeHashMap;
 typedef vtkstd::string ovString;
-typedef vtkstd::pair< ovString, int > ovStringIntPair;
-typedef vtkstd::vector< ovStringIntPair > ovStringIntPairVector;
-typedef vtkstd::pair< ovStringIntPairVector::iterator, ovStringIntPairVector::iterator > ovStringIntPairVectorRange;
 
-#endif // __vtkTypedefs_h
+struct ovTag
+{
+  ovString name;
+  int rank;
+  bool active;
+  ovTag( ovString n, int r = 1, int a = 1 ) : name( n ), rank( r ), active( a ) {}
+};
+
+typedef vtkstd::vector< ovTag* > ovTagVector;
+typedef vtkstd::pair< ovTagVector::iterator, ovTagVector::iterator > ovTagVectorRange;
+
+inline bool ovTagRankedCompare( ovTag *a, ovTag *b )
+{ return ( a->name == b->name ) && ( a->rank == b->rank ); }
+inline bool ovTagUnRankedCompare( ovTag *a, ovTag *b )
+{ return a->name == b->name; }
+inline bool ovTagSort( ovTag *a, ovTag *b )
+{ return a->name < b->name; }
+
+#endif // __vtkUtilities_h

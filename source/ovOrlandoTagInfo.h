@@ -22,7 +22,6 @@
 #include "vtkObject.h"
 
 #include "ovUtilities.h"
-
 #include "vtkSmartPointer.h"
 
 class ovOrlandoTagInfo : public vtkObject
@@ -30,15 +29,6 @@ class ovOrlandoTagInfo : public vtkObject
 // we need to friend the smart pointer class so that it has access to ::New()
 friend class vtkSmartPointer< ovOrlandoTagInfo >;
 public:
-  // Description:
-  // Static functions used to sort and compare tags
-  static bool RankedCompareTags( ovStringIntPair a, ovStringIntPair b )
-  { return ( a.first == b.first ) && ( a.second == b.second ); }
-  static bool UnRankedCompareTags( ovStringIntPair a, ovStringIntPair b )
-  { return a.first == b.first; }
-  static bool SortTags( ovStringIntPair a, ovStringIntPair b )
-  { return a.first < b.first; }
-
   // Description:
   // This method returns the one and only instantiation of the class, use this
   // method to get an object from this class
@@ -49,7 +39,7 @@ public:
   // Description:
   // Add association types to track when loading the file.  The rank parameter
   // will place the tag into a particular rank, or none if it is 0.
-  virtual void Add( ovString name, int rank = 0 );
+  virtual void Add( ovString name, int rank = 0, bool active = true );
 
   // Description:
   // Call this once all tags have been read, this sorts and makes unique the list
@@ -57,20 +47,38 @@ public:
   void Finalize();
 
   // Description:
-  // Returns the total number of tags
-  virtual int GetNumberOfTags() { return this->TagVector.size(); }
+  // Returns the number of ranks.
+  virtual int GetNumberOfRanks();
   
+  // Description:
+  // Returns the total number of tags.  If rank is not 0 then the number of tags
+  // at the given rank will be returned, otherwise the total count is returned.
+  virtual int GetNumberOfTags( int rank = 0 );
+  
+  // Description:
+  // Returns the a particular tag, or NULL if the tag is not found.
+  // By calling this method the tag info object will be finalized, meaning it
+  // cannot be changed any further.
+  // The rank parameter will restrict the search to a particular rank, or if
+  // it is 0 then no rank restriction will be performed.
+  virtual ovTag* FindTag( ovString, int rank = 0 );
+
   // Description:
   // Returns the index of a particular tag, or -1 if the tag is not found.
   // By calling this method the tag info object will be finalized, meaning it
   // cannot be changed any further.
   // The rank parameter will restrict the search to a particular rank, or if
   // it is 0 then no rank restriction will be performed.
-  virtual int FindTag( ovString, int rank = 0 );
+  virtual int FindTagIndex( ovString, int rank = 0 );
+
+  // Description:
+  // Populates a string array with the tags.  If rank is not 0 then only the tags
+  // of the given rank or smaller are included, of it is 0 then all tags are included.
+  virtual void GetTags( ovTagVector &array, int rank = 0 );
 
 protected:
   ovOrlandoTagInfo();
-  ~ovOrlandoTagInfo() {};
+  ~ovOrlandoTagInfo();
   
   // Description:
   // Reads the tag list from the resources directory
@@ -80,7 +88,7 @@ protected:
   static vtkSmartPointer< ovOrlandoTagInfo > Instance;
   
   bool Final;
-  ovStringIntPairVector TagVector;
+  ovTagVector TagVector;
 
 private:
   ovOrlandoTagInfo( const ovOrlandoTagInfo& );  // Not implemented.

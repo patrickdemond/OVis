@@ -11,7 +11,9 @@
 
 #include "ui_ovQMainWindow.h"
 
+#include <QComboBox>
 #include <QFileDialog>
+#include <QListWidget>
 
 #include "vtkCommand.h"
 #include "vtkGraph.h"
@@ -23,6 +25,7 @@
 #include "vtkSmartPointer.h"
 
 #include "source/ovOrlandoReader.h"
+#include "source/ovOrlandoTagInfo.h"
 
 class ovQMainWindowProgressCommand : public vtkCommand
 {
@@ -55,21 +58,25 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->ui->setupUi( this );
 
   // create file open menu item
-  this->ActionFileOpen = new QAction( tr( "&Open Data" ), this );
-  this->ActionFileOpen->setShortcut( tr( "Ctrl+O" ));
-  this->ActionFileOpen->setStatusTip( tr( "Open a data file" ) );
-  QObject::connect( this->ActionFileOpen, SIGNAL( triggered() ), this, SLOT( slotFileOpen() ));
+  this->actionFileOpen = new QAction( tr( "&Open Data" ), this );
+  this->actionFileOpen->setShortcut( tr( "Ctrl+O" ));
+  this->actionFileOpen->setStatusTip( tr( "Open a data file" ) );
+  QObject::connect(
+    this->actionFileOpen, SIGNAL( triggered() ),
+    this, SLOT( slotFileOpen() ));
 
   // create file exit menu item
-  this->ActionFileExit = new QAction( tr( "&Exit" ), this );
-  this->ActionFileExit->setShortcut( tr( "Ctrl+Q" ));
-  this->ActionFileExit->setStatusTip( tr( "Exit the application" ));
-  QObject::connect( this->ActionFileExit, SIGNAL( triggered() ), this, SLOT( slotFileExit() ));
+  this->actionFileExit = new QAction( tr( "&Exit" ), this );
+  this->actionFileExit->setShortcut( tr( "Ctrl+Q" ));
+  this->actionFileExit->setStatusTip( tr( "Exit the application" ));
+  QObject::connect(
+    this->actionFileExit, SIGNAL( triggered() ),
+    this, SLOT( slotFileExit() ));
 
   // create file menu
   menu = this->menuBar()->addMenu( tr( "&File" ));
-  menu->addAction( this->ActionFileOpen );
-  menu->addAction( this->ActionFileExit );
+  menu->addAction( this->actionFileOpen );
+  menu->addAction( this->actionFileExit );
   
   // set up the graph layout view
   this->GraphLayoutView = vtkSmartPointer< vtkGraphLayoutView >::New();
@@ -80,7 +87,27 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     this->ui->graphLayoutWidget->GetRenderWindow()->GetRenderers()->GetFirstRenderer();
   renderer->SetBackground( 0, 0, 0 );
   renderer->GradientBackgroundOff();
+
+  // set up the tag list
+  this->ui->tagListWidget->setSortingEnabled( 1 );
+  QObject::connect(
+    this->ui->tagListCheckAllButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagListCheckAllButtonClicked() ) );
+  QObject::connect(
+    this->ui->tagListCheckNoneButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagListCheckNoneButtonClicked() ) );
+  QObject::connect(
+    this->ui->tagListWidget, SIGNAL( itemChanged( QListWidgetItem* ) ),
+    this, SLOT( slotTagListItemChanged( QListWidgetItem* ) ) );
+  QObject::connect(
+    this->ui->tagListPresetComboBox, SIGNAL( currentIndexChanged( int ) ),
+    this, SLOT( slotTagListPresetComboBoxIndexChanged( int ) ) );
 };
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+ovQMainWindow::~ovQMainWindow()
+{
+}
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotFileOpen()
@@ -98,7 +125,19 @@ void ovQMainWindow::slotFileOpen()
       vtkSmartPointer< ovQMainWindowProgressCommand >::New();
     observer->progressBar = this->ui->progressBar;
     reader->AddObserver( vtkCommand::ProgressEvent, observer );
-
+    
+    // define the tag list based on orlando tags
+    char buffer[64];
+    for( int rank = 1, total = ovOrlandoTagInfo::GetInfo()->GetNumberOfRanks(); rank <= total; rank++ )
+    {
+      sprintf( buffer, "Preset List #%d", rank );
+      this->ui->tagListPresetComboBox->addItem( buffer, rank );
+    }
+    // ovQMainWindow::slotTagListPresetComboBoxIndexChanged is triggered by setting the current
+    // index which will populate the tagListWidget
+    this->ui->tagListPresetComboBox->setCurrentIndex( 0 );
+    
+    // load the orlando file and render
     reader->SetFileName( fileName.toStdString() );
     this->GraphLayoutView->SetRepresentationFromInput( reader->GetOutput() );
     this->GraphLayoutView->ResetCamera();
@@ -110,4 +149,62 @@ void ovQMainWindow::slotFileOpen()
 void ovQMainWindow::slotFileExit()
 {
   qApp->exit();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagListCheckAllButtonClicked()
+{
+  QListWidgetItem *item;
+  for( int row = 0; row < this->ui->tagListWidget->count(); row++ )
+  {
+    item = this->ui->tagListWidget->item( row );
+    if( Qt::Unchecked == item->checkState() ) item->setCheckState( Qt::Checked );
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagListCheckNoneButtonClicked()
+{
+  QListWidgetItem *item;
+  for( int row = 0; row < this->ui->tagListWidget->count(); row++ )
+  {
+    item = this->ui->tagListWidget->item( row );
+    if( Qt::Checked == item->checkState() ) item->setCheckState( Qt::Unchecked );
+  }
+}
+ 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagListItemChanged( QListWidgetItem* item )
+{
+  // the checked state of the item may have changed, update the tag info singleton
+  ovTag *tag = ovOrlandoTagInfo::GetInfo()->FindTag( item->text().toStdString() );
+  if( tag ) tag->active = Qt::Checked == item->checkState() ? true : false;
+}
+ 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagListPresetComboBoxIndexChanged( int index )
+{
+  QVariant data = this->ui->tagListPresetComboBox->itemData( index );
+
+  if( data.isValid() )
+  {
+    bool test = false;
+    int tagListId = data.toInt( &test );
+    if( test )
+    {
+      ovTagVector tags;
+      ovTagVector::iterator it;
+      QListWidgetItem *item;
+      ovOrlandoTagInfo::GetInfo()->GetTags( tags, tagListId );
+
+      this->ui->tagListWidget->clear();
+      for( it = tags.begin(); it != tags.end(); it++ )
+      {
+        item = new QListWidgetItem( (*it)->name.c_str(), this->ui->tagListWidget );
+        item->setCheckState( (*it)->active ? Qt::Checked : Qt::Unchecked );
+        item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
+        this->ui->tagListWidget->addItem( item );
+      }
+    }
+  }
 }

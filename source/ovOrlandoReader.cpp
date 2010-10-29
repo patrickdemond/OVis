@@ -195,7 +195,7 @@ int ovOrlandoReader::ProcessRequest(
           // This node describes an association type (edge tag)
           else
           {
-            int index = tagInfo->FindTag( ( char* )( this->CurrentNode.Name ) );
+            int index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
             if( 0 <= index ) // we found a match
             {
               if( this->CurrentNode.IsOpeningElement() )

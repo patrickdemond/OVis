@@ -92,7 +92,7 @@
      </widget>
     </item>
     <item row="0" column="1" colspan="2">
-     <layout class="QVBoxLayout" name="queryLayout" stretch="0,0">
+     <layout class="QVBoxLayout" name="queryLayout" stretch="0,0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetFixedSize</enum>
       </property>
@@ -100,7 +100,27 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QTreeWidget" name="queryTreeWidget">
+       <widget class="QLabel" name="label">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Active Tags</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="tagListPresetComboBox"/>
+      </item>
+      <item>
+       <widget class="QListWidget" name="tagListWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -109,20 +129,10 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>360</width>
+          <width>200</width>
           <height>0</height>
          </size>
         </property>
-        <column>
-         <property name="text">
-          <string>Operation</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Query</string>
-         </property>
-        </column>
        </widget>
       </item>
       <item>
@@ -134,16 +144,16 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QPushButton" name="queryAddButton">
+         <widget class="QPushButton" name="tagListCheckAllButton">
           <property name="text">
-           <string>Add</string>
+           <string>Check All</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="queryRemoveButton">
+         <widget class="QPushButton" name="tagListCheckNoneButton">
           <property name="text">
-           <string>Remove</string>
+           <string>Check None</string>
           </property>
          </widget>
         </item>
