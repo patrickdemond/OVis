@@ -7,9 +7,12 @@
 #include "vtkSmartPointer.h"
 
 class Ui_ovQMainWindow;
-class vtkGraphLayoutView;
 class QListWidget;
 class QListWidgetItem;
+class ovOrlandoReader;
+class ovRestrictGraph;
+class ovRemoveIsolatedVertices;
+class vtkGraphLayoutView;
 
 class ovQMainWindow : public QMainWindow
 {
@@ -20,6 +23,9 @@ public:
   ovQMainWindow( QWidget* parent = 0 );
   //destructor
   ~ovQMainWindow();
+  
+  // Update the graph view based on the current state of the UI
+  virtual void UpdateGraphView( bool resetCamera = false );
 
 public slots:
   //event functions
@@ -32,6 +38,9 @@ public slots:
 
 protected:
   vtkSmartPointer< vtkGraphLayoutView > GraphLayoutView;
+  vtkSmartPointer< ovOrlandoReader > OrlandoReader;
+  vtkSmartPointer< ovRestrictGraph > RestrictFilter;
+  vtkSmartPointer< ovRemoveIsolatedVertices > RemoveVerticesFilter;
 
 protected slots:
 
@@ -42,6 +51,9 @@ private:
   // File menu variables
   QAction *actionFileOpen;
   QAction *actionFileExit;
+
+  // Set to false to disable automatic updating of graph
+  bool AutoUpdateGraphView;
 };
 
 #endif

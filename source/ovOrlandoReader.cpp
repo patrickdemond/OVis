@@ -11,7 +11,7 @@
 
 #include "ovOrlandoTagInfo.h"
 
-#include "vtkBitArray.h"
+#include "vtkVariantArray.h"
 #include "vtkCommand.h"
 #include "vtkDataSetAttributes.h"
 #include "vtkGraph.h"
@@ -122,20 +122,25 @@ int ovOrlandoReader::ProcessRequest(
     graph->GetVertexData()->AddArray( pedigreeArray );
     graph->GetVertexData()->SetPedigreeIds( pedigreeArray );
     // the tag array is used to keep a list of tags which associates the two vertices
-    vtkSmartPointer< vtkBitArray > tagArray = vtkSmartPointer< vtkBitArray >::New();
-    tagArray->SetNumberOfComponents( tagInfo->GetNumberOfTags() );
-    graph->GetEdgeData()->AddArray( tagArray );
-    graph->GetEdgeData()->SetScalars( tagArray ); // not sure which array type to use here...
-    
+    ovTagVector tags;
+    ovTagVector::iterator it;
+    tagInfo->GetTags( tags );
+    for( it = tags.begin(); it != tags.end(); it++ )
+    {
+      vtkSmartPointer< vtkVariantArray > tagArray = vtkSmartPointer< vtkVariantArray >::New();
+      tagArray->SetName( (*it)->name.c_str() );
+      graph->GetEdgeData()->AddArray( tagArray );
+    }
+    //graph->GetEdgeData()->SetScalars( tagArray ); // not sure which array type to use here...
+
     // An array to store the current active tags and mark them all as false to begin with.
     // Every time we open a tag in the association types vector we will set the tag to true,
     // and every time the tag closes we will set it back to false.  This array will then be
     // copied every time we add a new edge.
-    vtkSmartPointer< vtkBitArray > currentTagArray = vtkSmartPointer< vtkBitArray >::New();
+    vtkSmartPointer< vtkVariantArray > currentTagArray = vtkSmartPointer< vtkVariantArray >::New();
     currentTagArray->SetNumberOfComponents( tagInfo->GetNumberOfTags() );
     currentTagArray->SetNumberOfTuples( 1 );
-    for( int i = 0; i < tagInfo->GetNumberOfTags(); i++ )
-      currentTagArray->SetComponent( 0, i, false );
+    for( int i = 0; i < tagInfo->GetNumberOfTags(); i++ ) currentTagArray->SetValue( i, false );
     
     try
     {
@@ -188,9 +193,9 @@ int ovOrlandoReader::ProcessRequest(
           {
             // Create an edge from the current vertex to the (possibly) new vertex
             // using the standard (linked author name) to identify it
-            graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ) );
-            tagArray->InsertNextTuple( 0, currentTagArray );
-            currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
+            vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
+            array->DeepCopy( currentTagArray );
+            graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ), array );
           }
           // This node describes an association type (edge tag)
           else
@@ -200,11 +205,11 @@ int ovOrlandoReader::ProcessRequest(
             {
               if( this->CurrentNode.IsOpeningElement() )
               { // opening element, mark the tag as true
-                currentTagArray->SetComponent( 0, index, true );
+                currentTagArray->SetValue( index, true );
               }
               else if( this->CurrentNode.IsClosingElement() )
               { // closing element, mark the tag as false
-                currentTagArray->SetComponent( 0, index, false );
+                currentTagArray->SetValue( index, false );
               }
             }
           }

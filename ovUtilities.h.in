@@ -30,6 +30,7 @@ class ovNode;
 typedef vtkstd::vector< ovEdge* > ovEdgeVector;
 typedef vtkstd::map< long, ovNode* > ovNodeHashMap;
 typedef vtkstd::string ovString;
+typedef vtkstd::vector< ovString > ovStringVector;
 
 struct ovTag
 {

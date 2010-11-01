@@ -88,7 +88,7 @@ void ovOrlandoTagInfo::ReadDefaultTags()
       else
       {
         // assume the line is a tag
-        this->Add( line, currentRank, true );
+        this->Add( line, currentRank, 1 == currentRank ? true : false );
       }
     }
     fileStream.close();

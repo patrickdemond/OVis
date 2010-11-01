@@ -27,6 +27,8 @@ SET( OVIS_SOURCE
   ovis.cpp
   source/ovOrlandoReader.cpp
   source/ovOrlandoTagInfo.cpp
+  source/ovRemoveIsolatedVertices.cpp
+  source/ovRestrictGraph.cpp
   interface/ovQMainWindow.cpp
 )
 
