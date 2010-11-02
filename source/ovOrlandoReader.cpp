@@ -118,29 +118,22 @@ int ovOrlandoReader::ProcessRequest(
     vtkSmartPointer< vtkMutableDirectedGraph > graph =
       vtkSmartPointer< vtkMutableDirectedGraph >::New();
     // the pedigree array is used to track vertices by name
-    vtkSmartPointer< vtkStringArray > pedigreeArray = vtkSmartPointer< vtkStringArray >::New();
-    graph->GetVertexData()->AddArray( pedigreeArray );
-    graph->GetVertexData()->SetPedigreeIds( pedigreeArray );
+    vtkSmartPointer< vtkStringArray > vertexPedigreeArray = vtkSmartPointer< vtkStringArray >::New();
+    graph->GetVertexData()->AddArray( vertexPedigreeArray );
+    graph->GetVertexData()->SetPedigreeIds( vertexPedigreeArray );
     // the tag array is used to keep a list of tags which associates the two vertices
     ovTagVector tags;
     ovTagVector::iterator it;
     tagInfo->GetTags( tags );
-    for( it = tags.begin(); it != tags.end(); it++ )
-    {
-      vtkSmartPointer< vtkVariantArray > tagArray = vtkSmartPointer< vtkVariantArray >::New();
-      tagArray->SetName( (*it)->name.c_str() );
-      graph->GetEdgeData()->AddArray( tagArray );
-    }
-    //graph->GetEdgeData()->SetScalars( tagArray ); // not sure which array type to use here...
+    vtkSmartPointer< vtkStringArray > newTagArray = vtkSmartPointer< vtkStringArray >::New();
+    newTagArray->SetName( "tags" );
+    graph->GetEdgeData()->AddArray( newTagArray );
 
-    // An array to store the current active tags and mark them all as false to begin with.
-    // Every time we open a tag in the association types vector we will set the tag to true,
-    // and every time the tag closes we will set it back to false.  This array will then be
+    // A string to store the current active tags and mark them all as '0' chars to begin with.
+    // Every time we open a tag in the association types vector we will set the tag to '1',
+    // and every time the tag closes we will set it back to '0'.  This string will then be
     // copied every time we add a new edge.
-    vtkSmartPointer< vtkVariantArray > currentTagArray = vtkSmartPointer< vtkVariantArray >::New();
-    currentTagArray->SetNumberOfComponents( tagInfo->GetNumberOfTags() );
-    currentTagArray->SetNumberOfTuples( 1 );
-    for( int i = 0; i < tagInfo->GetNumberOfTags(); i++ ) currentTagArray->SetValue( i, false );
+    ovString newCurrentTagArray( tagInfo->GetNumberOfTags(), '0' );
     
     try
     {
@@ -174,8 +167,8 @@ int ovOrlandoReader::ProcessRequest(
 
             // create a new vertex using the Id (author name) as the pedigree
             currentVertexId = graph->AddVertex();
-            pedigreeArray->InsertNextValue( ( char* )( this->CurrentNode.Id ) );
-            currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
+            vertexPedigreeArray->InsertNextValue( ( char* )( this->CurrentNode.Id ) );
+            currentVertexPedigree = vertexPedigreeArray->GetValue( currentVertexId );
           }
           else if( this->CurrentNode.IsClosingElement() )
           {
@@ -193,9 +186,11 @@ int ovOrlandoReader::ProcessRequest(
           {
             // Create an edge from the current vertex to the (possibly) new vertex
             // using the standard (linked author name) to identify it
-            vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-            array->DeepCopy( currentTagArray );
-            graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ), array );
+            vtkSmartPointer< vtkVariantArray > newArray = vtkSmartPointer< vtkVariantArray >::New();
+            newArray->SetNumberOfComponents( 1 );
+            newArray->SetNumberOfTuples( 1 );
+            newArray->SetValue( 0, vtkVariant( newCurrentTagArray ) );
+            graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ), newArray );
           }
           // This node describes an association type (edge tag)
           else
@@ -205,11 +200,11 @@ int ovOrlandoReader::ProcessRequest(
             {
               if( this->CurrentNode.IsOpeningElement() )
               { // opening element, mark the tag as true
-                currentTagArray->SetValue( index, true );
+                newCurrentTagArray[index] = '1';
               }
               else if( this->CurrentNode.IsClosingElement() )
               { // closing element, mark the tag as false
-                currentTagArray->SetValue( index, false );
+                newCurrentTagArray[index] = '0';
               }
             }
           }

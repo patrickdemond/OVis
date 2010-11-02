@@ -26,88 +26,6 @@
 #include <vtkstd/algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////////
-// BuildGraph
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-template< typename GraphT >
-static void BuildGraph(
-  ovRestrictGraph *filter,
-  vtkGraph* inputGraph,
-  vtkStringArray *includeTags,
-  vtkGraph* outputGraph )
-{
-  // if we have no include tags then do nothing
-  if( NULL == includeTags )
-  {
-    outputGraph->ShallowCopy( inputGraph );
-    return;
-  }
-
-  vtkSmartPointer<GraphT> graph = vtkSmartPointer<GraphT>::New();
-  graph->ShallowCopy( inputGraph );
-  vtkDataSetAttributes* const inputEdgeData = inputGraph->GetEdgeData();
-  vtkDataSetAttributes* const outputEdgeData = graph->GetEdgeData();
-  outputEdgeData->CopyAllocate( inputEdgeData );
-  
-  // if there the array is empty then display an empty graph
-  if( 0 == includeTags->GetNumberOfValues() )
-  {
-    graph->Initialize();
-  }
-  else
-  {
-    // Go through each edge in the graph and remove all those which do not have any
-    // of the tags in the includeTags array.  Tag info is stored as the scalar in
-    // the edge data in the form of a bit array (see ovOrlandoReader::ProcessRequest())
-    ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
-    vtkDataSetAttributes *data = graph->GetEdgeData();
-    int numTags = tagInfo->GetNumberOfTags();
-    
-    // Take the include tags array and turn it into a bit map
-    bool *includeBits = new bool[ numTags ];
-    for( int i = 0; i < numTags; i++ ) includeBits[ i ] = false;
-    for( vtkIdType i = 0; i < includeTags->GetNumberOfValues(); i++ )
-    {
-      int tagIndex = tagInfo->FindTagIndex( includeTags->GetValue( i ) );
-      if( 0 <= tagIndex && tagIndex < numTags ) includeBits[ tagIndex ] = true;
-    }
-    
-    double progress, numEdges = 0, totalEdges = inputGraph->GetNumberOfEdges();
-  
-    // read the edge's bits and compare them to the include bits
-    vtkSmartPointer< vtkIdTypeArray > removeIds = vtkSmartPointer< vtkIdTypeArray >::New();
-    vtkSmartPointer< vtkEdgeListIterator > it = vtkSmartPointer<vtkEdgeListIterator>::New();
-    inputGraph->GetEdges( it );
-    while( it->HasNext() )
-    {
-      // invoke progress update
-      progress = numEdges++ / totalEdges;
-      if( filter ) filter->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
-  
-      bool match = false;
-      vtkIdType edgeId = it->Next().Id;
-      for( int i = 0; i < inputGraph->GetEdgeData()->GetNumberOfArrays(); i++ )
-      {
-        vtkAbstractArray *array = inputGraph->GetEdgeData()->GetAbstractArray( i );
-        if( includeBits[ i ] && 0 != array->GetVariantValue( edgeId ).ToInt() )
-        {
-          match = true;
-          break;
-        }
-      }
-  
-      // if we do not have a match then remove the edge from the graph
-      if( !match ) removeIds->InsertNextValue( edgeId );
-    }
-    
-    graph->RemoveEdges( removeIds );
-    delete [] includeBits;
-  }
-
-  outputGraph->ShallowCopy( graph ); 
-}
-
-///////////////////////////////////////////////////////////////////////////////////
 // ovRestrictGraph
 
 vtkCxxRevisionMacro( ovRestrictGraph, "$Revision: 1.2 $" );
@@ -205,25 +123,96 @@ int ovRestrictGraph::RequestData(
   vtkInformationVector** inputVector, 
   vtkInformationVector* outputVector )
 {
-  // Ensure we have valid inputs ...
   vtkGraph* const inputGraph = vtkGraph::GetData( inputVector[0] );
   vtkGraph* const outputGraph = vtkGraph::GetData( outputVector );
 
-  // Build the new output graph, based on the graph type ...
-  if( vtkDirectedGraph::SafeDownCast( inputGraph ) )
+  // Make sure the input is a directed graph
+  if( NULL == vtkDirectedGraph::SafeDownCast( inputGraph ) )
   {
-    BuildGraph<vtkMutableDirectedGraph>( this, inputGraph, this->IncludeTags, outputGraph );
-  }
-  else if( vtkUndirectedGraph::SafeDownCast( inputGraph ) )
-  {
-    BuildGraph<vtkMutableUndirectedGraph>( this, inputGraph, this->IncludeTags, outputGraph );
-  }
-  else
-  {
-    vtkErrorMacro( << "Unknown input graph type" );
+    vtkErrorMacro( << "Input must be a directed graph" );
     return 0;
   }
+
+  // If we have no include tags then do nothing
+  if( NULL == this->IncludeTags )
+  {
+    outputGraph->ShallowCopy( inputGraph );
+    return 1;
+  }
+  
+  // prepare the working and output graphs
+  vtkSmartPointer< vtkMutableDirectedGraph > graph =
+    vtkSmartPointer< vtkMutableDirectedGraph >::New();
+  graph->ShallowCopy( inputGraph );
+  vtkDataSetAttributes* const inputEdgeData = inputGraph->GetEdgeData();
+  vtkDataSetAttributes* const outputEdgeData = graph->GetEdgeData();
+  outputEdgeData->CopyAllocate( inputEdgeData );
+  
+  // If the include tags array is empty then display an empty graph
+  if( 0 == this->IncludeTags->GetNumberOfValues() )
+  {
+    outputGraph->Initialize();
+    return 1;
+  }
+
+  // Make sure the graph's edge data contains a tags arrays
+  vtkStringArray *tagBitArray =
+    vtkStringArray::SafeDownCast( inputGraph->GetEdgeData()->GetAbstractArray( "tags" ) );
+  if( NULL == tagBitArray )
+  {
+    vtkErrorMacro( << "Input graph edge data does not have a 'tags' array." );
+    outputGraph->ShallowCopy( inputGraph ); 
+    return 0;
+  }
+  
+  // Go through each edge in the graph and remove all those which do not have any
+  // of the tags in the this->IncludeTags array.  Tag info is stored as the scalar in
+  // the edge data in the form of a bit array (see ovOrlandoReader::ProcessRequest())
+  ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
+  vtkDataSetAttributes *data = graph->GetEdgeData();
+  int numTags = tagInfo->GetNumberOfTags();
     
+  // Take the include tags array and turn it into a bit map
+  bool *includeBits = new bool[ numTags ];
+  for( int i = 0; i < numTags; i++ ) includeBits[ i ] = false;
+  for( vtkIdType i = 0; i < this->IncludeTags->GetNumberOfValues(); i++ )
+  {
+    int tagIndex = tagInfo->FindTagIndex( this->IncludeTags->GetValue( i ) );
+    if( 0 <= tagIndex && tagIndex < numTags ) includeBits[ tagIndex ] = true;
+  }
+  
+  double progress, numEdges = 0, totalEdges = inputGraph->GetNumberOfEdges();
+
+  // read the edge's tags array information and compare it to the include bits
+  vtkSmartPointer< vtkIdTypeArray > removeIds = vtkSmartPointer< vtkIdTypeArray >::New();
+  vtkSmartPointer< vtkEdgeListIterator > it = vtkSmartPointer<vtkEdgeListIterator>::New();
+  inputGraph->GetEdges( it );
+  while( it->HasNext() )
+  {
+    // invoke progress update
+    progress = numEdges++ / totalEdges;
+    this->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
+
+    bool match = false;
+    vtkIdType edgeId = it->Next().Id;
+    for( int tagId = 0; tagId < numTags; tagId++ )
+    {
+      ovString tagBits = tagBitArray->GetValue( edgeId );
+      if( includeBits[ tagId ] && '1' == tagBitArray->GetValue( edgeId ).at( tagId ) )
+      {
+        match = true;
+        break;
+      }
+    }
+
+    // if we do not have a match then remove the edge from the graph
+    if( !match ) removeIds->InsertNextValue( edgeId );
+  }
+  
+  graph->RemoveEdges( removeIds );
+  delete [] includeBits;
+  
+  outputGraph->ShallowCopy( graph ); 
   return 1;
 }
 
