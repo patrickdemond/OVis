@@ -38,8 +38,6 @@ protected:
   ovRestrictGraph();
   ~ovRestrictGraph();
 
-  int FillInputPortInformation( int port, vtkInformation* info );
-  
   int RequestData(
     vtkInformation*, 
     vtkInformationVector**, 

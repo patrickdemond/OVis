@@ -11,30 +11,33 @@
 
 #include "ui_ovQMainWindow.h"
 
+#include <QColorDialog>
 #include <QComboBox>
 #include <QFileDialog>
 #include <QListWidget>
 
 #include "vtkCommand.h"
+#include "vtkGlyphSource2D.h"
 #include "vtkGraph.h"
 #include "vtkGraphLayoutView.h"
+#include "vtkLookupTable.h"
 #include "vtkMath.h"
 #include "vtkRenderer.h"
 #include "vtkRendererCollection.h"
 #include "vtkRenderWindow.h"
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
+#include "vtkViewTheme.h"
 
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
-#include "source/ovRemoveIsolatedVertices.h"
 #include "source/ovRestrictGraph.h"
 
 class ovQMainWindowProgressCommand : public vtkCommand
 {
 public:
   static ovQMainWindowProgressCommand *New() { return new ovQMainWindowProgressCommand; }
-  virtual void Execute( vtkObject *caller, unsigned long eventId, void *callData )
+void Execute( vtkObject *caller, unsigned long eventId, void *callData )
   {
     if( this->ui )
     {
@@ -53,15 +56,11 @@ public:
         QString message = QString( "" );
         if( ovOrlandoReader::SafeDownCast( caller ) )
         {
-          message = QString( "Step 1 of 3: Reading data..." );
+          message = QString( "Reading data..." );
         }
         else if( ovRestrictGraph::SafeDownCast( caller ) )
         {
-          message = QString( "Step 2 of 3: Resolving visible edges..." );
-        }
-        else if( ovRemoveIsolatedVertices::SafeDownCast( caller ) )
-        {
-          message = QString( "Step 3 of 3: Removing isolated vertices..." );
+          message = QString( "Resolving visible edges..." );
         }
       
         if( message.length() ) this->ui->statusbar->showMessage( message );
@@ -87,36 +86,88 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->ui = new Ui_ovQMainWindow;
   this->ui->setupUi( this );
 
-  // create file open menu item
-  this->actionFileOpen = new QAction( tr( "&Open Data" ), this );
-  this->actionFileOpen->setShortcut( tr( "Ctrl+O" ));
-  this->actionFileOpen->setStatusTip( tr( "Open a data file" ) );
+  // connect the file menu items
   QObject::connect(
-    this->actionFileOpen, SIGNAL( triggered() ),
-    this, SLOT( slotFileOpen() ));
-
-  // create file exit menu item
-  this->actionFileExit = new QAction( tr( "&Exit" ), this );
-  this->actionFileExit->setShortcut( tr( "Ctrl+Q" ));
-  this->actionFileExit->setStatusTip( tr( "Exit the application" ));
+    this->ui->actionFileOpen, SIGNAL( triggered() ),
+    this, SLOT( slotFileOpen() ) );
   QObject::connect(
-    this->actionFileExit, SIGNAL( triggered() ),
-    this, SLOT( slotFileExit() ));
-
-  // create file menu
-  menu = this->menuBar()->addMenu( tr( "&File" ));
-  menu->addAction( this->actionFileOpen );
-  menu->addAction( this->actionFileExit );
+    this->ui->actionFileExit, SIGNAL( triggered() ),
+    this, SLOT( slotFileExit() ) );
   
+  // connect the view menu items
+  QObject::connect(
+    this->ui->actionViewSetBackgroundSolid, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetBackgroundSolid() ) );
+  QObject::connect(
+    this->ui->actionViewSetBackgroundTop, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetBackgroundTop() ) );
+  QObject::connect(
+    this->ui->actionViewSetBackgroundBottom, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetBackgroundBottom() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToNone, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleNone() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToVertex, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleVertex() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToDash, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleDash() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToCross, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleCross() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToThickCross, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleThickcross() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToTriangle, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleTriangle() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToSquare, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleSquare() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToCircle, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleCircle() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToDiamond, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleDiamond() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToArrow, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleArrow() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToThickArrow, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleThickarrow() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToHookedArrow, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleHookedarrow() ) );
+  QObject::connect(
+    this->ui->actionViewSetVertexStyleToEdgeArrow, SIGNAL( triggered() ),
+    this, SLOT( slotViewSetVertexStyleEdgearrow() ) );
+
   // set up the graph layout view
   this->GraphLayoutView = vtkSmartPointer< vtkGraphLayoutView >::New();
   this->GraphLayoutView->SetLayoutStrategyToClustering2D();
+  this->GraphLayoutView->SetEdgeLayoutStrategyToPassThrough();
+  this->GraphLayoutView->IconVisibilityOff();
+  this->GraphLayoutView->SetEdgeScalarBarVisibility( false );
+  this->GraphLayoutView->SetGlyphType( VTK_VERTEX_GLYPH );
+  this->GraphLayoutView->SetEdgeColorArrayName( "colors" );
+  this->GraphLayoutView->ColorEdgesOn();
+  this->GraphLayoutView->SetScalingArrayName( "sizes" );
+  this->GraphLayoutView->ScaledGlyphsOff();
   this->GraphLayoutView->SetInteractor( this->ui->graphLayoutWidget->GetInteractor() );
   this->ui->graphLayoutWidget->SetRenderWindow( this->GraphLayoutView->GetRenderWindow() );
-  vtkRenderer *renderer =
-    this->ui->graphLayoutWidget->GetRenderWindow()->GetRenderers()->GetFirstRenderer();
-  renderer->SetBackground( 0, 0, 0 );
-  renderer->GradientBackgroundOff();
+
+  this->GraphLayoutViewTheme = vtkSmartPointer< vtkViewTheme >::New();
+  this->GraphLayoutViewTheme->SetBackgroundColor( 0.0, 0.0, 0.0 );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( 0.0, 0.0, 0.0 );
+  this->GraphLayoutViewTheme->SetPointSize( 6 );
+  this->GraphLayoutViewTheme->SetLineWidth( 3 );
+  vtkLookupTable *lut =
+    vtkLookupTable::SafeDownCast( this->GraphLayoutViewTheme->GetCellLookupTable() );
+  lut->SetValueRange( 0.5, 1.0 );
+  lut->SetAlphaRange( 0.5, 1.0 );
+  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   
   // set up the reader and filters
   vtkSmartPointer< ovQMainWindowProgressCommand > observer;
@@ -127,9 +178,6 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->RestrictFilter = vtkSmartPointer< ovRestrictGraph >::New();
   this->RestrictFilter->AddObserver( vtkCommand::ProgressEvent, observer );
   this->RestrictFilter->SetInput( this->OrlandoReader->GetOutput() );
-  this->RemoveVerticesFilter = vtkSmartPointer< ovRemoveIsolatedVertices >::New();
-  this->RemoveVerticesFilter->AddObserver( vtkCommand::ProgressEvent, observer );
-  this->RemoveVerticesFilter->SetInput( this->RestrictFilter->GetOutput() );
 
   // set up the tag list
   this->ui->tagListWidget->setSortingEnabled( 1 );
@@ -159,7 +207,7 @@ ovQMainWindow::~ovQMainWindow()
 void ovQMainWindow::slotFileOpen()
 {
   QString fileName = QFileDialog::getOpenFileName(
-    this, tr( "Open Orlando File" ), ".", tr( "Orlando XML Files (*.xml)" ) );
+    this, tr( "Open Orlando File" ), "data", tr( "Orlando XML Files (*.xml)" ) );
 
   if( "" != fileName )
   {
@@ -177,7 +225,7 @@ void ovQMainWindow::slotFileOpen()
     
     // load the orlando file and render
     this->OrlandoReader->SetFileName( fileName.toStdString() );
-    this->GraphLayoutView->SetRepresentationFromInput( this->RemoveVerticesFilter->GetOutput() );
+    this->GraphLayoutView->SetRepresentationFromInput( this->RestrictFilter->GetOutput() );
     this->UpdateGraphView( true );
   }
 }
@@ -186,6 +234,77 @@ void ovQMainWindow::slotFileOpen()
 void ovQMainWindow::slotFileExit()
 {
   qApp->exit();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotViewSetBackgroundSolid()
+{
+  double rgb[3];
+  this->GraphLayoutViewTheme->GetBackgroundColor( rgb );
+  QColor c( 255. * rgb[0], 255. * rgb[1], 255. * rgb[2] );
+  c = QColorDialog::getColor( c, this );
+  rgb[0] = static_cast< double >( c.red() ) / 255.;
+  rgb[1] = static_cast< double >( c.green() ) / 255.;
+  rgb[2] = static_cast< double >( c.blue() ) / 255.;
+
+  this->GraphLayoutViewTheme->SetBackgroundColor( rgb[0], rgb[1], rgb[2] );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( rgb[0], rgb[1], rgb[2] );
+  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotViewSetBackgroundTop()
+{
+  double rgb[3];
+  this->GraphLayoutViewTheme->GetBackgroundColor2( rgb );
+  QColor c( 255. * rgb[0], 255. * rgb[1], 255. * rgb[2] );
+  c = QColorDialog::getColor( c, this );
+  rgb[0] = static_cast< double >( c.red() ) / 255.;
+  rgb[1] = static_cast< double >( c.green() ) / 255.;
+  rgb[2] = static_cast< double >( c.blue() ) / 255.;
+
+  this->GraphLayoutViewTheme->SetBackgroundColor2( rgb[0], rgb[1], rgb[2] );
+  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotViewSetBackgroundBottom()
+{
+  double rgb[3];
+  this->GraphLayoutViewTheme->GetBackgroundColor( rgb );
+  QColor c( 255. * rgb[0], 255. * rgb[1], 255. * rgb[2] );
+  c = QColorDialog::getColor( c, this );
+  rgb[0] = static_cast< double >( c.red() ) / 255.;
+  rgb[1] = static_cast< double >( c.green() ) / 255.;
+  rgb[2] = static_cast< double >( c.blue() ) / 255.;
+
+  this->GraphLayoutViewTheme->SetBackgroundColor( rgb[0], rgb[1], rgb[2] );
+  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetVertexStyle( int type )
+{
+  // make sure only the selected vertex style menu item is checked
+  this->ui->actionViewSetVertexStyleToNone->setChecked( type == VTK_NO_GLYPH );
+  this->ui->actionViewSetVertexStyleToVertex->setChecked( type == VTK_VERTEX_GLYPH );
+  this->ui->actionViewSetVertexStyleToDash->setChecked( type == VTK_DASH_GLYPH );
+  this->ui->actionViewSetVertexStyleToCross->setChecked( type == VTK_CROSS_GLYPH );
+  this->ui->actionViewSetVertexStyleToThickCross->setChecked( type == VTK_THICKCROSS_GLYPH );
+  this->ui->actionViewSetVertexStyleToTriangle->setChecked( type == VTK_TRIANGLE_GLYPH );
+  this->ui->actionViewSetVertexStyleToSquare->setChecked( type == VTK_SQUARE_GLYPH );
+  this->ui->actionViewSetVertexStyleToCircle->setChecked( type == VTK_CIRCLE_GLYPH );
+  this->ui->actionViewSetVertexStyleToDiamond->setChecked( type == VTK_DIAMOND_GLYPH );
+  this->ui->actionViewSetVertexStyleToArrow->setChecked( type == VTK_ARROW_GLYPH );
+  this->ui->actionViewSetVertexStyleToThickArrow->setChecked( type == VTK_THICKARROW_GLYPH );
+  this->ui->actionViewSetVertexStyleToHookedArrow->setChecked( type == VTK_HOOKEDARROW_GLYPH );
+  this->ui->actionViewSetVertexStyleToEdgeArrow->setChecked( type == VTK_EDGEARROW_GLYPH );
+  
+  this->GraphLayoutView->SetGlyphType( type );
+  this->GraphLayoutView->Render();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

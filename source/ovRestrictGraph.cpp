@@ -17,8 +17,10 @@
 #include "vtkIdTypeArray.h"
 #include "vtkInformation.h"
 #include "vtkMutableDirectedGraph.h"
+#include "vtkMutableGraphHelper.h"
 #include "vtkMutableUndirectedGraph.h"
 #include "vtkObjectFactory.h"
+#include "vtkPoints.h"
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
 #include "vtkVariantArray.h"
@@ -34,7 +36,6 @@ vtkStandardNewMacro( ovRestrictGraph );
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovRestrictGraph::ovRestrictGraph()
 {
-  this->SetNumberOfInputPorts( 1 );
   this->IncludeTags = NULL;
 }
 
@@ -106,113 +107,150 @@ void ovRestrictGraph::SetIncludeTags( vtkStringArray* newTagArray )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int ovRestrictGraph::FillInputPortInformation( int port, vtkInformation* info )
-{
-  if( port == 0 )
-  {
-    info->Set( vtkAlgorithm::INPUT_REQUIRED_DATA_TYPE(), "vtkGraph" );
-    return 1;
-  }
-    
-  return 0;
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int ovRestrictGraph::RequestData(
   vtkInformation* vtkNotUsed( request ),
   vtkInformationVector** inputVector, 
   vtkInformationVector* outputVector )
 {
-  vtkGraph* const inputGraph = vtkGraph::GetData( inputVector[0] );
-  vtkGraph* const outputGraph = vtkGraph::GetData( outputVector );
-
-  // Make sure the input is a directed graph
-  if( NULL == vtkDirectedGraph::SafeDownCast( inputGraph ) )
-  {
-    vtkErrorMacro( << "Input must be a directed graph" );
-    return 0;
-  }
+  vtkGraph* input = vtkGraph::GetData( inputVector[0] );
+  vtkGraph* output = vtkGraph::GetData( outputVector );
 
   // If we have no include tags then do nothing
   if( NULL == this->IncludeTags )
   {
-    outputGraph->ShallowCopy( inputGraph );
+    output->ShallowCopy( input );
     return 1;
   }
-  
-  // prepare the working and output graphs
-  vtkSmartPointer< vtkMutableDirectedGraph > graph =
-    vtkSmartPointer< vtkMutableDirectedGraph >::New();
-  graph->ShallowCopy( inputGraph );
-  vtkDataSetAttributes* const inputEdgeData = inputGraph->GetEdgeData();
-  vtkDataSetAttributes* const outputEdgeData = graph->GetEdgeData();
-  outputEdgeData->CopyAllocate( inputEdgeData );
   
   // If the include tags array is empty then display an empty graph
   if( 0 == this->IncludeTags->GetNumberOfValues() )
   {
-    outputGraph->Initialize();
     return 1;
   }
 
   // Make sure the graph's edge data contains a tags arrays
   vtkStringArray *tagBitArray =
-    vtkStringArray::SafeDownCast( inputGraph->GetEdgeData()->GetAbstractArray( "tags" ) );
+    vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray( "tags" ) );
   if( NULL == tagBitArray )
   {
     vtkErrorMacro( << "Input graph edge data does not have a 'tags' array." );
-    outputGraph->ShallowCopy( inputGraph ); 
+    output->ShallowCopy( input ); 
     return 0;
   }
   
-  // Go through each edge in the graph and remove all those which do not have any
-  // of the tags in the this->IncludeTags array.  Tag info is stored as the scalar in
-  // the edge data in the form of a bit array (see ovOrlandoReader::ProcessRequest())
+  // Create a vector of booleans which correspond to the list of all tags and
+  // whether or not to include them
   ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
-  vtkDataSetAttributes *data = graph->GetEdgeData();
   int numTags = tagInfo->GetNumberOfTags();
-    
-  // Take the include tags array and turn it into a bit map
-  bool *includeBits = new bool[ numTags ];
-  for( int i = 0; i < numTags; i++ ) includeBits[ i ] = false;
+  int numIncludeTags = 0;
+  vtkstd::vector< bool > includeBits( numTags, false );
   for( vtkIdType i = 0; i < this->IncludeTags->GetNumberOfValues(); i++ )
   {
     int tagIndex = tagInfo->FindTagIndex( this->IncludeTags->GetValue( i ) );
-    if( 0 <= tagIndex && tagIndex < numTags ) includeBits[ tagIndex ] = true;
+    if( 0 <= tagIndex && tagIndex < numTags )
+    {
+      includeBits[ tagIndex ] = true;
+      numIncludeTags++;
+    }
   }
   
-  double progress, numEdges = 0, totalEdges = inputGraph->GetNumberOfEdges();
+  // Set up our mutable graph helper
+  vtkSmartPointer<vtkMutableGraphHelper> builder = 
+    vtkSmartPointer<vtkMutableGraphHelper>::New();
+  if (vtkDirectedGraph::SafeDownCast(input))
+  {
+    vtkSmartPointer<vtkMutableDirectedGraph> dir = 
+      vtkSmartPointer<vtkMutableDirectedGraph>::New();
+    builder->SetGraph(dir);
+  }
+  else
+  {
+    vtkSmartPointer<vtkMutableUndirectedGraph> undir = 
+      vtkSmartPointer<vtkMutableUndirectedGraph>::New();
+    builder->SetGraph(undir);
+  }
 
-  // read the edge's tags array information and compare it to the include bits
-  vtkSmartPointer< vtkIdTypeArray > removeIds = vtkSmartPointer< vtkIdTypeArray >::New();
-  vtkSmartPointer< vtkEdgeListIterator > it = vtkSmartPointer<vtkEdgeListIterator>::New();
-  inputGraph->GetEdges( it );
-  while( it->HasNext() )
+  // Initialize edge data, vertex data, and points
+  vtkDataSetAttributes *inputEdgeData = input->GetEdgeData();
+  vtkDataSetAttributes *builderEdgeData = builder->GetGraph()->GetEdgeData();
+  builderEdgeData->CopyAllocate( inputEdgeData );
+
+  vtkDataSetAttributes *inputVertData = input->GetVertexData();
+  vtkDataSetAttributes *builderVertData = builder->GetGraph()->GetVertexData();
+  builderVertData->CopyAllocate( inputVertData );
+
+  vtkPoints* inputPoints = input->GetPoints();
+  vtkSmartPointer<vtkPoints> builderPoints = vtkSmartPointer<vtkPoints>::New();
+  builder->GetGraph()->SetPoints( builderPoints );
+
+  // Vector keeps track of mapping of input vertex ids to output vertex ids
+  vtkIdType numVert = input->GetNumberOfVertices();
+  vtkstd::vector<int> outputVertex( numVert, -1 );
+
+  vtkSmartPointer<vtkEdgeListIterator> edgeIter =
+    vtkSmartPointer<vtkEdgeListIterator>::New();
+  input->GetEdges( edgeIter );
+  
+  double progress, numEdges = 0, totalEdges = input->GetNumberOfEdges();
+  while( edgeIter->HasNext() )
   {
     // invoke progress update
     progress = numEdges++ / totalEdges;
     this->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
 
+    vtkEdgeType e = edgeIter->Next();
+
+    // check to see if this edge should be included and set the color array value
+    // based on these results
     bool match = false;
-    vtkIdType edgeId = it->Next().Id;
+    int includeTagIndex = 0;
+    ovString includeTagMatches( numIncludeTags, '0' );
     for( int tagId = 0; tagId < numTags; tagId++ )
     {
-      ovString tagBits = tagBitArray->GetValue( edgeId );
-      if( includeBits[ tagId ] && '1' == tagBitArray->GetValue( edgeId ).at( tagId ) )
+      ovString tagBits = tagBitArray->GetValue( e.Id );
+      if( includeBits[ tagId ] )
       {
-        match = true;
-        break;
+        if( '1' == tagBitArray->GetValue( e.Id ).at( tagId ) )
+        {
+          includeTagMatches[includeTagIndex] = '1';
+          match = true;
+        }
+        includeTagIndex++;
       }
     }
-
-    // if we do not have a match then remove the edge from the graph
-    if( !match ) removeIds->InsertNextValue( edgeId );
+    
+    if( match )
+    {
+      vtkIdType source = outputVertex[e.Source];
+      if( source < 0 )
+      {
+        source = builder->AddVertex();
+        outputVertex[e.Source] = source;
+        builderVertData->CopyData( inputVertData, e.Source, source );
+        builderPoints->InsertNextPoint( inputPoints->GetPoint( e.Source ) );
+      }
+      vtkIdType target = outputVertex[e.Target];
+      if( target < 0 )
+      {
+        target = builder->AddVertex();
+        outputVertex[e.Target] = target;
+        builderVertData->CopyData( inputVertData, e.Target, target );
+        builderPoints->InsertNextPoint( inputPoints->GetPoint( e.Target ) );
+      }
+      vtkEdgeType outputEdge = builder->AddEdge( source, target );
+      builderEdgeData->CopyData( inputEdgeData, e.Id, outputEdge.Id );
+      vtkVariantArray *colors = vtkVariantArray::SafeDownCast(
+        builderEdgeData->GetAbstractArray( "colors" ) );
+      if( colors ) colors->SetValue( outputEdge.Id, vtkVariant( ovHash( includeTagMatches ) ) );
+    }
   }
-  
-  graph->RemoveEdges( removeIds );
-  delete [] includeBits;
-  
-  outputGraph->ShallowCopy( graph ); 
+
+  // Pass constructed graph to output.
+  output->ShallowCopy( builder->GetGraph() );
+  output->GetFieldData()->PassData( input->GetFieldData() );
+
+  // Clean up
+  output->Squeeze();
+
   return 1;
 }
-

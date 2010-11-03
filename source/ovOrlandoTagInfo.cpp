@@ -68,7 +68,9 @@ ovOrlandoTagInfo* ovOrlandoTagInfo::GetInfo()
 void ovOrlandoTagInfo::ReadDefaultTags()
 {
   // open the tag list from the resources directory
-  vtkstd::ifstream fileStream( "resources/tag_list.txt" );
+  char buffer[1024];
+  sprintf( buffer, "%s/tag_list.txt", OVIS_RESOURCES_DIR );
+  vtkstd::ifstream fileStream( buffer );
   if( fileStream.is_open() )
   {
     bool valid;

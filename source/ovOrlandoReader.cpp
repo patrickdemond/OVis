@@ -11,9 +11,9 @@
 
 #include "ovOrlandoTagInfo.h"
 
-#include "vtkVariantArray.h"
 #include "vtkCommand.h"
 #include "vtkDataSetAttributes.h"
+#include "vtkDoubleArray.h"
 #include "vtkGraph.h"
 #include "vtkInformation.h"
 #include "vtkInformationVector.h"
@@ -22,6 +22,7 @@
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
+#include "vtkVariantArray.h"
 
 #include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
@@ -115,25 +116,39 @@ int ovOrlandoReader::ProcessRequest(
     tagInfo->Finalize();
     
     // create and set up a graph with pedigree and tag arrays
+    // (the pedigree array is used to track vertices by name)
     vtkSmartPointer< vtkMutableDirectedGraph > graph =
       vtkSmartPointer< vtkMutableDirectedGraph >::New();
-    // the pedigree array is used to track vertices by name
-    vtkSmartPointer< vtkStringArray > vertexPedigreeArray = vtkSmartPointer< vtkStringArray >::New();
-    graph->GetVertexData()->AddArray( vertexPedigreeArray );
-    graph->GetVertexData()->SetPedigreeIds( vertexPedigreeArray );
+    vtkSmartPointer< vtkStringArray > pedigreeArray = vtkSmartPointer< vtkStringArray >::New();
+    pedigreeArray->SetName( "pedigrees" );
+    graph->GetVertexData()->AddArray( pedigreeArray );
+    graph->GetVertexData()->SetPedigreeIds( pedigreeArray );
+
+    // the sizes array is used to determine the size of each vertex
+    vtkSmartPointer< vtkDoubleArray > sizeArray = vtkSmartPointer< vtkDoubleArray >::New();
+    sizeArray->SetName( "sizes" );
+    graph->GetVertexData()->AddArray( sizeArray );
+    graph->GetVertexData()->SetActiveScalars( sizeArray->GetName() );
+
     // the tag array is used to keep a list of tags which associates the two vertices
     ovTagVector tags;
     ovTagVector::iterator it;
     tagInfo->GetTags( tags );
-    vtkSmartPointer< vtkStringArray > newTagArray = vtkSmartPointer< vtkStringArray >::New();
-    newTagArray->SetName( "tags" );
-    graph->GetEdgeData()->AddArray( newTagArray );
+    vtkSmartPointer< vtkStringArray > tagArray = vtkSmartPointer< vtkStringArray >::New();
+    tagArray->SetName( "tags" );
+    graph->GetEdgeData()->AddArray( tagArray );
+
+    // the colors array is used for edge coloring, this will be manipulated internally by the
+    // restrict graph algorithm
+    vtkSmartPointer< vtkVariantArray > colorArray = vtkSmartPointer< vtkVariantArray >::New();
+    colorArray->SetName( "colors" );
+    graph->GetEdgeData()->AddArray( colorArray );
 
     // A string to store the current active tags and mark them all as '0' chars to begin with.
     // Every time we open a tag in the association types vector we will set the tag to '1',
     // and every time the tag closes we will set it back to '0'.  This string will then be
     // copied every time we add a new edge.
-    ovString newCurrentTagArray( tagInfo->GetNumberOfTags(), '0' );
+    ovString currentTagArray( tagInfo->GetNumberOfTags(), '0' );
     
     try
     {
@@ -166,9 +181,13 @@ int ovOrlandoReader::ProcessRequest(
             this->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
 
             // create a new vertex using the Id (author name) as the pedigree
-            currentVertexId = graph->AddVertex();
-            vertexPedigreeArray->InsertNextValue( ( char* )( this->CurrentNode.Id ) );
-            currentVertexPedigree = vertexPedigreeArray->GetValue( currentVertexId );
+            vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
+            array->SetNumberOfComponents( 2 );
+            array->SetNumberOfTuples( 1 );
+            array->SetValue( 0, vtkVariant( ( char* )( this->CurrentNode.Id ) ) ); // pedigrees
+            array->SetValue( 1, 1 ); // sizes
+            currentVertexId = graph->AddVertex( array );
+            currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
           }
           else if( this->CurrentNode.IsClosingElement() )
           {
@@ -186,11 +205,12 @@ int ovOrlandoReader::ProcessRequest(
           {
             // Create an edge from the current vertex to the (possibly) new vertex
             // using the standard (linked author name) to identify it
-            vtkSmartPointer< vtkVariantArray > newArray = vtkSmartPointer< vtkVariantArray >::New();
-            newArray->SetNumberOfComponents( 1 );
-            newArray->SetNumberOfTuples( 1 );
-            newArray->SetValue( 0, vtkVariant( newCurrentTagArray ) );
-            graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ), newArray );
+            vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
+            array->SetNumberOfComponents( 2 );
+            array->SetNumberOfTuples( 1 );
+            array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
+            array->SetValue( 1, vtkVariant( ovHash( currentTagArray ) ) ); // colors
+            graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ), array );
           }
           // This node describes an association type (edge tag)
           else
@@ -200,11 +220,11 @@ int ovOrlandoReader::ProcessRequest(
             {
               if( this->CurrentNode.IsOpeningElement() )
               { // opening element, mark the tag as true
-                newCurrentTagArray[index] = '1';
+                currentTagArray[index] = '1';
               }
               else if( this->CurrentNode.IsClosingElement() )
               { // closing element, mark the tag as false
-                newCurrentTagArray[index] = '0';
+                currentTagArray[index] = '0';
               }
             }
           }
