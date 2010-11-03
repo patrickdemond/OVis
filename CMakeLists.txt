@@ -18,6 +18,9 @@ INCLUDE( ${QT_USE_FILE} )
 # We need LibXML2
 FIND_PACKAGE( LibXml2 REQUIRED )
 
+# Setup other variables needed by the utilities header
+SET( OVIS_RESOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/resources )
+
 # Configure the utitlities header
 CONFIGURE_FILE( ${PROJECT_SOURCE_DIR}/ovUtilities.h.in
                 ${PROJECT_BINARY_DIR}/ovUtilities.h @ONLY IMMEDIATE )
@@ -27,7 +30,6 @@ SET( OVIS_SOURCE
   ovis.cpp
   source/ovOrlandoReader.cpp
   source/ovOrlandoTagInfo.cpp
-  source/ovRemoveIsolatedVertices.cpp
   source/ovRestrictGraph.cpp
   interface/ovQMainWindow.cpp
 )
@@ -67,7 +69,7 @@ TARGET_LINK_LIBRARIES( ovis
 )
 
 # Make the resources directory and copy files
-MAKE_DIRECTORY( ${CMAKE_CURRENT_BINARY_DIR}/resources )
+MAKE_DIRECTORY( ${OVIS_RESOURCES_DIR} )
 FILE( GLOB resources RELATIVE
   ${CMAKE_CURRENT_SOURCE_DIR}/resources
   ${CMAKE_CURRENT_SOURCE_DIR}/resources/* )

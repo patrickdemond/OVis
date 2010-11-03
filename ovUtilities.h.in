@@ -18,17 +18,13 @@
 #define OVIS_VERSION_MAJOR @OVIS_VERSION_MAJOR@
 #define OVIS_VERSION_MINOR @OVIS_VERSION_MINOR@
 #define OVIS_VERSION_PATCH @OVIS_VERSION_PATCH@
+#define OVIS_RESOURCES_DIR "@OVIS_RESOURCES_DIR@"
 
 // STL headers and typedefs
 #include <vtkstd/map>
 #include <vtkstd/string>
 #include <vtkstd/vector>
 
-class ovEdge;
-class ovNode;
-
-typedef vtkstd::vector< ovEdge* > ovEdgeVector;
-typedef vtkstd::map< long, ovNode* > ovNodeHashMap;
 typedef vtkstd::string ovString;
 typedef vtkstd::vector< ovString > ovStringVector;
 
@@ -49,5 +45,12 @@ inline bool ovTagUnRankedCompare( ovTag *a, ovTag *b )
 { return a->name == b->name; }
 inline bool ovTagSort( ovTag *a, ovTag *b )
 { return a->name < b->name; }
+
+inline long ovHash( ovString str )
+{
+  vtkstd::locale ovLocale( "POSIX" );
+  const vtkstd::collate< char > &ovCollate = vtkstd::use_facet< vtkstd::collate< char > >( ovLocale );
+  return ovCollate.hash( str.data(), str.data() + str.length() );
+}
 
 #endif // __vtkUtilities_h
