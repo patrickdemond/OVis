@@ -92,7 +92,7 @@
      </widget>
     </item>
     <item row="0" column="1" colspan="2">
-     <layout class="QVBoxLayout" name="queryLayout" stretch="0,0,0,0">
+     <layout class="QVBoxLayout" name="queryLayout" stretch="0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetFixedSize</enum>
       </property>
@@ -100,40 +100,160 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QLabel" name="label">
-        <property name="enabled">
-         <bool>true</bool>
+       <layout class="QVBoxLayout" name="displayPropertiesLayout">
+        <property name="topMargin">
+         <number>0</number>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Active Tags</string>
-        </property>
-       </widget>
+        <item>
+         <widget class="QLabel" name="displayPropertiesLabel">
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Display Properties</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="sizeSliderLayout">
+          <property name="horizontalSpacing">
+           <number>5</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QSlider" name="vertexSizeSlider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>23</number>
+            </property>
+            <property name="pageStep">
+             <number>5</number>
+            </property>
+            <property name="value">
+             <number>5</number>
+            </property>
+            <property name="tracking">
+             <bool>true</bool>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::TicksAbove</enum>
+            </property>
+            <property name="tickInterval">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSlider" name="edgeSizeSlider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>12</number>
+            </property>
+            <property name="pageStep">
+             <number>4</number>
+            </property>
+            <property name="value">
+             <number>2</number>
+            </property>
+            <property name="tracking">
+             <bool>true</bool>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
+             <bool>false</bool>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::TicksAbove</enum>
+            </property>
+            <property name="tickInterval">
+             <number>1</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="vertexSizeLabel">
+            <property name="text">
+             <string>Vertex Size</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="edgeSizeLabel">
+            <property name="text">
+             <string>Edge Size</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QComboBox" name="tagListPresetComboBox"/>
-      </item>
-      <item>
-       <widget class="QListWidget" name="tagListWidget">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <layout class="QVBoxLayout" name="activeTagsLayout">
+        <property name="topMargin">
+         <number>10</number>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>200</width>
-          <height>0</height>
-         </size>
-        </property>
-       </widget>
+        <item>
+         <widget class="QLabel" name="activeTagsLabel">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Active Tags</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="tagListPresetComboBox"/>
+        </item>
+        <item>
+         <widget class="QListWidget" name="tagListWidget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="queryButtonLayout" stretch="0,0">
@@ -172,8 +292,363 @@
      <height>25</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionFileOpen"/>
+    <addaction name="actionFileExit"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuViewSetVertexStyle">
+     <property name="statusTip">
+      <string>Select the vertex style</string>
+     </property>
+     <property name="title">
+      <string>Set Vertex Style</string>
+     </property>
+     <addaction name="actionSetVertexStyleToNone"/>
+     <addaction name="actionSetVertexStyleToVertex"/>
+     <addaction name="actionSetVertexStyleToDash"/>
+     <addaction name="actionSetVertexStyleToCross"/>
+     <addaction name="actionSetVertexStyleToThickCross"/>
+     <addaction name="actionSetVertexStyleToTriangle"/>
+     <addaction name="actionSetVertexStyleToSquare"/>
+     <addaction name="actionSetVertexStyleToCircle"/>
+     <addaction name="actionSetVertexStyleToDiamond"/>
+     <addaction name="actionSetVertexStyleToArrow"/>
+     <addaction name="actionSetVertexStyleToThickArrow"/>
+     <addaction name="actionSetVertexStyleToHookedArrow"/>
+     <addaction name="actionSetVertexStyleToEdgeArrow"/>
+    </widget>
+    <widget class="QMenu" name="menuSet_Background">
+     <property name="title">
+      <string>Set Background</string>
+     </property>
+     <addaction name="actionSetBackgroundSolid"/>
+     <addaction name="actionSetBackgroundTop"/>
+     <addaction name="actionSetBackgroundBottom"/>
+    </widget>
+    <widget class="QMenu" name="menuSet_Layout_Strategy">
+     <property name="title">
+      <string>Set Layout Strategy</string>
+     </property>
+     <addaction name="actionSetLayoutStrategyToRandom"/>
+     <addaction name="actionSetLayoutStrategyToForceDirected"/>
+     <addaction name="actionSetLayoutStrategyToSimple2D"/>
+     <addaction name="actionSetLayoutStrategyToClustering2D"/>
+     <addaction name="actionSetLayoutStrategyToCommunity2D"/>
+     <addaction name="actionSetLayoutStrategyToFast2D"/>
+     <addaction name="actionSetLayoutStrategyToCircular"/>
+     <addaction name="actionSetLayoutStrategyToTree"/>
+     <addaction name="actionSetLayoutStrategyToCosmicTree"/>
+     <addaction name="actionSetLayoutStrategyToCone"/>
+     <addaction name="actionSetLayoutStrategyToSpanTree"/>
+    </widget>
+    <addaction name="menuSet_Background"/>
+    <addaction name="menuViewSetVertexStyle"/>
+    <addaction name="menuSet_Layout_Strategy"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionFileOpen">
+   <property name="text">
+    <string>Open Data</string>
+   </property>
+   <property name="statusTip">
+    <string>Open a data file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToNone">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>None</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to none</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToVertex">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Vertex</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to vertex</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToDash">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Dash</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to dash</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToCross">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Cross</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to cross</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToThickCross">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Thick Cross</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to thick cross</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToTriangle">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Triangle</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to triangle</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToSquare">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Square</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to square</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToCircle">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Circle</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to circle</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToDiamond">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Diamond</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to diamond</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToArrow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Arrow</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to arrow</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToThickArrow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Thick Arrow</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to thick arrow</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToHookedArrow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hooked Arrow</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to hooked arrow</string>
+   </property>
+  </action>
+  <action name="actionSetVertexStyleToEdgeArrow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Edge Arrow</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the vertex style to edge arrow</string>
+   </property>
+  </action>
+  <action name="actionFileExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="statusTip">
+    <string>Exit the application</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionViewSetBackground2">
+   <property name="text">
+    <string>Set Background #2</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the top background color</string>
+   </property>
+  </action>
+  <action name="actionSetBackgroundSolid">
+   <property name="text">
+    <string>Set Solid Color</string>
+   </property>
+   <property name="statusTip">
+    <string>Set the background to a single solid color</string>
+   </property>
+  </action>
+  <action name="actionSetBackgroundTop">
+   <property name="text">
+    <string>Set Top Gradient</string>
+   </property>
+  </action>
+  <action name="actionSetBackgroundBottom">
+   <property name="text">
+    <string>Set Bottom Gradient</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToRandom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Random</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToForceDirected">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ForceDirected</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToSimple2D">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Simple2D</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToClustering2D">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Clustering2D</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToCommunity2D">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Community2D</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToFast2D">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fast2D</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToPassThrough">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>PassThrough</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToCircular">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Circular</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToTree">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Tree</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToCosmicTree">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>CosmicTree</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToCone">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Cone</string>
+   </property>
+  </action>
+  <action name="actionSetLayoutStrategyToSpanTree">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>SpanTree</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

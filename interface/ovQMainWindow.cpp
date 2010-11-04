@@ -11,6 +11,7 @@
 
 #include "ui_ovQMainWindow.h"
 
+#include <QActionGroup>
 #include <QColorDialog>
 #include <QComboBox>
 #include <QFileDialog>
@@ -22,12 +23,17 @@
 #include "vtkGraphLayoutView.h"
 #include "vtkLookupTable.h"
 #include "vtkMath.h"
+#include "vtkRenderedGraphRepresentation.h"
 #include "vtkRenderer.h"
 #include "vtkRendererCollection.h"
 #include "vtkRenderWindow.h"
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
 #include "vtkViewTheme.h"
+
+// experimental
+//#include "vtkDataSetAttributes.h"
+//#include "vtkVariantArray.h"
 
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
@@ -96,77 +102,139 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   
   // connect the view menu items
   QObject::connect(
-    this->ui->actionViewSetBackgroundSolid, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetBackgroundSolid() ) );
+    this->ui->actionSetBackgroundSolid, SIGNAL( triggered() ),
+    this, SLOT( slotSetBackgroundSolid() ) );
   QObject::connect(
-    this->ui->actionViewSetBackgroundTop, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetBackgroundTop() ) );
+    this->ui->actionSetBackgroundTop, SIGNAL( triggered() ),
+    this, SLOT( slotSetBackgroundTop() ) );
   QObject::connect(
-    this->ui->actionViewSetBackgroundBottom, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetBackgroundBottom() ) );
+    this->ui->actionSetBackgroundBottom, SIGNAL( triggered() ),
+    this, SLOT( slotSetBackgroundBottom() ) );
+
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToNone, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleNone() ) );
+    this->ui->actionSetVertexStyleToNone, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToNone() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToVertex, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleVertex() ) );
+    this->ui->actionSetVertexStyleToVertex, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToVertex() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToDash, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleDash() ) );
+    this->ui->actionSetVertexStyleToDash, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToDash() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToCross, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleCross() ) );
+    this->ui->actionSetVertexStyleToCross, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToCross() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToThickCross, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleThickcross() ) );
+    this->ui->actionSetVertexStyleToThickCross, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToThickcross() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToTriangle, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleTriangle() ) );
+    this->ui->actionSetVertexStyleToTriangle, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToTriangle() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToSquare, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleSquare() ) );
+    this->ui->actionSetVertexStyleToSquare, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToSquare() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToCircle, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleCircle() ) );
+    this->ui->actionSetVertexStyleToCircle, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToCircle() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToDiamond, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleDiamond() ) );
+    this->ui->actionSetVertexStyleToDiamond, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToDiamond() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToArrow, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleArrow() ) );
+    this->ui->actionSetVertexStyleToArrow, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToArrow() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToThickArrow, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleThickarrow() ) );
+    this->ui->actionSetVertexStyleToThickArrow, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToThickarrow() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToHookedArrow, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleHookedarrow() ) );
+    this->ui->actionSetVertexStyleToHookedArrow, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToHookedarrow() ) );
   QObject::connect(
-    this->ui->actionViewSetVertexStyleToEdgeArrow, SIGNAL( triggered() ),
-    this, SLOT( slotViewSetVertexStyleEdgearrow() ) );
+    this->ui->actionSetVertexStyleToEdgeArrow, SIGNAL( triggered() ),
+    this, SLOT( slotSetVertexStyleToEdgearrow() ) );
+  
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToRandom, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToRandom() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToForceDirected, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToForceDirected() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToSimple2D, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToSimple2D() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToClustering2D, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToClustering2D() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToCommunity2D, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToCommunity2D() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToFast2D, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToFast2D() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToCircular, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToCircular() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToTree, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToTree() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToCosmicTree, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToCosmicTree() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToCone, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToCone() ) );
+  QObject::connect(
+    this->ui->actionSetLayoutStrategyToSpanTree, SIGNAL( triggered() ),
+    this, SLOT( slotSetLayoutStrategyToSpanTree() ) );
+  
+  // set up the menu action groups
+  this->vertexStyleActionGroup = new QActionGroup( this );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToNone );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToVertex );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToDash );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToCross );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToThickCross );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToTriangle );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToSquare );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToCircle );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToDiamond );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToArrow );
+  
+  this->layoutStrategyActionGroup = new QActionGroup( this );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToRandom );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToForceDirected );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToSimple2D );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToClustering2D );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCommunity2D );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToFast2D );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCircular );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToTree );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCosmicTree );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCone );
+  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToSpanTree );
 
   // set up the graph layout view
   this->GraphLayoutView = vtkSmartPointer< vtkGraphLayoutView >::New();
   this->GraphLayoutView->SetLayoutStrategyToClustering2D();
-  this->GraphLayoutView->SetEdgeLayoutStrategyToPassThrough();
+  this->GraphLayoutView->DisplayHoverTextOn();
   this->GraphLayoutView->IconVisibilityOff();
-  this->GraphLayoutView->SetEdgeScalarBarVisibility( false );
   this->GraphLayoutView->SetGlyphType( VTK_VERTEX_GLYPH );
   this->GraphLayoutView->SetEdgeColorArrayName( "colors" );
   this->GraphLayoutView->ColorEdgesOn();
   this->GraphLayoutView->SetScalingArrayName( "sizes" );
   this->GraphLayoutView->ScaledGlyphsOff();
+  vtkRenderedGraphRepresentation* rep = vtkRenderedGraphRepresentation::SafeDownCast(
+    this->GraphLayoutView->GetRepresentation() );
+  rep->SetVertexHoverArrayName( "pedigrees" );
   this->GraphLayoutView->SetInteractor( this->ui->graphLayoutWidget->GetInteractor() );
   this->ui->graphLayoutWidget->SetRenderWindow( this->GraphLayoutView->GetRenderWindow() );
 
   this->GraphLayoutViewTheme = vtkSmartPointer< vtkViewTheme >::New();
   this->GraphLayoutViewTheme->SetBackgroundColor( 0.0, 0.0, 0.0 );
   this->GraphLayoutViewTheme->SetBackgroundColor2( 0.0, 0.0, 0.0 );
-  this->GraphLayoutViewTheme->SetPointSize( 6 );
-  this->GraphLayoutViewTheme->SetLineWidth( 3 );
+  this->GraphLayoutViewTheme->SetPointSize( this->ui->vertexSizeSlider->value() );
+  this->GraphLayoutViewTheme->SetLineWidth( this->ui->edgeSizeSlider->value() );
   vtkLookupTable *lut =
     vtkLookupTable::SafeDownCast( this->GraphLayoutViewTheme->GetCellLookupTable() );
-  lut->SetValueRange( 0.5, 1.0 );
-  lut->SetAlphaRange( 0.5, 1.0 );
+  lut->SetAlphaRange( 1.0, 1.0 );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   
   // set up the reader and filters
@@ -178,6 +246,14 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->RestrictFilter = vtkSmartPointer< ovRestrictGraph >::New();
   this->RestrictFilter->AddObserver( vtkCommand::ProgressEvent, observer );
   this->RestrictFilter->SetInput( this->OrlandoReader->GetOutput() );
+  
+  // set up the display property widgets
+  QObject::connect(
+    this->ui->vertexSizeSlider, SIGNAL( valueChanged( int ) ),
+    this, SLOT( slotVertexSizeSliderValueChanged( int ) ) );
+  QObject::connect(
+    this->ui->edgeSizeSlider, SIGNAL( valueChanged( int ) ),
+    this, SLOT( slotEdgeSizeSliderValueChanged( int ) ) );
 
   // set up the tag list
   this->ui->tagListWidget->setSortingEnabled( 1 );
@@ -237,7 +313,7 @@ void ovQMainWindow::slotFileExit()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotViewSetBackgroundSolid()
+void ovQMainWindow::slotSetBackgroundSolid()
 {
   double rgb[3];
   this->GraphLayoutViewTheme->GetBackgroundColor( rgb );
@@ -254,7 +330,7 @@ void ovQMainWindow::slotViewSetBackgroundSolid()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotViewSetBackgroundTop()
+void ovQMainWindow::slotSetBackgroundTop()
 {
   double rgb[3];
   this->GraphLayoutViewTheme->GetBackgroundColor2( rgb );
@@ -270,7 +346,7 @@ void ovQMainWindow::slotViewSetBackgroundTop()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotViewSetBackgroundBottom()
+void ovQMainWindow::slotSetBackgroundBottom()
 {
   double rgb[3];
   this->GraphLayoutViewTheme->GetBackgroundColor( rgb );
@@ -288,22 +364,39 @@ void ovQMainWindow::slotViewSetBackgroundBottom()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::SetVertexStyle( int type )
 {
-  // make sure only the selected vertex style menu item is checked
-  this->ui->actionViewSetVertexStyleToNone->setChecked( type == VTK_NO_GLYPH );
-  this->ui->actionViewSetVertexStyleToVertex->setChecked( type == VTK_VERTEX_GLYPH );
-  this->ui->actionViewSetVertexStyleToDash->setChecked( type == VTK_DASH_GLYPH );
-  this->ui->actionViewSetVertexStyleToCross->setChecked( type == VTK_CROSS_GLYPH );
-  this->ui->actionViewSetVertexStyleToThickCross->setChecked( type == VTK_THICKCROSS_GLYPH );
-  this->ui->actionViewSetVertexStyleToTriangle->setChecked( type == VTK_TRIANGLE_GLYPH );
-  this->ui->actionViewSetVertexStyleToSquare->setChecked( type == VTK_SQUARE_GLYPH );
-  this->ui->actionViewSetVertexStyleToCircle->setChecked( type == VTK_CIRCLE_GLYPH );
-  this->ui->actionViewSetVertexStyleToDiamond->setChecked( type == VTK_DIAMOND_GLYPH );
-  this->ui->actionViewSetVertexStyleToArrow->setChecked( type == VTK_ARROW_GLYPH );
-  this->ui->actionViewSetVertexStyleToThickArrow->setChecked( type == VTK_THICKARROW_GLYPH );
-  this->ui->actionViewSetVertexStyleToHookedArrow->setChecked( type == VTK_HOOKEDARROW_GLYPH );
-  this->ui->actionViewSetVertexStyleToEdgeArrow->setChecked( type == VTK_EDGEARROW_GLYPH );
-  
   this->GraphLayoutView->SetGlyphType( type );
+  
+  // we need to double the point size for all but vertex type
+  this->GraphLayoutViewTheme->SetPointSize(
+    this->ui->vertexSizeSlider->value() * ( VTK_VERTEX_GLYPH == type ? 1 : 2 ) );
+
+  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetLayoutStrategy( const char* strategy )
+{
+  this->GraphLayoutView->SetLayoutStrategy( strategy );
+  this->GraphLayoutView->ResetCamera();
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotVertexSizeSliderValueChanged( int value )
+{
+  // we need to double the point size for all but the vertex type
+  int type = this->GraphLayoutView->GetGlyphType();
+  this->GraphLayoutViewTheme->SetPointSize( value * ( VTK_VERTEX_GLYPH == type ? 1 : 2 ) );
+  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
+{
+  this->GraphLayoutViewTheme->SetLineWidth( value );
+  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   this->GraphLayoutView->Render();
 }
 
@@ -404,4 +497,50 @@ void ovQMainWindow::UpdateGraphView( bool resetCamera )
   this->RestrictFilter->SetIncludeTags( tags );
   if( resetCamera ) this->GraphLayoutView->ResetCamera();
   this->GraphLayoutView->Render();
+
+/*
+  vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+    this->GraphLayoutViewTheme->GetCellLookupTable() );
+  if( NULL == lut ) return;
+
+  vtkstd::vector< double > hashArray;
+  vtkstd::vector< double >::iterator it;
+  for( vtkIdType i = 0; i < tags->GetNumberOfValues(); ++i )
+  {
+    hashArray.push_back( ovHash( tags->GetValue( i ) ) );
+  }
+
+  double* rng = lut->GetRange();
+  double minVal = rng[0];
+  double maxVal = rng[1];
+  minVal = VTK_DOUBLE_MAX;
+  maxVal = VTK_DOUBLE_MIN;
+  
+  for( it = hashArray.begin(); it != hashArray.end(); ++it )
+  {
+    if( *it > maxVal )
+    {
+      maxVal = *it;
+    }
+    if( *it < minVal )
+    {
+      minVal = *it;
+    }
+  }
+
+  double scale = 1.0;
+  if( minVal != maxVal )
+  {
+    scale = ( rng[1] - rng[0] ) / ( maxVal - minVal );
+  }
+
+  int i = 0;
+  double rgb[3];
+  for( it = hashArray.begin(); it != hashArray.end(); ++it )
+  {
+    double value = rng[0] + scale * ( *it - minVal );
+    lut->GetColor( value, rgb );
+    cout << tags->GetValue( i++ ) << " is (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")" << endl;
+  }
+*/
 }
