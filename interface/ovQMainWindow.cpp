@@ -172,15 +172,14 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->actionSetLayoutStrategyToCircular, SIGNAL( triggered() ),
     this, SLOT( slotSetLayoutStrategyToCircular() ) );
-  QObject::connect(
-    this->ui->actionSetLayoutStrategyToTree, SIGNAL( triggered() ),
-    this, SLOT( slotSetLayoutStrategyToTree() ) );
-  QObject::connect(
-    this->ui->actionSetLayoutStrategyToCosmicTree, SIGNAL( triggered() ),
-    this, SLOT( slotSetLayoutStrategyToCosmicTree() ) );
-  QObject::connect(
-    this->ui->actionSetLayoutStrategyToCone, SIGNAL( triggered() ),
-    this, SLOT( slotSetLayoutStrategyToCone() ) );
+  // Not sure if cosmic trees are actually useful for this project
+  //QObject::connect(
+  //  this->ui->actionSetLayoutStrategyToCosmicTree, SIGNAL( triggered() ),
+  //  this, SLOT( slotSetLayoutStrategyToCosmicTree() ) );
+  // Cone seems to crash the app from time to time, so leaving it out for now
+  //QObject::connect(
+  //  this->ui->actionSetLayoutStrategyToCone, SIGNAL( triggered() ),
+  //  this, SLOT( slotSetLayoutStrategyToCone() ) );
   QObject::connect(
     this->ui->actionSetLayoutStrategyToSpanTree, SIGNAL( triggered() ),
     this, SLOT( slotSetLayoutStrategyToSpanTree() ) );
@@ -197,6 +196,9 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToCircle );
   this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToDiamond );
   this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToArrow );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToThickArrow );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToHookedArrow );
+  this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToEdgeArrow );
   
   this->layoutStrategyActionGroup = new QActionGroup( this );
   this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToRandom );
@@ -206,9 +208,8 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCommunity2D );
   this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToFast2D );
   this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCircular );
-  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToTree );
-  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCosmicTree );
-  this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCone );
+  //this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCosmicTree );
+  //this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCone );
   this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToSpanTree );
 
   // set up the graph layout view

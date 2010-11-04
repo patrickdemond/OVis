@@ -343,9 +343,6 @@
      <addaction name="actionSetLayoutStrategyToCommunity2D"/>
      <addaction name="actionSetLayoutStrategyToFast2D"/>
      <addaction name="actionSetLayoutStrategyToCircular"/>
-     <addaction name="actionSetLayoutStrategyToTree"/>
-     <addaction name="actionSetLayoutStrategyToCosmicTree"/>
-     <addaction name="actionSetLayoutStrategyToCone"/>
      <addaction name="actionSetLayoutStrategyToSpanTree"/>
     </widget>
     <addaction name="menuSet_Background"/>
