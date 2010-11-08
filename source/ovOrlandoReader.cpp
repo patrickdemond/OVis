@@ -17,6 +17,7 @@
 #include "vtkGraph.h"
 #include "vtkInformation.h"
 #include "vtkInformationVector.h"
+#include "vtkIntArray.h"
 #include "vtkMutableDirectedGraph.h"
 #include "vtkObjectFactory.h"
 #include "vtkSmartPointer.h"
@@ -130,6 +131,16 @@ int ovOrlandoReader::ProcessRequest(
     graph->GetVertexData()->AddArray( sizeArray );
     graph->GetVertexData()->SetActiveScalars( sizeArray->GetName() );
 
+    // the births and deaths arrays track author birth and death dates
+    vtkSmartPointer< vtkIntArray > birthArray = vtkSmartPointer< vtkIntArray >::New();
+    birthArray->SetName( "births" );
+    graph->GetVertexData()->AddArray( birthArray );
+    graph->GetVertexData()->SetActiveScalars( birthArray->GetName() );
+    vtkSmartPointer< vtkIntArray > deathArray = vtkSmartPointer< vtkIntArray >::New();
+    deathArray->SetName( "deaths" );
+    graph->GetVertexData()->AddArray( deathArray );
+    graph->GetVertexData()->SetActiveScalars( deathArray->GetName() );
+
     // the tag array is used to keep a list of tags which associates the two vertices
     ovTagVector tags;
     ovTagVector::iterator it;
@@ -154,6 +165,7 @@ int ovOrlandoReader::ProcessRequest(
     {
       vtkIdType currentVertexId;
       vtkStdString currentVertexPedigree;
+      bool inBirthTag = false, inDeathTag = false;
       this->CreateReader();
       
       // count how many entries are in the file (for progress reporting)
@@ -182,10 +194,12 @@ int ovOrlandoReader::ProcessRequest(
 
             // create a new vertex using the Id (author name) as the pedigree
             vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-            array->SetNumberOfComponents( 2 );
+            array->SetNumberOfComponents( 4 );
             array->SetNumberOfTuples( 1 );
             array->SetValue( 0, vtkVariant( ( char* )( this->CurrentNode.Id ) ) ); // pedigrees
             array->SetValue( 1, 1 ); // sizes
+            array->SetValue( 2, 0 ); // birth date
+            array->SetValue( 3, 0 ); // death date
             currentVertexId = graph->AddVertex( array );
             currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
           }
@@ -212,6 +226,30 @@ int ovOrlandoReader::ProcessRequest(
             array->SetValue( 1, vtkVariant( ovHash( currentTagArray ) ) ); // colors
             graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ), array );
           }
+          // Maybe this is a birth tag?
+          else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "BIRTH" ) )
+          {
+            if( this->CurrentNode.IsOpeningElement() )
+            {
+              inBirthTag = true;
+            }
+            else if( this->CurrentNode.IsClosingElement() )
+            {
+              inBirthTag = false;
+            }
+          }
+          // Maybe this is a death tag?
+          else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DEATH" ) )
+          {
+            if( this->CurrentNode.IsOpeningElement() )
+            {
+              inDeathTag = true;
+            }
+            else if( this->CurrentNode.IsClosingElement() )
+            {
+              inDeathTag = false;
+            }
+          }
           // This node describes an association type (edge tag)
           else
           {
@@ -225,6 +263,48 @@ int ovOrlandoReader::ProcessRequest(
               else if( this->CurrentNode.IsClosingElement() )
               { // closing element, mark the tag as false
                 currentTagArray[index] = '0';
+              }
+            }
+
+            // record birth date if we are inside a birth tag
+            if( inBirthTag && 
+                this->CurrentNode.IsOpeningElement() &&
+                0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+            {
+              ovDate newDate( ( char* )( this->CurrentNode.Value ) );
+              ovDate curDate( birthArray->GetValue( currentVertexId ) );
+
+              // there might be more than one date in the birth tag, so use the earliest date
+              if( curDate > newDate )
+              {
+                // make sure the earlier date has as much information as the current or more
+                if( 0 < newDate.day ||
+                    ( 0 < newDate.month && 0 == curDate.day ) ||
+                    0 == curDate.month )
+                {
+                  birthArray->SetValue( currentVertexId, newDate.AsInt() );
+                }
+              }
+            }
+
+            // record death date if we are inside a death tag
+            if( inDeathTag &&
+                this->CurrentNode.IsOpeningElement() &&
+                0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+            {
+              ovDate newDate( ( char* )( this->CurrentNode.Value ) );
+              ovDate curDate( deathArray->GetValue( currentVertexId ) );
+
+              // there might be more than one date in the death tag, so use the latest date
+              if( curDate < newDate )
+              {
+                // make sure the earlier date has as much information as the current or more
+                if( 0 < newDate.day ||
+                    ( 0 < newDate.month && 0 == curDate.day ) ||
+                    0 == curDate.month )
+                {
+                  deathArray->SetValue( currentVertexId, newDate.AsInt() );
+                }
               }
             }
           }
@@ -322,13 +402,14 @@ int ovOrlandoReader::ParseNode()
   { // successful read
     this->CurrentNode.Name = xmlTextReaderConstName( this->Reader );
     if( this->CurrentNode.Name == NULL ) this->CurrentNode.Name = BAD_CAST "--";
-    this->CurrentNode.Value = xmlTextReaderConstValue( this->Reader );
+    this->CurrentNode.Content = xmlTextReaderConstValue( this->Reader );
     this->CurrentNode.Id = xmlTextReaderGetAttribute( this->Reader, BAD_CAST "id" );
+    this->CurrentNode.Value = xmlTextReaderGetAttribute( this->Reader, BAD_CAST "VALUE" );
     this->CurrentNode.Standard = xmlTextReaderGetAttribute( this->Reader, BAD_CAST "STANDARD" );
     this->CurrentNode.Depth = xmlTextReaderDepth( this->Reader );
     this->CurrentNode.NodeType = xmlTextReaderNodeType( this->Reader );
     this->CurrentNode.IsEmptyElement = xmlTextReaderIsEmptyElement( this->Reader );
-    this->CurrentNode.HasValue = xmlTextReaderHasValue( this->Reader );
+    this->CurrentNode.HasContent = xmlTextReaderHasValue( this->Reader );
   }
 
   return result;

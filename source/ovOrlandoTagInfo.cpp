@@ -58,43 +58,134 @@ ovOrlandoTagInfo* ovOrlandoTagInfo::GetInfo()
   if( NULL == ovOrlandoTagInfo::Instance )
   {
     ovOrlandoTagInfo::Instance = vtkSmartPointer< ovOrlandoTagInfo >::New();
-    ovOrlandoTagInfo::Instance->ReadDefaultTags();
+
+    // add in the default Orlando tags
+    ovOrlandoTagInfo::Instance->Add( "BIOGRAPHY", 1, false );
+    ovOrlandoTagInfo::Instance->Add( "PRODUCTION", 1, false );
+    ovOrlandoTagInfo::Instance->Add( "RECEPTION", 1, false );
+    ovOrlandoTagInfo::Instance->Add( "TEXTUALFEATURES", 1, false );
+    ovOrlandoTagInfo::Instance->Add( "CULTURALFORMATION", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "EDUCATION", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "FAMILY", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "FRIENDSASSOCIATES", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "INTIMATERELATIONSHIPS", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "LEISUREANDSOCIETY", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "LOCATION", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "OCCUPATION", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "POLITICS", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "SIGNIFICANTACTIVITY", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "VIOLENCE", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "WEALTH", 2, false );
+    ovOrlandoTagInfo::Instance->Add( "AUTHORSUMMARY", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "AWARD", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "CHILDLESSNESS", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "CLASS", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "CLASSISSUE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "COMPANION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "CONTESTEDBEHAVIOUR", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "DEGREE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "DIVORCE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "EMPLOYER", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "ETHNICITY", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "GEOGHERITAGE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "HEALTH", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "JOB", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "LANGUAGE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "LIVESWITH", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "MARRIAGE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "MEMBER", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "NAME", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "NATIONALITYISSUE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "ORGNAME", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "OTHERLIFEEVENT", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PADVERTISING", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PANTHOLOGIZATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PATTITUDES", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PAUTHORSHIP", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PCIRCULATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PCONTRACT", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PCOPYRIGHT", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PDEDICATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PEARNINGS", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PFIRSTLITERARYACTIVITY", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PINFLUENCESHER", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PLACE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PLITERARYSCHOOLS", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PMATERIALCONDITIONS", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PMODEOFPUBLICATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PMOTIVES", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PNONSURVIVAL", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "POLITICALAFFILIATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PPERFORMANCE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PPERIODICALPUBLICATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PPLACEOFPUBLICATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PPRESSRUN", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "PRELATIONSWITHPUBLISHER", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RACEANDETHNICITY", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RACECOLOUR", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RBESTKNOWNWORK", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RDESTRUCTIONOFWORK", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RELIGION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "REMUNERATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RFICTIONALIZATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RLANDMARKTEXT", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RPENALTIES", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RRECOGNITIONS", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RRECOGNITIONVALUE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RRESPONSES", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RSELFDESCRIPTION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "RSHEINFLUENCED", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "SEPARATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "SEXUALITY", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "SUBJECT", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TCHARACTERIZATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TCHARACTERNAME", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TCHARACTERTYPEROLE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TEXT", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TGENRE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TGENREISSUE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TINTERTEXTUALITY", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TITLE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TMOTIF", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TPLOT", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TSETTINGDATE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TSETTINGPLACE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TTECHNIQUES", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TTHEMETOPIC", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TTONESTYLE", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "TVOICENARRATION", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "WRITING", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "BIRTH", 3, false );
+    ovOrlandoTagInfo::Instance->Add( "BIRTHPOSITION", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "CHILDREN", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "DATE", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "DEATH", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "DENOMINATION", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "EXTENTOFOEUVRE", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "GENERICRANGE", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "GEOG", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "INSTRUCTOR", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "NATIONALHERITAGE", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "NATIONALITY", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PARCHIVALLOCATION", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PEDITIONS", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PERSONNAME", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PLASTLITERARYACTIVITY", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PMANUSCRIPTHISTORY", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PNONBOOKMEDIA", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PPRICE", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PRARITIESFEATURESDECORATIONS", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PSERIALIZATION", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PSEUDONYM", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PSUBMISSIONSREJECTIONS", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "PTYPEOFPRESS", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "QUOTE", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "SCHOLARNOTE", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "SCHOOL", 4, false );
+    ovOrlandoTagInfo::Instance->Add( "SEXUALIDENTITY", 4, false );
   }
 
   return ovOrlandoTagInfo::Instance;
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoTagInfo::ReadDefaultTags()
-{
-  // open the tag list from the resources directory
-  char buffer[1024];
-  sprintf( buffer, "%s/tag_list.txt", OVIS_RESOURCES_DIR );
-  vtkstd::ifstream fileStream( buffer );
-  if( fileStream.is_open() )
-  {
-    bool valid;
-    int currentRank = 0, rank = 0;
-    ovString line;
-    while( getline( fileStream, line ) )
-    {
-      // The line is either a number of text: a number meaning the rank of the
-      // following tags has changed, text means a new tag is to be added to the
-      // list
-      rank = vtkVariant( line ).ToInt( &valid );
-      if( valid )
-      {
-        // update the current rank that new tags will be added under
-        currentRank = rank;
-      }
-      else
-      {
-        // assume the line is a tag
-        this->Add( line, currentRank, 1 == currentRank ? true : false );
-      }
-    }
-    fileStream.close();
-  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

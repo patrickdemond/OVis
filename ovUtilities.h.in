@@ -20,6 +20,9 @@
 #define OVIS_VERSION_PATCH @OVIS_VERSION_PATCH@
 #define OVIS_RESOURCES_DIR "@OVIS_RESOURCES_DIR@"
 
+// for atoi
+#include <stdlib.h>
+
 // STL headers and typedefs
 #include <vtkstd/map>
 #include <vtkstd/string>
@@ -27,6 +30,72 @@
 
 typedef vtkstd::string ovString;
 typedef vtkstd::vector< ovString > ovStringVector;
+
+struct ovDate
+{
+  unsigned short year;
+  unsigned short month;
+  unsigned short day;
+  ovDate( unsigned short y, unsigned short m, unsigned short d ) : year( y ), month( m ), day( d )
+  { this->Validate(); }
+  ovDate( int date )
+  {
+    this->day = date % 100;
+    this->month = ( ( date - this->day ) % 10000 ) / 100;
+    this->year = ( date - this->month - this->day ) / 10000;
+    this->Validate();
+  }
+  ovDate( const char *date )
+  {
+    this->year = 0;
+    this->month = 0;
+    this->day = 0;
+    
+    ovString dateStr = ovString( date );
+
+    size_t first = dateStr.find( '-' );
+    if( vtkstd::string::npos != first )
+    {
+      this->year = atoi( dateStr.substr( 0, first ).c_str() );
+
+      size_t second = dateStr.find( '-', first + 1 );
+      if( vtkstd::string::npos != second )
+      {
+        this->month = atoi( dateStr.substr( first + 1, second - first - 1 ).c_str() );
+        this->day = atoi( dateStr.substr( second + 1, dateStr.length() - second - 1 ).c_str() );
+      }
+    }
+    this->Validate();
+  }
+  int AsInt() { return 10000 * this->year + 100 * month + day; }
+  void Validate()
+  {
+    // range checking
+    if( 1 > this->year ) this->year = 0;
+    if( 1 > this->month || 12 < this->month ) this->month = 0;
+    // not necessary to bother with exact number of days per month
+    if( 1 > this->day || 31 < this->day ) this->day = 0;
+  }
+  bool operator == ( ovDate otherDate )
+  {
+    return this->year == otherDate.year &&
+           this->month == otherDate.month &&
+           this->day == otherDate.day;
+  }
+  bool operator < ( ovDate otherDate )
+  {
+    return this->year < otherDate.year ||
+           ( this->year == otherDate.year &&
+             this->month < otherDate.month ) ||
+           ( this->year == otherDate.year &&
+             this->month == otherDate.month &&
+             this->day < otherDate.day );
+  }
+  bool operator <= ( ovDate otherDate ) { return *this == otherDate || *this < otherDate; }
+  bool operator > ( ovDate otherDate ) { return !( *this <= otherDate ); }
+  bool operator >= ( ovDate otherDate ) { return !( *this < otherDate ); }
+  bool operator != ( ovDate otherDate ) { return !( *this == otherDate ); }
+};
 
 struct ovTag
 {

@@ -89,10 +89,11 @@ protected:
     const xmlChar* Value;
     const xmlChar* Id;
     const xmlChar* Standard;
+    const xmlChar* Content;
     int Depth;
     int NodeType;
     int IsEmptyElement;
-    int HasValue;
+    int HasContent;
 
     _ovXMLNode() { this->Clear(); }
     void Clear()
@@ -101,10 +102,11 @@ protected:
       this->Value = NULL;
       this->Id = NULL;
       this->Standard = NULL;
+      this->Content = NULL;
       this->Depth = 0;
       this->NodeType = 0;
       this->IsEmptyElement = 0;
-      this->HasValue = 0;
+      this->HasContent = 0;
     }
     bool IsOpeningElement() { return 1 == this->NodeType; }
     bool IsClosingElement() { return 15 == this->NodeType; }
@@ -118,10 +120,12 @@ protected:
          << ( NULL == this->Id ? "(null)" : ( char* )( this->Id ) ) << endl;
       os << indent << "Standard: "
          << ( NULL == this->Standard ? "(null)" : ( char* )( this->Standard ) ) << endl;
+      os << indent << "Content: "
+         << ( NULL == this->Content ? "(null)" : ( char* )( this->Content ) ) << endl;
       os << indent << "Depth: " << this->Depth << endl;
       os << indent << "NodeType: " << this->NodeType << endl;
       os << indent << "IsEmptyElement: " << this->IsEmptyElement << endl;
-      os << indent << "HasValue: " << this->HasValue << endl;
+      os << indent << "HasContent: " << this->HasContent << endl;
     }
   };
   

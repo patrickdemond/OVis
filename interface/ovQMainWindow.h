@@ -9,6 +9,7 @@
 
 class Ui_ovQMainWindow;
 
+class ovQMainWindowProgressCommand;
 class ovOrlandoReader;
 class ovRestrictGraph;
 class QActionGroup;
@@ -88,6 +89,8 @@ private:
   // Action groups for radio-based menu items
   QActionGroup *vertexStyleActionGroup;
   QActionGroup *layoutStrategyActionGroup;
+  
+  vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
 
   // Set to false to disable automatic updating of graph
   bool AutoUpdateGraphView;

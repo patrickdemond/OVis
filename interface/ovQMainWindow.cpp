@@ -20,6 +20,7 @@
 #include "vtkCommand.h"
 #include "vtkGlyphSource2D.h"
 #include "vtkGraph.h"
+#include "vtkGraphLayoutStrategy.h"
 #include "vtkGraphLayoutView.h"
 #include "vtkLookupTable.h"
 #include "vtkMath.h"
@@ -43,44 +44,54 @@ class ovQMainWindowProgressCommand : public vtkCommand
 {
 public:
   static ovQMainWindowProgressCommand *New() { return new ovQMainWindowProgressCommand; }
-void Execute( vtkObject *caller, unsigned long eventId, void *callData )
-  {
-    if( this->ui )
-    {
-      // display the progress
-      double progress = *( static_cast<double*>( callData ) );
-      int value = vtkMath::Floor( 100 * progress );
-      if( this->ui->progressBar->value() != value ) this->ui->progressBar->setValue( value );
-
-      // show what's happening in the status bar
-      if( 100 == value )
-      {
-        this->ui->statusbar->clearMessage();
-      }
-      else
-      {
-        QString message = QString( "" );
-        if( ovOrlandoReader::SafeDownCast( caller ) )
-        {
-          message = QString( "Reading data..." );
-        }
-        else if( ovRestrictGraph::SafeDownCast( caller ) )
-        {
-          message = QString( "Resolving visible edges..." );
-        }
-      
-        if( message.length() ) this->ui->statusbar->showMessage( message );
-      }
-    }
-  }
-
-  //QProgressBar *progressBar;
+  void Execute( vtkObject *caller, unsigned long eventId, void *callData );
   Ui_ovQMainWindow *ui;
+
+  // Set to true when a file is being loaded
+  bool IsLoadingFile;
 
 protected:
   ovQMainWindowProgressCommand() { this->ui = NULL; }
 };
 
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindowProgressCommand::Execute(
+  vtkObject *caller, unsigned long eventId, void *callData )
+{
+  if( this->ui )
+  {
+    // display the progress
+    double progress = *( static_cast<double*>( callData ) );
+    int value = vtkMath::Floor( 100 * progress ) + 1;
+    if( 100 < value ) value = 100;
+    if( this->ui->progressBar->value() != value ) this->ui->progressBar->setValue( value );
+
+    // show what's happening in the status bar
+    if( 100 == value )
+    {
+      this->ui->statusbar->clearMessage();
+    }
+    else
+    {
+      QString message = QString( "" );
+      if( ovOrlandoReader::SafeDownCast( caller ) )
+      {
+        message = QString( "Reading data..." );
+      }
+      else if( ovRestrictGraph::SafeDownCast( caller ) )
+      {
+        message = QString( "Resolving visible edges..." );
+      }
+      else if( vtkGraphLayoutStrategy::SafeDownCast( caller ) )
+      {
+        message = QString( "Determining graph layout..." );
+      }
+    
+      if( message.length() ) this->ui->statusbar->showMessage( message );
+    }
+  }
+}
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovQMainWindow::ovQMainWindow( QWidget* parent )
@@ -212,9 +223,16 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   //this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCone );
   this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToSpanTree );
 
+  // set up the observer to update the progress bar
+  this->ProgressObserver = vtkSmartPointer< ovQMainWindowProgressCommand >::New();
+  this->ProgressObserver = vtkSmartPointer< ovQMainWindowProgressCommand >::New();
+  this->ProgressObserver->ui = this->ui;
+
   // set up the graph layout view
   this->GraphLayoutView = vtkSmartPointer< vtkGraphLayoutView >::New();
   this->GraphLayoutView->SetLayoutStrategyToClustering2D();
+  this->GraphLayoutView->GetLayoutStrategy()->AddObserver(
+    vtkCommand::ProgressEvent, this->ProgressObserver );
   this->GraphLayoutView->DisplayHoverTextOn();
   this->GraphLayoutView->IconVisibilityOff();
   this->GraphLayoutView->SetGlyphType( VTK_VERTEX_GLYPH );
@@ -239,13 +257,10 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   
   // set up the reader and filters
-  vtkSmartPointer< ovQMainWindowProgressCommand > observer;
-  observer = vtkSmartPointer< ovQMainWindowProgressCommand >::New();
-  observer->ui = this->ui;
   this->OrlandoReader = vtkSmartPointer< ovOrlandoReader >::New();
-  this->OrlandoReader->AddObserver( vtkCommand::ProgressEvent, observer );
+  this->OrlandoReader->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
   this->RestrictFilter = vtkSmartPointer< ovRestrictGraph >::New();
-  this->RestrictFilter->AddObserver( vtkCommand::ProgressEvent, observer );
+  this->RestrictFilter->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
   this->RestrictFilter->SetInput( this->OrlandoReader->GetOutput() );
   
   // set up the display property widgets
@@ -378,7 +393,11 @@ void ovQMainWindow::SetVertexStyle( int type )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::SetLayoutStrategy( const char* strategy )
 {
+  this->GraphLayoutView->GetLayoutStrategy()->RemoveObserver(
+    vtkCommand::ProgressEvent );
   this->GraphLayoutView->SetLayoutStrategy( strategy );
+  this->GraphLayoutView->GetLayoutStrategy()->AddObserver(
+    vtkCommand::ProgressEvent, this->ProgressObserver );
   this->GraphLayoutView->ResetCamera();
   this->GraphLayoutView->Render();
 }

@@ -80,10 +80,6 @@ protected:
   ovOrlandoTagInfo();
   ~ovOrlandoTagInfo();
   
-  // Description:
-  // Reads the tag list from the resources directory
-  virtual void ReadDefaultTags();
-
   static ovOrlandoTagInfo *New();
   static vtkSmartPointer< ovOrlandoTagInfo > Instance;
   
