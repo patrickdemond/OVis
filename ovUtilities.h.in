@@ -25,6 +25,7 @@
 
 // STL headers and typedefs
 #include <vtkstd/map>
+#include <vtkstd/stack>
 #include <vtkstd/string>
 #include <vtkstd/vector>
 
@@ -99,18 +100,17 @@ struct ovDate
 
 struct ovTag
 {
+  ovString parent;
   ovString name;
-  int rank;
   bool active;
-  ovTag( ovString n, int r = 1, int a = 1 ) : name( n ), rank( r ), active( a ) {}
+  ovTag( ovString p, ovString n, int a = 1 ) : parent( p ), name( n ), active( a ) {}
+  ovTag( ovString n, int a = 1 ) : parent( "" ), name( n ), active( a ) {}
 };
 
 typedef vtkstd::vector< ovTag* > ovTagVector;
 typedef vtkstd::pair< ovTagVector::iterator, ovTagVector::iterator > ovTagVectorRange;
 
-inline bool ovTagRankedCompare( ovTag *a, ovTag *b )
-{ return ( a->name == b->name ) && ( a->rank == b->rank ); }
-inline bool ovTagUnRankedCompare( ovTag *a, ovTag *b )
+inline bool ovTagCompare( ovTag *a, ovTag *b )
 { return a->name == b->name; }
 inline bool ovTagSort( ovTag *a, ovTag *b )
 { return a->name < b->name; }

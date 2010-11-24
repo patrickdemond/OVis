@@ -14,8 +14,9 @@
 #include <QActionGroup>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QMessageBox>
 #include <QFileDialog>
-#include <QListWidget>
+#include <QTreeWidget>
 
 #include "vtkCommand.h"
 #include "vtkGlyphSource2D.h"
@@ -38,7 +39,9 @@
 
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
-#include "source/ovRestrictGraph.h"
+#include "source/ovRestrictGraphFilter.h"
+
+#include <vtkstd/stdexcept>
 
 class ovQMainWindowProgressCommand : public vtkCommand
 {
@@ -79,9 +82,9 @@ void ovQMainWindowProgressCommand::Execute(
       {
         message = QString( "Reading data..." );
       }
-      else if( ovRestrictGraph::SafeDownCast( caller ) )
+      else if( ovRestrictGraphFilter::SafeDownCast( caller ) )
       {
-        message = QString( "Resolving visible edges..." );
+        message = QString( "Resolving visible vertices and edges..." );
       }
       else if( vtkGraphLayoutStrategy::SafeDownCast( caller ) )
       {
@@ -236,19 +239,21 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->GraphLayoutView->DisplayHoverTextOn();
   this->GraphLayoutView->IconVisibilityOff();
   this->GraphLayoutView->SetGlyphType( VTK_VERTEX_GLYPH );
-  this->GraphLayoutView->SetEdgeColorArrayName( "colors" );
+  this->GraphLayoutView->SetVertexColorArrayName( "color" );
+  this->GraphLayoutView->ColorVerticesOn();
+  this->GraphLayoutView->SetEdgeColorArrayName( "color" );
   this->GraphLayoutView->ColorEdgesOn();
-  this->GraphLayoutView->SetScalingArrayName( "sizes" );
+  this->GraphLayoutView->SetScalingArrayName( "size" );
   this->GraphLayoutView->ScaledGlyphsOff();
   vtkRenderedGraphRepresentation* rep = vtkRenderedGraphRepresentation::SafeDownCast(
     this->GraphLayoutView->GetRepresentation() );
-  rep->SetVertexHoverArrayName( "pedigrees" );
+  rep->SetVertexHoverArrayName( "pedigree" );
   this->GraphLayoutView->SetInteractor( this->ui->graphLayoutWidget->GetInteractor() );
   this->ui->graphLayoutWidget->SetRenderWindow( this->GraphLayoutView->GetRenderWindow() );
 
   this->GraphLayoutViewTheme = vtkSmartPointer< vtkViewTheme >::New();
-  this->GraphLayoutViewTheme->SetBackgroundColor( 0.0, 0.0, 0.0 );
-  this->GraphLayoutViewTheme->SetBackgroundColor2( 0.0, 0.0, 0.0 );
+  this->GraphLayoutViewTheme->SetBackgroundColor( 1.0, 1.0, 1.0 );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( 1.0, 1.0, 1.0 );
   this->GraphLayoutViewTheme->SetPointSize( this->ui->vertexSizeSlider->value() );
   this->GraphLayoutViewTheme->SetLineWidth( this->ui->edgeSizeSlider->value() );
   vtkLookupTable *lut =
@@ -259,32 +264,55 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   // set up the reader and filters
   this->OrlandoReader = vtkSmartPointer< ovOrlandoReader >::New();
   this->OrlandoReader->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
-  this->RestrictFilter = vtkSmartPointer< ovRestrictGraph >::New();
-  this->RestrictFilter->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
-  this->RestrictFilter->SetInput( this->OrlandoReader->GetOutput() );
+  this->RestrictGraphFilter = vtkSmartPointer< ovRestrictGraphFilter >::New();
+  this->RestrictGraphFilter->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
+  this->RestrictGraphFilter->SetInput( this->OrlandoReader->GetOutput() );
   
   // set up the display property widgets
+  QObject::connect(
+    this->ui->authorCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotAuthorCheckBoxStateChanged( int ) ) );
+  QObject::connect(
+    this->ui->genderComboBox, SIGNAL( currentIndexChanged( const QString& ) ),
+    this, SLOT( slotGenderComboBoxCurrentIndexChanged( const QString& ) ) );
+  QObject::connect(
+    this->ui->writerComboBox, SIGNAL( currentIndexChanged( const QString& ) ),
+    this, SLOT( slotWriterComboBoxCurrentIndexChanged( const QString& ) ) );
   QObject::connect(
     this->ui->vertexSizeSlider, SIGNAL( valueChanged( int ) ),
     this, SLOT( slotVertexSizeSliderValueChanged( int ) ) );
   QObject::connect(
     this->ui->edgeSizeSlider, SIGNAL( valueChanged( int ) ),
     this, SLOT( slotEdgeSizeSliderValueChanged( int ) ) );
+  
+  // set up the date restriction widgets
+  QObject::connect(
+    this->ui->startLineEdit, SIGNAL( textChanged( const QString& ) ),
+    this, SLOT( slotStartLineEditTextChanged( const QString& ) ) );
+  QObject::connect(
+    this->ui->startSetPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotStartSetPushButtonClicked() ) );
+  QObject::connect(
+    this->ui->endLineEdit, SIGNAL( textChanged( const QString& ) ),
+    this, SLOT( slotEndLineEditTextChanged( const QString& ) ) );
+  QObject::connect(
+    this->ui->endSetPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotEndSetPushButtonClicked() ) );
 
-  // set up the tag list
-  this->ui->tagListWidget->setSortingEnabled( 1 );
+  // set up the tag tree
+  this->ui->tagTreeWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
   QObject::connect(
-    this->ui->tagListCheckAllButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotTagListCheckAllButtonClicked() ) );
+    this->ui->tagTreeCheckButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagTreeCheckButtonClicked() ) );
   QObject::connect(
-    this->ui->tagListCheckNoneButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotTagListCheckNoneButtonClicked() ) );
+    this->ui->tagTreeUnCheckButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagTreeUnCheckButtonClicked() ) );
   QObject::connect(
-    this->ui->tagListWidget, SIGNAL( itemChanged( QListWidgetItem* ) ),
-    this, SLOT( slotTagListItemChanged( QListWidgetItem* ) ) );
+    this->ui->tagTreeWidget, SIGNAL( itemChanged( QTreeWidgetItem*, int ) ),
+    this, SLOT( slotTagTreeItemChanged( QTreeWidgetItem*, int ) ) );
   QObject::connect(
-    this->ui->tagListPresetComboBox, SIGNAL( currentIndexChanged( int ) ),
-    this, SLOT( slotTagListPresetComboBoxIndexChanged( int ) ) );
+    this->ui->tagTreeWidget, SIGNAL( itemDoubleClicked( QTreeWidgetItem*, int ) ),
+    this, SLOT( slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int ) ) );
 
   // start updating the graph view automatically
   this->AutoUpdateGraphView = true;
@@ -304,20 +332,68 @@ void ovQMainWindow::slotFileOpen()
   if( "" != fileName )
   {
     // define the tag list based on orlando tags
-    char buffer[64];
-    this->ui->tagListPresetComboBox->clear();
-    for( int rank = 1, total = ovOrlandoTagInfo::GetInfo()->GetNumberOfRanks(); rank <= total; rank++ )
+    // don't update the graph view until we're done checking tags
+    this->AutoUpdateGraphView = false;
+    
+    ovTag *tag;
+    ovTagVector tags;
+    ovTagVector::iterator it;
+    QTreeWidgetItem *item, *parent;
+    ovOrlandoTagInfo::GetInfo()->GetTags( tags );
+    
+    bool tagParentError = false; // we only want to display the tag tree error once
+    this->ui->tagTreeWidget->clear();
+    for( it = tags.begin(); it != tags.end(); it++ )
     {
-      sprintf( buffer, "Preset List #%d", rank );
-      this->ui->tagListPresetComboBox->addItem( buffer, rank );
+      tag = *it;
+      if( tag->parent.length() )
+      {
+        // find the item with the parent's name
+
+        parent = NULL;
+        QTreeWidgetItemIterator it( this->ui->tagTreeWidget );
+        while( *it )
+        {
+          if( tag->parent == (*it)->text( 0 ).toStdString() ) parent = *it;
+          it++;
+        }
+        
+        // If we can't find a parent then something is wrong, let the user know
+        // Should this error ever occur then likely ovOrlandoTagInfo::Add() is being
+        // called improperly somewhere (make sure parents are added before children)
+        if( NULL == parent && !tagParentError )
+        {
+          tagParentError = true;
+          QMessageBox errorMessage( this );
+          errorMessage.setWindowModality( Qt::WindowModal );
+          errorMessage.setIcon( QMessageBox::Warning );
+          errorMessage.setText( "Some tags may be missing from the tag tree." );
+          errorMessage.exec();
+        }
+        else
+        {
+          item = new QTreeWidgetItem( parent );
+        }
+      }
+      else
+      {
+        item = new QTreeWidgetItem( this->ui->tagTreeWidget );
+      }
+      item->setText(0, (*it)->name.c_str() );
+      item->setCheckState( 0, (*it)->active ? Qt::Checked : Qt::Unchecked );
+      item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable );
+      
+      // top level items have to be explicitely added to the tree
+      if( 0 == tag->parent.length() ) this->ui->tagTreeWidget->addTopLevelItem( item );
     }
-    // ovQMainWindow::slotTagListPresetComboBoxIndexChanged is triggered by setting the current
-    // index which will populate the tagListWidget
-    this->ui->tagListPresetComboBox->setCurrentIndex( 0 );
+  
+    // manually update the graph view
+    this->UpdateGraphView();
+    this->AutoUpdateGraphView = true;
     
     // load the orlando file and render
     this->OrlandoReader->SetFileName( fileName.toStdString() );
-    this->GraphLayoutView->SetRepresentationFromInput( this->RestrictFilter->GetOutput() );
+    this->GraphLayoutView->SetRepresentationFromInput( this->RestrictGraphFilter->GetOutput() );
     this->UpdateGraphView( true );
   }
 }
@@ -403,6 +479,29 @@ void ovQMainWindow::SetLayoutStrategy( const char* strategy )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotAuthorCheckBoxStateChanged( int state )
+{
+  this->RestrictGraphFilter->SetAuthorsOnly( 0 != state );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotGenderComboBoxCurrentIndexChanged( const QString& index )
+{
+  this->RestrictGraphFilter->SetGenderTypeRestriction(
+    ovRestrictGraphFilter::GenderTypeRestrictionFromString( index.toStdString().c_str() ) );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotWriterComboBoxCurrentIndexChanged( const QString& index )
+{
+  this->RestrictGraphFilter->SetWriterTypeRestriction(
+    ovRestrictGraphFilter::WriterTypeRestrictionFromString( index.toStdString().c_str() ) );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotVertexSizeSliderValueChanged( int value )
 {
   // we need to double the point size for all but the vertex type
@@ -421,83 +520,82 @@ void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotTagListCheckAllButtonClicked()
+void ovQMainWindow::slotStartLineEditTextChanged( const QString& text )
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotStartSetPushButtonClicked()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotEndLineEditTextChanged( const QString& text )
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotEndSetPushButtonClicked()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagTreeCheckButtonClicked()
 {
   // don't update the graph view until we're done checking tags
   this->AutoUpdateGraphView = false;
+  
+  // check all selected tree items
+  QTreeWidgetItem *item;
+  QList< QTreeWidgetItem* > list = this->ui->tagTreeWidget->selectedItems();
 
-  QListWidgetItem *item;
-  for( int row = 0; row < this->ui->tagListWidget->count(); row++ )
+  for( int index = 0; index < list.size(); ++index )
   {
-    item = this->ui->tagListWidget->item( row );
-    if( Qt::Unchecked == item->checkState() ) item->setCheckState( Qt::Checked );
+    item = list.at( index );
+    if( Qt::Unchecked == item->checkState( 0 ) ) item->setCheckState( 0, Qt::Checked );
   }
 
   // manually update the graph view
-  this->UpdateGraphView();
+  this->UpdateGraphView( true );
   this->AutoUpdateGraphView = true;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotTagListCheckNoneButtonClicked()
+void ovQMainWindow::slotTagTreeUnCheckButtonClicked()
 {
   // don't update the graph view until we're done checking tags
   this->AutoUpdateGraphView = false;
 
-  QListWidgetItem *item;
-  for( int row = 0; row < this->ui->tagListWidget->count(); row++ )
+  // check all selected tree items
+  QTreeWidgetItem *item;
+  QList< QTreeWidgetItem* > list = this->ui->tagTreeWidget->selectedItems();
+
+  for( int index = 0; index < list.size(); ++index )
   {
-    item = this->ui->tagListWidget->item( row );
-    if( Qt::Checked == item->checkState() ) item->setCheckState( Qt::Unchecked );
+    item = list.at( index );
+    if( Qt::Checked == item->checkState( 0 ) ) item->setCheckState( 0, Qt::Unchecked );
   }
 
   // manually update the graph view
-  this->UpdateGraphView();
+  this->UpdateGraphView( true );
   this->AutoUpdateGraphView = true;
 }
  
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotTagListItemChanged( QListWidgetItem* item )
+void ovQMainWindow::slotTagTreeItemChanged( QTreeWidgetItem* item, int column )
 {
   // the checked state of the item may have changed, update the tag info singleton
-  ovTag *tag = ovOrlandoTagInfo::GetInfo()->FindTag( item->text().toStdString() );
-  if( tag ) tag->active = Qt::Checked == item->checkState() ? true : false;
+  ovTag *tag = ovOrlandoTagInfo::GetInfo()->FindTag( item->text( column ).toStdString() );
+  if( tag ) tag->active = Qt::Checked == item->checkState( column ) ? true : false;
   if( this->AutoUpdateGraphView ) this->UpdateGraphView();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotTagListPresetComboBoxIndexChanged( int index )
+void ovQMainWindow::slotTagTreeItemDoubleClicked( QTreeWidgetItem* item, int column )
 {
-  // don't update the graph view until we're done checking tags
-  this->AutoUpdateGraphView = false;
-
-  QVariant data = this->ui->tagListPresetComboBox->itemData( index );
-
-  if( data.isValid() )
-  {
-    bool test = false;
-    int tagListId = data.toInt( &test );
-    if( test )
-    {
-      ovTagVector tags;
-      ovTagVector::iterator it;
-      QListWidgetItem *item;
-      ovOrlandoTagInfo::GetInfo()->GetTags( tags, tagListId );
-
-      this->ui->tagListWidget->clear();
-      for( it = tags.begin(); it != tags.end(); it++ )
-      {
-        item = new QListWidgetItem( (*it)->name.c_str(), this->ui->tagListWidget );
-        item->setCheckState( (*it)->active ? Qt::Checked : Qt::Unchecked );
-        item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
-        this->ui->tagListWidget->addItem( item );
-      }
-    }
-  }
-
-  // manually update the graph view
-  this->UpdateGraphView();
-  this->AutoUpdateGraphView = true;
+  // TODO: implement
+  // the checked state of the item may have changed, update the tag info singleton
+  // cout << item->text( column ).toStdString() << endl;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -505,16 +603,18 @@ void ovQMainWindow::UpdateGraphView( bool resetCamera )
 {
   // build a string array from all the currently active tags
   vtkSmartPointer< vtkStringArray > tags = vtkSmartPointer< vtkStringArray >::New();
-
-  QListWidgetItem *item;
-  for( int row = 0; row < this->ui->tagListWidget->count(); row++ )
-  {
-    item = this->ui->tagListWidget->item( row );
-    if( Qt::Checked == item->checkState() )
-      tags->InsertNextValue( item->text().toStdString() );
-  }
   
-  this->RestrictFilter->SetIncludeTags( tags );
+  QTreeWidgetItemIterator it( this->ui->tagTreeWidget );
+  while( *it )
+  {
+    if( Qt::Checked == (*it)->checkState( 0 ) )
+    {
+      tags->InsertNextValue( (*it)->text( 0 ).toStdString() );
+    }
+    it++;
+  }
+
+  this->RestrictGraphFilter->SetIncludeTags( tags );
   if( resetCamera ) this->GraphLayoutView->ResetCamera();
   this->GraphLayoutView->Render();
 

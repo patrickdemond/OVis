@@ -1,21 +1,24 @@
 /*=========================================================================
 
   Program:  ovis ( OrlandoVision )
-  Module:   ovRestrictGraph.cpp
+  Module:   ovRestrictGraphFilter.cpp
   Language: C++
 
   Author: Patrick Emond <emondpd@mcmaster.ca>
 
 =========================================================================*/
-#include "ovRestrictGraph.h"
+#include "ovRestrictGraphFilter.h"
 
+#include "ovOrlandoReader.h"
 #include "ovOrlandoTagInfo.h"
 #include "ovUtilities.h"
+
 #include "vtkCommand.h"
 #include "vtkDataSetAttributes.h"
 #include "vtkEdgeListIterator.h"
 #include "vtkIdTypeArray.h"
 #include "vtkInformation.h"
+#include "vtkIntArray.h"
 #include "vtkMutableDirectedGraph.h"
 #include "vtkMutableGraphHelper.h"
 #include "vtkMutableUndirectedGraph.h"
@@ -28,31 +31,34 @@
 #include <vtkstd/algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////////
-// ovRestrictGraph
+// ovRestrictGraphFilter
 
-vtkCxxRevisionMacro( ovRestrictGraph, "$Revision: 1.2 $" );
-vtkStandardNewMacro( ovRestrictGraph );
+vtkCxxRevisionMacro( ovRestrictGraphFilter, "$Revision: 1.2 $" );
+vtkStandardNewMacro( ovRestrictGraphFilter );
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovRestrictGraph::ovRestrictGraph()
+ovRestrictGraphFilter::ovRestrictGraphFilter()
 {
+  this->AuthorsOnly = false;
+  this->GenderTypeRestriction = ovRestrictGraphFilter::GenderTypeRestrictionAny;
+  this->WriterTypeRestriction = ovRestrictGraphFilter::WriterTypeRestrictionAny;
   this->IncludeTags = NULL;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovRestrictGraph::~ovRestrictGraph()
+ovRestrictGraphFilter::~ovRestrictGraphFilter()
 {
   this->SetIncludeTags( NULL );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovRestrictGraph::PrintSelf( ostream& os, vtkIndent indent )
+void ovRestrictGraphFilter::PrintSelf( ostream& os, vtkIndent indent )
 {
   this->Superclass::PrintSelf( os, indent );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovRestrictGraph::SetIncludeTags( vtkStringArray* newTagArray )
+void ovRestrictGraphFilter::SetIncludeTags( vtkStringArray* newTagArray )
 {
   // make sure the new array holds different values from the current
   // array before causing the filter to re-run itself
@@ -107,7 +113,7 @@ void ovRestrictGraph::SetIncludeTags( vtkStringArray* newTagArray )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int ovRestrictGraph::RequestData(
+int ovRestrictGraphFilter::RequestData(
   vtkInformation* vtkNotUsed( request ),
   vtkInformationVector** inputVector, 
   vtkInformationVector* outputVector )
@@ -128,7 +134,7 @@ int ovRestrictGraph::RequestData(
     return 1;
   }
 
-  // Make sure the graph's edge data contains a tags arrays
+  // Make sure we have all the necessary graph arrays
   vtkStringArray *tagBitArray =
     vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray( "tags" ) );
   if( NULL == tagBitArray )
@@ -138,20 +144,32 @@ int ovRestrictGraph::RequestData(
     return 0;
   }
   
-  // Create a vector of booleans which correspond to the list of all tags and
-  // whether or not to include them
+  vtkIntArray *genderArray =
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "gender" ) );
+  if( NULL == genderArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a 'gender' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
+  vtkIntArray *writerTypeArray =
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "writerTypes" ) );
+  if( NULL == writerTypeArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a 'writerTypes' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
+  // Create a vector of tag bit indices which are to be searched for in every edge
   ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
   int numTags = tagInfo->GetNumberOfTags();
-  int numIncludeTags = 0;
-  vtkstd::vector< bool > includeBits( numTags, false );
-  for( vtkIdType i = 0; i < this->IncludeTags->GetNumberOfValues(); i++ )
+  vtkstd::vector< vtkIdType > includeIndices;
+  for( vtkIdType i = 0; i < this->IncludeTags->GetNumberOfValues(); ++i )
   {
     int tagIndex = tagInfo->FindTagIndex( this->IncludeTags->GetValue( i ) );
-    if( 0 <= tagIndex && tagIndex < numTags )
-    {
-      includeBits[ tagIndex ] = true;
-      numIncludeTags++;
-    }
+    if( 0 <= tagIndex && tagIndex < numTags ) includeIndices.push_back( tagIndex );
   }
   
   // Set up our mutable graph helper
@@ -183,6 +201,15 @@ int ovRestrictGraph::RequestData(
   vtkSmartPointer<vtkPoints> builderPoints = vtkSmartPointer<vtkPoints>::New();
   builder->GetGraph()->SetPoints( builderPoints );
 
+  vtkVariantArray *colorArray = vtkVariantArray::SafeDownCast(
+    builderEdgeData->GetAbstractArray( "color" ) );
+  if( NULL == colorArray )
+  {
+    vtkErrorMacro( << "Input graph edge data does not have a 'color' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+
   // Vector keeps track of mapping of input vertex ids to output vertex ids
   vtkIdType numVert = input->GetNumberOfVertices();
   vtkstd::vector<int> outputVertex( numVert, -1 );
@@ -199,27 +226,80 @@ int ovRestrictGraph::RequestData(
     this->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
 
     vtkEdgeType e = edgeIter->Next();
+    
+    // STEP #1
+    // make sure that the edge's two vertices are both to be included
+    bool sourceIsAuthor = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Source );
+    bool targetIsAuthor = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Target );
+    if( this->AuthorsOnly && ( !sourceIsAuthor || !targetIsAuthor ) ) continue;
 
-    // check to see if this edge should be included and set the color array value
-    // based on these results
-    bool match = false;
-    int includeTagIndex = 0;
-    ovString includeTagMatches( numIncludeTags, '0' );
-    for( int tagId = 0; tagId < numTags; tagId++ )
+    int sourceGender = genderArray->GetValue( e.Source );
+    int targetGender = genderArray->GetValue( e.Target );
+    
+    if( ovRestrictGraphFilter::GenderTypeRestrictionMale == this->GenderTypeRestriction )
     {
-      ovString tagBits = tagBitArray->GetValue( e.Id );
-      if( includeBits[ tagId ] )
-      {
-        if( '1' == tagBitArray->GetValue( e.Id ).at( tagId ) )
-        {
-          includeTagMatches[includeTagIndex] = '1';
-          match = true;
-        }
-        includeTagIndex++;
-      }
+      if( ovOrlandoReader::GenderTypeFemale == sourceGender ||
+          ovOrlandoReader::GenderTypeFemale == targetGender ) continue;
+    }
+    else if( ovRestrictGraphFilter::GenderTypeRestrictionFemale == this->GenderTypeRestriction )
+    {
+      if( ovOrlandoReader::GenderTypeMale == sourceGender ||
+          ovOrlandoReader::GenderTypeMale == targetGender ) continue;
     }
     
-    if( match )
+    int sourceWriterType = writerTypeArray->GetValue( e.Source );
+    int targetWriterType = writerTypeArray->GetValue( e.Target );
+    if( ovRestrictGraphFilter::WriterTypeRestrictionWriter == this->WriterTypeRestriction )
+    {
+      if( ovOrlandoReader::WriterTypeBRW == sourceWriterType ||
+          ovOrlandoReader::WriterTypeIBR == sourceWriterType ||
+          ovOrlandoReader::WriterTypeBRW == targetWriterType ||
+          ovOrlandoReader::WriterTypeIBR == targetWriterType ) continue;
+    }
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRW == this->WriterTypeRestriction )
+    {
+      if( ovOrlandoReader::WriterTypeWriter == sourceWriterType ||
+          ovOrlandoReader::WriterTypeIBR == sourceWriterType ||
+          ovOrlandoReader::WriterTypeWriter == targetWriterType ||
+          ovOrlandoReader::WriterTypeIBR == targetWriterType ) continue;
+    }
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionIBR == this->WriterTypeRestriction )
+    {
+      if( ovOrlandoReader::WriterTypeWriter == sourceWriterType ||
+          ovOrlandoReader::WriterTypeBRW == sourceWriterType ||
+          ovOrlandoReader::WriterTypeWriter == targetWriterType ||
+          ovOrlandoReader::WriterTypeBRW == targetWriterType ) continue;
+    }
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrBRW == this->WriterTypeRestriction )
+    {
+      if( ovOrlandoReader::WriterTypeIBR == sourceWriterType ||
+          ovOrlandoReader::WriterTypeIBR == targetWriterType ) continue;
+    }
+    else if( ovRestrictGraphFilter:: WriterTypeRestrictionWriterOrIBR == this->WriterTypeRestriction )
+    {
+      if( ovOrlandoReader::WriterTypeBRW == sourceWriterType ||
+          ovOrlandoReader::WriterTypeBRW == targetWriterType ) continue;
+    }
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRWOrIBR == this->WriterTypeRestriction )
+    {
+      if( ovOrlandoReader::WriterTypeWriter == sourceWriterType ||
+          ovOrlandoReader::WriterTypeWriter == targetWriterType ) continue;
+    }
+
+    // STEP #2
+    // make sure that the edge itself is to be included
+    vtkIdType matchIndex = -1;
+    vtkstd::vector< vtkIdType >::iterator it;
+    for( it = includeIndices.begin(); it != includeIndices.end(); ++it )
+    {
+      if( '1' == tagBitArray->GetValue( e.Id ).at( *it ) )
+      {
+        matchIndex = *it;
+        break;
+      }
+    }
+
+    if( 0 <= matchIndex )
     {
       vtkIdType source = outputVertex[e.Source];
       if( source < 0 )
@@ -239,9 +319,7 @@ int ovRestrictGraph::RequestData(
       }
       vtkEdgeType outputEdge = builder->AddEdge( source, target );
       builderEdgeData->CopyData( inputEdgeData, e.Id, outputEdge.Id );
-      vtkVariantArray *colors = vtkVariantArray::SafeDownCast(
-        builderEdgeData->GetAbstractArray( "colors" ) );
-      if( colors ) colors->SetValue( outputEdge.Id, vtkVariant( ovHash( includeTagMatches ) ) );
+      colorArray->SetValue( outputEdge.Id, vtkVariant( matchIndex ) );
     }
   }
 

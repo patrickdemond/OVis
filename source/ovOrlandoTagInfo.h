@@ -37,44 +37,25 @@ public:
   void PrintSelf( ostream& os, vtkIndent indent );
 
   // Description:
-  // Add association types to track when loading the file.  The rank parameter
-  // will place the tag into a particular rank, or none if it is 0.
-  virtual void Add( ovString name, int rank = 0, bool active = true );
+  // Add association types (tags) to track when loading the file.  The parent-child
+  // hierarchy is used by the UI for easier management of tags
+  virtual void Add( ovString parent, ovString name, bool active = true );
 
   // Description:
-  // Call this once all tags have been read, this sorts and makes unique the list
-  // and prevents any further changes.
-  void Finalize();
-
-  // Description:
-  // Returns the number of ranks.
-  virtual int GetNumberOfRanks();
-  
-  // Description:
-  // Returns the total number of tags.  If rank is not 0 then the number of tags
-  // at the given rank will be returned, otherwise the total count is returned.
-  virtual int GetNumberOfTags( int rank = 0 );
+  // Returns the total number of tags.
+  virtual int GetNumberOfTags();
   
   // Description:
   // Returns the a particular tag, or NULL if the tag is not found.
-  // By calling this method the tag info object will be finalized, meaning it
-  // cannot be changed any further.
-  // The rank parameter will restrict the search to a particular rank, or if
-  // it is 0 then no rank restriction will be performed.
-  virtual ovTag* FindTag( ovString, int rank = 0 );
+  virtual ovTag* FindTag( ovString );
 
   // Description:
   // Returns the index of a particular tag, or -1 if the tag is not found.
-  // By calling this method the tag info object will be finalized, meaning it
-  // cannot be changed any further.
-  // The rank parameter will restrict the search to a particular rank, or if
-  // it is 0 then no rank restriction will be performed.
-  virtual int FindTagIndex( ovString, int rank = 0 );
+  virtual int FindTagIndex( ovString );
 
   // Description:
-  // Populates a string array with the tags.  If rank is not 0 then only the tags
-  // of the given rank or smaller are included, of it is 0 then all tags are included.
-  virtual void GetTags( ovTagVector &array, int rank = 0 );
+  // Populates a string array with the tags.
+  virtual void GetTags( ovTagVector &array );
 
 protected:
   ovOrlandoTagInfo();
@@ -83,7 +64,6 @@ protected:
   static ovOrlandoTagInfo *New();
   static vtkSmartPointer< ovOrlandoTagInfo > Instance;
   
-  bool Final;
   ovTagVector TagVector;
 
 private:

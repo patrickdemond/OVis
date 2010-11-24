@@ -30,7 +30,7 @@ SET( OVIS_SOURCE
   ovis.cpp
   source/ovOrlandoReader.cpp
   source/ovOrlandoTagInfo.cpp
-  source/ovRestrictGraph.cpp
+  source/ovRestrictGraphFilter.cpp
   interface/ovQMainWindow.cpp
 )
 

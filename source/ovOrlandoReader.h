@@ -28,6 +28,7 @@
 
 #include "ovUtilities.h"
 #include <libxml/xmlreader.h>
+#include "vtksys/SystemTools.hxx"
 
 class vtkGraph;
 
@@ -49,6 +50,43 @@ public:
   vtkGraph *GetOutput( int idx );
   void SetOutput( vtkGraph *output );
   
+  enum GenderType
+  {
+    GenderTypeUnknown,
+    GenderTypeMale,
+    GenderTypeFemale
+  };
+
+  static int GenderTypeFromString( const char *gender )
+  {
+    return 0 == vtksys::SystemTools::Strucmp( "male", gender )
+         ? GenderTypeMale
+         : 0 == vtksys::SystemTools::Strucmp( "female", gender )
+         ? GenderTypeFemale
+         : GenderTypeUnknown;
+  }
+
+  enum WriterType
+  {
+    WriterTypeNone,
+    WriterTypeWriter,
+    WriterTypeBRW,
+    WriterTypeIBR
+  };
+
+  static int WriterTypeFromString( const char *writer )
+  {
+    return 0 == vtksys::SystemTools::Strucmp( "writer", writer )
+         ? WriterTypeWriter
+         : 0 == vtksys::SystemTools::Strucmp( "brw", writer ) ||
+           0 == vtksys::SystemTools::Strucmp( "brwwriter", writer )
+         ? WriterTypeBRW
+         : 0 == vtksys::SystemTools::Strucmp( "ibr", writer ) ||
+           0 == vtksys::SystemTools::Strucmp( "ibrwriter", writer )
+         ? WriterTypeIBR
+         : WriterTypeNone;
+  }
+
 protected:
   ovOrlandoReader();
   ~ovOrlandoReader();
@@ -87,8 +125,6 @@ protected:
   {
     const xmlChar* Name;
     const xmlChar* Value;
-    const xmlChar* Id;
-    const xmlChar* Standard;
     const xmlChar* Content;
     int Depth;
     int NodeType;
@@ -100,8 +136,6 @@ protected:
     {
       this->Name = NULL;
       this->Value = NULL;
-      this->Id = NULL;
-      this->Standard = NULL;
       this->Content = NULL;
       this->Depth = 0;
       this->NodeType = 0;
@@ -116,10 +150,6 @@ protected:
          << ( NULL == this->Name ? "(null)" : ( char* )( this->Name ) ) << endl;
       os << indent << "Value: "
          << ( NULL == this->Value ? "(null)" : ( char* )( this->Value ) ) << endl;
-      os << indent << "Id: "
-         << ( NULL == this->Id ? "(null)" : ( char* )( this->Id ) ) << endl;
-      os << indent << "Standard: "
-         << ( NULL == this->Standard ? "(null)" : ( char* )( this->Standard ) ) << endl;
       os << indent << "Content: "
          << ( NULL == this->Content ? "(null)" : ( char* )( this->Content ) ) << endl;
       os << indent << "Depth: " << this->Depth << endl;

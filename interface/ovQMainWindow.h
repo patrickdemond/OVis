@@ -11,9 +11,9 @@ class Ui_ovQMainWindow;
 
 class ovQMainWindowProgressCommand;
 class ovOrlandoReader;
-class ovRestrictGraph;
+class ovRestrictGraphFilter;
 class QActionGroup;
-class QListWidgetItem;
+class QTreeWidgetItem;
 class vtkGraphLayoutView;
 class vtkViewTheme;
 
@@ -67,18 +67,25 @@ public slots:
   virtual void slotSetLayoutStrategyToCone() { this->SetLayoutStrategy( "Cone" ); }
   virtual void slotSetLayoutStrategyToSpanTree() { this->SetLayoutStrategy( "Span Tree" ); }
 
-  virtual void slotVertexSizeSliderValueChanged( int change );
-  virtual void slotEdgeSizeSliderValueChanged( int change );
-  virtual void slotTagListCheckAllButtonClicked();
-  virtual void slotTagListCheckNoneButtonClicked();
-  virtual void slotTagListItemChanged( QListWidgetItem* );
-  virtual void slotTagListPresetComboBoxIndexChanged( int );
+  virtual void slotAuthorCheckBoxStateChanged( int );
+  virtual void slotGenderComboBoxCurrentIndexChanged( const QString& );
+  virtual void slotWriterComboBoxCurrentIndexChanged( const QString& );
+  virtual void slotVertexSizeSliderValueChanged( int );
+  virtual void slotEdgeSizeSliderValueChanged( int );
+  virtual void slotStartLineEditTextChanged( const QString& );
+  virtual void slotStartSetPushButtonClicked();
+  virtual void slotEndLineEditTextChanged( const QString& );
+  virtual void slotEndSetPushButtonClicked();
+  virtual void slotTagTreeCheckButtonClicked();
+  virtual void slotTagTreeUnCheckButtonClicked();
+  virtual void slotTagTreeItemChanged( QTreeWidgetItem*, int );
+  virtual void slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int );
 
 protected:
   vtkSmartPointer< vtkGraphLayoutView > GraphLayoutView;
   vtkSmartPointer< vtkViewTheme > GraphLayoutViewTheme;
   vtkSmartPointer< ovOrlandoReader > OrlandoReader;
-  vtkSmartPointer< ovRestrictGraph > RestrictFilter;
+  vtkSmartPointer< ovRestrictGraphFilter > RestrictGraphFilter;
 
 protected slots:
 

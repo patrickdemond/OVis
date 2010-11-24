@@ -112,34 +112,44 @@ int ovOrlandoReader::ProcessRequest(
   {
     vtkDebugMacro( << "Reading orlando data ...");
 
-    // get the tag info and finalize it since we are about to use it
     ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
-    tagInfo->Finalize();
     
     // create and set up a graph with pedigree and tag arrays
     // (the pedigree array is used to track vertices by name)
     vtkSmartPointer< vtkMutableDirectedGraph > graph =
       vtkSmartPointer< vtkMutableDirectedGraph >::New();
     vtkSmartPointer< vtkStringArray > pedigreeArray = vtkSmartPointer< vtkStringArray >::New();
-    pedigreeArray->SetName( "pedigrees" );
+    pedigreeArray->SetName( "pedigree" );
     graph->GetVertexData()->AddArray( pedigreeArray );
     graph->GetVertexData()->SetPedigreeIds( pedigreeArray );
 
-    // the sizes array is used to determine the size of each vertex
+    // the color array is used for edge coloring, this will be manipulated internally by the
+    // restrict graph algorithm
+    vtkSmartPointer< vtkIntArray > vertexColorArray = vtkSmartPointer< vtkIntArray >::New();
+    vertexColorArray->SetName( "color" );
+    graph->GetVertexData()->AddArray( vertexColorArray );
+
+    // the size array is used to determine the size of each vertex
     vtkSmartPointer< vtkDoubleArray > sizeArray = vtkSmartPointer< vtkDoubleArray >::New();
-    sizeArray->SetName( "sizes" );
+    sizeArray->SetName( "size" );
     graph->GetVertexData()->AddArray( sizeArray );
     graph->GetVertexData()->SetActiveScalars( sizeArray->GetName() );
 
-    // the births and deaths arrays track author birth and death dates
+    // the birth and death arrays track author birth and death dates
     vtkSmartPointer< vtkIntArray > birthArray = vtkSmartPointer< vtkIntArray >::New();
-    birthArray->SetName( "births" );
+    birthArray->SetName( "birth" );
     graph->GetVertexData()->AddArray( birthArray );
-    graph->GetVertexData()->SetActiveScalars( birthArray->GetName() );
     vtkSmartPointer< vtkIntArray > deathArray = vtkSmartPointer< vtkIntArray >::New();
-    deathArray->SetName( "deaths" );
+    deathArray->SetName( "death" );
     graph->GetVertexData()->AddArray( deathArray );
-    graph->GetVertexData()->SetActiveScalars( deathArray->GetName() );
+
+    // the gender and writer type of the author
+    vtkSmartPointer< vtkIntArray > genderArray = vtkSmartPointer< vtkIntArray >::New();
+    genderArray->SetName( "gender" );
+    graph->GetVertexData()->AddArray( genderArray );
+    vtkSmartPointer< vtkIntArray > writerTypeArray = vtkSmartPointer< vtkIntArray >::New();
+    writerTypeArray->SetName( "writerTypes" );
+    graph->GetVertexData()->AddArray( writerTypeArray );
 
     // the tag array is used to keep a list of tags which associates the two vertices
     ovTagVector tags;
@@ -149,11 +159,11 @@ int ovOrlandoReader::ProcessRequest(
     tagArray->SetName( "tags" );
     graph->GetEdgeData()->AddArray( tagArray );
 
-    // the colors array is used for edge coloring, this will be manipulated internally by the
+    // the color array is used for edge coloring, this will be manipulated internally by the
     // restrict graph algorithm
-    vtkSmartPointer< vtkVariantArray > colorArray = vtkSmartPointer< vtkVariantArray >::New();
-    colorArray->SetName( "colors" );
-    graph->GetEdgeData()->AddArray( colorArray );
+    vtkSmartPointer< vtkVariantArray > edgeColorArray = vtkSmartPointer< vtkVariantArray >::New();
+    edgeColorArray->SetName( "color" );
+    graph->GetEdgeData()->AddArray( edgeColorArray );
 
     // A string to store the current active tags and mark them all as '0' chars to begin with.
     // Every time we open a tag in the association types vector we will set the tag to '1',
@@ -163,8 +173,8 @@ int ovOrlandoReader::ProcessRequest(
     
     try
     {
-      vtkIdType currentVertexId;
-      vtkStdString currentVertexPedigree;
+      vtkIdType currentVertexId = -1, currentConnectingVertexId = -1;
+      vtkStdString currentVertexPedigree = "";
       bool inBirthTag = false, inDeathTag = false;
       this->CreateReader();
       
@@ -178,11 +188,14 @@ int ovOrlandoReader::ProcessRequest(
       // is incorrect progress reporting which really isn't so bad (so worth the uncertainty)
       while( getline( fileStream, line ) ) if( line.find( "<ENTRY" ) ) totalEntries++;
       fileStream.close();
-
+      
       // process each node, one at a time
       double numEntries = 0, progress;
       while( this->ParseNode() )
       {
+        // ignore node type 14 (#text stuff that we don't need)
+        if( 14 == this->CurrentNode.NodeType ) continue;
+        
         // This node is an entry (vertex)
         if( 1 == this->CurrentNode.Depth &&
             0 == xmlStrcmp( BAD_CAST "ENTRY", this->CurrentNode.Name ) )
@@ -191,19 +204,27 @@ int ovOrlandoReader::ProcessRequest(
           {
             progress = numEntries / totalEntries;
             this->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
+            
+            // get the pedigree (author's name) from this node's id attribute
+            const char *pedigree = ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "id" ) );
 
             // create a new vertex using the Id (author name) as the pedigree
             vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-            array->SetNumberOfComponents( 4 );
+            array->SetNumberOfComponents( 7 );
             array->SetNumberOfTuples( 1 );
-            array->SetValue( 0, vtkVariant( ( char* )( this->CurrentNode.Id ) ) ); // pedigrees
-            array->SetValue( 1, 1 ); // sizes
-            array->SetValue( 2, 0 ); // birth date
-            array->SetValue( 3, 0 ); // death date
+            array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
+            array->SetValue( 1, 1 ); // color
+            array->SetValue( 2, 2 ); // size
+            array->SetValue( 3, 0 ); // birth date
+            array->SetValue( 4, 0 ); // death date
+            array->SetValue( 5, ovOrlandoReader::GenderTypeUnknown ); // gender
+            array->SetValue( 6, ovOrlandoReader::WriterTypeNone ); // writer type
             currentVertexId = graph->AddVertex( array );
             currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
           }
-          else if( this->CurrentNode.IsClosingElement() )
+          
+          if( this->CurrentNode.IsEmptyElement ||
+              this->CurrentNode.IsClosingElement() )
           {
             // no more child vertices for this vertex
             currentVertexId = -1;
@@ -212,98 +233,158 @@ int ovOrlandoReader::ProcessRequest(
         }
         else if( 0 <= currentVertexId )
         {
-          // This node describes an association (edge)
-          if ( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "NAME" ) &&
-               this->CurrentNode.IsOpeningElement() &&
-               currentVertexPedigree != vtkStdString( ( char* )( this->CurrentNode.Standard ) ) )
+          // we're in an open NAME tag which is closing
+          if( 0 <= currentConnectingVertexId &&
+              this->CurrentNode.IsClosingElement() &&
+              0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "NAME" ) )
           {
-            // Create an edge from the current vertex to the (possibly) new vertex
-            // using the standard (linked author name) to identify it
-            vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-            array->SetNumberOfComponents( 2 );
-            array->SetNumberOfTuples( 1 );
-            array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
-            array->SetValue( 1, vtkVariant( ovHash( currentTagArray ) ) ); // colors
-            graph->AddEdge( currentVertexPedigree, ( char* )( this->CurrentNode.Standard ), array );
+            currentConnectingVertexId = -1;
           }
-          // Maybe this is a birth tag?
-          else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "BIRTH" ) )
-          {
-            if( this->CurrentNode.IsOpeningElement() )
-            {
-              inBirthTag = true;
-            }
-            else if( this->CurrentNode.IsClosingElement() )
-            {
-              inBirthTag = false;
-            }
-          }
-          // Maybe this is a death tag?
-          else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DEATH" ) )
-          {
-            if( this->CurrentNode.IsOpeningElement() )
-            {
-              inDeathTag = true;
-            }
-            else if( this->CurrentNode.IsClosingElement() )
-            {
-              inDeathTag = false;
-            }
-          }
-          // This node describes an association type (edge tag)
           else
           {
-            int index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
-            if( 0 <= index ) // we found a match
+            // get the pedigree (associate's name) from this node's standard attribute
+            const char *pedigree = ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "STANDARD" ) );
+
+            // This node describes an association (edge)
+            if( this->CurrentNode.IsOpeningElement() &&
+                0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "NAME" ) &&
+                currentVertexPedigree != vtkStdString( pedigree ) )
             {
-              if( this->CurrentNode.IsOpeningElement() )
-              { // opening element, mark the tag as true
-                currentTagArray[index] = '1';
+              // create a new vertex (if necessary) using the standard (association's name) as the pedigree
+              if( -1 == graph->FindVertex( pedigree ) )
+              {
+                vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
+                array->SetNumberOfComponents( 7 );
+                array->SetNumberOfTuples( 1 );
+                array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
+                array->SetValue( 1, 0 ); // color
+                array->SetValue( 2, 1 ); // size
+                array->SetValue( 3, 0 ); // birth date
+                array->SetValue( 4, 0 ); // death date
+                array->SetValue( 5, ovOrlandoReader::GenderTypeUnknown ); // gender
+                array->SetValue( 6, ovOrlandoReader::WriterTypeNone ); // writer type
+                graph->AddVertex( array );
               }
-              else if( this->CurrentNode.IsClosingElement() )
-              { // closing element, mark the tag as false
-                currentTagArray[index] = '0';
+
+              // Create an edge from the current vertex to the new vertex
+              vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
+              array->SetNumberOfComponents( 2 );
+              array->SetNumberOfTuples( 1 );
+              array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
+              array->SetValue( 1, vtkVariant( ovHash( currentTagArray ) ) ); // color
+              graph->AddEdge( currentVertexPedigree, pedigree, array );
+  
+              // determine the connecting vertex' id if this isn't an empty element
+              if( !( this->CurrentNode.IsEmptyElement ) )
+              {
+                currentConnectingVertexId = pedigreeArray->LookupValue( pedigree );
               }
             }
-
-            // record birth date if we are inside a birth tag
-            if( inBirthTag && 
-                this->CurrentNode.IsOpeningElement() &&
-                0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+            // This node may describe an association type (edge tag) or birth/death dates
+            else
             {
-              ovDate newDate( ( char* )( this->CurrentNode.Value ) );
-              ovDate curDate( birthArray->GetValue( currentVertexId ) );
-
-              // there might be more than one date in the birth tag, so use the earliest date
-              if( curDate > newDate )
+              // if this is a biography tag then record the author's gender and writer type
+              if( this->CurrentNode.IsOpeningElement() &&
+                  0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "BIOGRAPHY" ) )
               {
-                // make sure the earlier date has as much information as the current or more
-                if( 0 < newDate.day ||
-                    ( 0 < newDate.month && 0 == curDate.day ) ||
-                    0 == curDate.month )
+                // get the current author's gender and writer type from the the biography tag
+                genderArray->SetValue( currentVertexId,
+                  ovOrlandoReader::GenderTypeFromString(
+                    ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "SEX" ) ) ) );
+                writerTypeArray->SetValue( currentVertexId,
+                  ovOrlandoReader::WriterTypeFromString(
+                    ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "PERSON" ) ) ) );
+              }
+
+              // first let's see if the name is in our tag list
+              int index = -1;
+              if( !( this->CurrentNode.IsEmptyElement ) && this->CurrentNode.IsOpeningElement() )
+              {
+                index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
+                if( 0 <= index ) // we found a match
                 {
-                  birthArray->SetValue( currentVertexId, newDate.AsInt() );
+                  // are we already in a connecting vertex (NAME) tag?
+                  if( 0 <= currentConnectingVertexId )
+                  {
+                    tagArray->GetValue( currentConnectingVertexId ).at( index ) = '1';
+                  }
+
+                  // opening element, mark the tag as true
+                  currentTagArray[index] = '1';
                 }
               }
-            }
-
-            // record death date if we are inside a death tag
-            if( inDeathTag &&
-                this->CurrentNode.IsOpeningElement() &&
-                0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
-            {
-              ovDate newDate( ( char* )( this->CurrentNode.Value ) );
-              ovDate curDate( deathArray->GetValue( currentVertexId ) );
-
-              // there might be more than one date in the death tag, so use the latest date
-              if( curDate < newDate )
+              else if( this->CurrentNode.IsClosingElement() )
               {
-                // make sure the earlier date has as much information as the current or more
-                if( 0 < newDate.day ||
-                    ( 0 < newDate.month && 0 == curDate.day ) ||
-                    0 == curDate.month )
+                index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
+                if( 0 <= index ) // we found a match
+                { // closing element, mark the tag as false
+                  currentTagArray[index] = '0';
+                }
+              }
+              
+              // Now handle birth and death tags, and any dates associated with them
+              // Is this a date inside a birth tag?
+              if( inBirthTag && 
+                  this->CurrentNode.IsOpeningElement() &&
+                  0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+              {
+                ovDate newDate( ( char* )( this->CurrentNode.Value ) );
+                ovDate curDate( birthArray->GetValue( currentVertexId ) );
+  
+                // there might be more than one date in the birth tag, so use the earliest date
+                if( curDate > newDate )
                 {
-                  deathArray->SetValue( currentVertexId, newDate.AsInt() );
+                  // make sure the earlier date has as much information as the current or more
+                  if( 0 < newDate.day ||
+                      ( 0 < newDate.month && 0 == curDate.day ) ||
+                      0 == curDate.month )
+                  {
+                    birthArray->SetValue( currentVertexId, newDate.AsInt() );
+                  }
+                }
+              }
+              // ...or maybe a date inside a death tag?
+              else if( inDeathTag &&
+                       this->CurrentNode.IsOpeningElement() &&
+                       0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+              {
+                ovDate newDate( ( char* )( this->CurrentNode.Value ) );
+                ovDate curDate( deathArray->GetValue( currentVertexId ) );
+  
+                // there might be more than one date in the death tag, so use the latest date
+                if( curDate < newDate )
+                {
+                  // make sure the earlier date has as much information as the current or more
+                  if( 0 < newDate.day ||
+                      ( 0 < newDate.month && 0 == curDate.day ) ||
+                      0 == curDate.month )
+                  {
+                    deathArray->SetValue( currentVertexId, newDate.AsInt() );
+                  }
+                }
+              }
+              // ...or maybe a birth tag?
+              else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "BIRTH" ) )
+              {
+                if( !( this->CurrentNode.IsEmptyElement ) && this->CurrentNode.IsOpeningElement() )
+                {
+                  inBirthTag = true;
+                }
+                else if( this->CurrentNode.IsClosingElement() )
+                {
+                  inBirthTag = false;
+                }
+              }
+              // ...or maybe a death tag?
+              else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DEATH" ) )
+              {
+                if( !( this->CurrentNode.IsEmptyElement ) && this->CurrentNode.IsOpeningElement() )
+                {
+                  inDeathTag = true;
+                }
+                else if( this->CurrentNode.IsClosingElement() )
+                {
+                  inDeathTag = false;
                 }
               }
             }
@@ -403,9 +484,7 @@ int ovOrlandoReader::ParseNode()
     this->CurrentNode.Name = xmlTextReaderConstName( this->Reader );
     if( this->CurrentNode.Name == NULL ) this->CurrentNode.Name = BAD_CAST "--";
     this->CurrentNode.Content = xmlTextReaderConstValue( this->Reader );
-    this->CurrentNode.Id = xmlTextReaderGetAttribute( this->Reader, BAD_CAST "id" );
     this->CurrentNode.Value = xmlTextReaderGetAttribute( this->Reader, BAD_CAST "VALUE" );
-    this->CurrentNode.Standard = xmlTextReaderGetAttribute( this->Reader, BAD_CAST "STANDARD" );
     this->CurrentNode.Depth = xmlTextReaderDepth( this->Reader );
     this->CurrentNode.NodeType = xmlTextReaderNodeType( this->Reader );
     this->CurrentNode.IsEmptyElement = xmlTextReaderIsEmptyElement( this->Reader );
