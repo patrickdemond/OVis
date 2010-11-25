@@ -37,6 +37,7 @@
 //#include "vtkDataSetAttributes.h"
 //#include "vtkVariantArray.h"
 
+#include "ovQDateDialog.h"
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
 #include "source/ovRestrictGraphFilter.h"
@@ -252,8 +253,8 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->ui->graphLayoutWidget->SetRenderWindow( this->GraphLayoutView->GetRenderWindow() );
 
   this->GraphLayoutViewTheme = vtkSmartPointer< vtkViewTheme >::New();
-  this->GraphLayoutViewTheme->SetBackgroundColor( 1.0, 1.0, 1.0 );
-  this->GraphLayoutViewTheme->SetBackgroundColor2( 1.0, 1.0, 1.0 );
+  this->GraphLayoutViewTheme->SetBackgroundColor( 0.7, 0.7, 0.7 );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( 0.9, 0.9, 0.9 );
   this->GraphLayoutViewTheme->SetPointSize( this->ui->vertexSizeSlider->value() );
   this->GraphLayoutViewTheme->SetLineWidth( this->ui->edgeSizeSlider->value() );
   vtkLookupTable *lut =
@@ -527,6 +528,17 @@ void ovQMainWindow::slotStartLineEditTextChanged( const QString& text )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotStartSetPushButtonClicked()
 {
+  ovQDateDialog dialog( this );
+  dialog.setModal( true );
+  dialog.setWindowTitle( tr( "Select start date" ) );
+  dialog.setDate( ovDate( this->ui->startLineEdit->text().toStdString().c_str() ) );
+  
+  if( QDialog::Accepted == dialog.exec() )
+  {
+    ovString dateString;
+    dialog.getDate().ToString( dateString );
+    this->ui->startLineEdit->setText( dateString.c_str() );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -537,6 +549,17 @@ void ovQMainWindow::slotEndLineEditTextChanged( const QString& text )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotEndSetPushButtonClicked()
 {
+  ovQDateDialog dialog( this );
+  dialog.setModal( true );
+  dialog.setWindowTitle( tr( "Select end date" ) );
+  dialog.setDate( ovDate( this->ui->endLineEdit->text().toStdString().c_str() ) );
+  
+  if( QDialog::Accepted == dialog.exec() )
+  {
+    ovString dateString;
+    dialog.getDate().ToString( dateString );
+    this->ui->endLineEdit->setText( dateString.c_str() );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -617,50 +640,4 @@ void ovQMainWindow::UpdateGraphView( bool resetCamera )
   this->RestrictGraphFilter->SetIncludeTags( tags );
   if( resetCamera ) this->GraphLayoutView->ResetCamera();
   this->GraphLayoutView->Render();
-
-/*
-  vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
-    this->GraphLayoutViewTheme->GetCellLookupTable() );
-  if( NULL == lut ) return;
-
-  vtkstd::vector< double > hashArray;
-  vtkstd::vector< double >::iterator it;
-  for( vtkIdType i = 0; i < tags->GetNumberOfValues(); ++i )
-  {
-    hashArray.push_back( ovHash( tags->GetValue( i ) ) );
-  }
-
-  double* rng = lut->GetRange();
-  double minVal = rng[0];
-  double maxVal = rng[1];
-  minVal = VTK_DOUBLE_MAX;
-  maxVal = VTK_DOUBLE_MIN;
-  
-  for( it = hashArray.begin(); it != hashArray.end(); ++it )
-  {
-    if( *it > maxVal )
-    {
-      maxVal = *it;
-    }
-    if( *it < minVal )
-    {
-      minVal = *it;
-    }
-  }
-
-  double scale = 1.0;
-  if( minVal != maxVal )
-  {
-    scale = ( rng[1] - rng[0] ) / ( maxVal - minVal );
-  }
-
-  int i = 0;
-  double rgb[3];
-  for( it = hashArray.begin(); it != hashArray.end(); ++it )
-  {
-    double value = rng[0] + scale * ( *it - minVal );
-    lut->GetColor( value, rgb );
-    cout << tags->GetValue( i++ ) << " is (" << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << ")" << endl;
-  }
-*/
 }

@@ -21,6 +21,7 @@
 #define OVIS_RESOURCES_DIR "@OVIS_RESOURCES_DIR@"
 
 // for atoi
+#include <stdio.h>
 #include <stdlib.h>
 
 // STL headers and typedefs
@@ -32,13 +33,43 @@
 typedef vtkstd::string ovString;
 typedef vtkstd::vector< ovString > ovStringVector;
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+inline int ovGetMaxDays( int year, int month )
+{
+  if( 1 == month || 3 == month || 5 == month || 7 == month ||
+      8 == month || 10 == month || 12 == month )
+  {
+    return 31;
+  }
+
+  if( 4 == month || 6 == month || 9 == month || 11 == month )
+  {
+    return 30;
+  }
+  
+  // The only month left is February, the "our calendar doesn't actually work
+  // so let's use this month to try and fix it" month.  We need to determine
+  // whether or not the given year is a leap year.  The algorithm to determine
+  // whether this is a leap year taken from wikipedia:
+  // http://en.wikipedia.org/wiki/Leap_year
+  bool leapYear = 0 == year % 400 ? true
+                : 0 == year % 100 ? false
+                : 0 == year % 4 ? true
+                : false;
+
+  return leapYear ? 29 : 28;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 struct ovDate
 {
   unsigned short year;
   unsigned short month;
   unsigned short day;
+  ovDate() : year( 0 ), month( 0 ), day( 0 ) {}
   ovDate( unsigned short y, unsigned short m, unsigned short d ) : year( y ), month( m ), day( d )
   { this->Validate(); }
+
   ovDate( int date )
   {
     this->day = date % 100;
@@ -46,6 +77,7 @@ struct ovDate
     this->year = ( date - this->month - this->day ) / 10000;
     this->Validate();
   }
+
   ovDate( const char *date )
   {
     this->year = 0;
@@ -68,36 +100,60 @@ struct ovDate
     }
     this->Validate();
   }
-  int AsInt() { return 10000 * this->year + 100 * month + day; }
+
+  int ToInt() { return 10000 * this->year + 100 * month + day; }
+
+  void ToString( ovString &dateString )
+  {
+    char buffer[64];
+    sprintf( buffer, this->year ? "%d-%02d-%02d" : "", this->year, this->month, this->day );
+    dateString = buffer;
+  }
+
   void Validate()
   {
     // range checking
-    if( 1 > this->year ) this->year = 0;
-    if( 1 > this->month || 12 < this->month ) this->month = 0;
+    if( 0 > this->year ) this->year = 0;
+    if( 0 > this->month || 12 < this->month ) this->month = 0;
+
     // not necessary to bother with exact number of days per month
-    if( 1 > this->day || 31 < this->day ) this->day = 0;
+    if( 0 > this->day || ovGetMaxDays( this->year, this->month ) < this->day ) this->day = 0;
   }
-  bool operator == ( ovDate otherDate )
+
+  bool operator == ( ovDate rhs )
   {
-    return this->year == otherDate.year &&
-           this->month == otherDate.month &&
-           this->day == otherDate.day;
+    return this->year == rhs.year &&
+           this->month == rhs.month &&
+           this->day == rhs.day;
   }
-  bool operator < ( ovDate otherDate )
+
+  bool operator < ( ovDate rhs )
   {
-    return this->year < otherDate.year ||
-           ( this->year == otherDate.year &&
-             this->month < otherDate.month ) ||
-           ( this->year == otherDate.year &&
-             this->month == otherDate.month &&
-             this->day < otherDate.day );
+    return this->year < rhs.year ||
+           ( this->year == rhs.year &&
+             this->month < rhs.month ) ||
+           ( this->year == rhs.year &&
+             this->month == rhs.month &&
+             this->day < rhs.day );
   }
-  bool operator <= ( ovDate otherDate ) { return *this == otherDate || *this < otherDate; }
-  bool operator > ( ovDate otherDate ) { return !( *this <= otherDate ); }
-  bool operator >= ( ovDate otherDate ) { return !( *this < otherDate ); }
-  bool operator != ( ovDate otherDate ) { return !( *this == otherDate ); }
+
+  bool operator <= ( ovDate rhs ) { return *this == rhs || *this < rhs; }
+  bool operator > ( ovDate rhs ) { return rhs < *this; }
+  bool operator >= ( ovDate rhs ) { return rhs <= *this; }
+  bool operator != ( ovDate rhs ) { return !( *this == rhs ); }
 };
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+struct ovDatePeriod
+{
+  ovString name;
+  ovDate start;
+  ovDate end;
+  ovDatePeriod( ovString n, ovDate s, ovDate e ) : name( n ), start( s ), end( e ) {}
+};
+typedef vtkstd::vector< ovDatePeriod* > ovDatePeriodVector;
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 struct ovTag
 {
   ovString parent;

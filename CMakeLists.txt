@@ -31,14 +31,17 @@ SET( OVIS_SOURCE
   source/ovOrlandoReader.cpp
   source/ovOrlandoTagInfo.cpp
   source/ovRestrictGraphFilter.cpp
+  interface/ovQDateDialog.cpp
   interface/ovQMainWindow.cpp
 )
 
 SET( OVIS_UIS
+  interface/ovQDateDialog.ui
   interface/ovQMainWindow.ui
 )
 
 SET( OVIS_HEADERS
+  interface/ovQDateDialog.h
   interface/ovQMainWindow.h
 )
 

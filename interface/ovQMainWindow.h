@@ -1,5 +1,5 @@
-#ifndef ORLANDO_H
-#define ORLANDO_H
+#ifndef __ovQMainWindow_h
+#define __ovQMainWindow_h
 
 #include <QMainWindow>
 

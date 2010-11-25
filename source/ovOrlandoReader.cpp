@@ -329,7 +329,7 @@ int ovOrlandoReader::ProcessRequest(
                   0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
               {
                 ovDate newDate( ( char* )( this->CurrentNode.Value ) );
-                ovDate curDate( birthArray->GetValue( currentVertexId ) );
+                ovDate curDate( ( birthArray->GetValue( currentVertexId ) ) );
   
                 // there might be more than one date in the birth tag, so use the earliest date
                 if( curDate > newDate )
@@ -339,7 +339,7 @@ int ovOrlandoReader::ProcessRequest(
                       ( 0 < newDate.month && 0 == curDate.day ) ||
                       0 == curDate.month )
                   {
-                    birthArray->SetValue( currentVertexId, newDate.AsInt() );
+                    birthArray->SetValue( currentVertexId, newDate.ToInt() );
                   }
                 }
               }
@@ -349,7 +349,7 @@ int ovOrlandoReader::ProcessRequest(
                        0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
               {
                 ovDate newDate( ( char* )( this->CurrentNode.Value ) );
-                ovDate curDate( deathArray->GetValue( currentVertexId ) );
+                ovDate curDate( birthArray->GetValue( currentVertexId ) );
   
                 // there might be more than one date in the death tag, so use the latest date
                 if( curDate < newDate )
@@ -359,7 +359,7 @@ int ovOrlandoReader::ProcessRequest(
                       ( 0 < newDate.month && 0 == curDate.day ) ||
                       0 == curDate.month )
                   {
-                    deathArray->SetValue( currentVertexId, newDate.AsInt() );
+                    deathArray->SetValue( currentVertexId, newDate.ToInt() );
                   }
                 }
               }

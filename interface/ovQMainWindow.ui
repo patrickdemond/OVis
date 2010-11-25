@@ -904,6 +904,20 @@
    <header>QVTKWidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>authorCheckBox</tabstop>
+  <tabstop>genderComboBox</tabstop>
+  <tabstop>writerComboBox</tabstop>
+  <tabstop>vertexSizeSlider</tabstop>
+  <tabstop>edgeSizeSlider</tabstop>
+  <tabstop>startLineEdit</tabstop>
+  <tabstop>startSetPushButton</tabstop>
+  <tabstop>endLineEdit</tabstop>
+  <tabstop>endSetPushButton</tabstop>
+  <tabstop>tagTreeWidget</tabstop>
+  <tabstop>tagTreeCheckButton</tabstop>
+  <tabstop>tagTreeUnCheckButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

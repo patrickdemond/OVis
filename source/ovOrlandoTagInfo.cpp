@@ -30,7 +30,7 @@ ovOrlandoTagInfo::~ovOrlandoTagInfo()
 {
   // delete all tags
   ovTagVector::iterator it;
-  for( it = this->TagVector.begin(); it != this->TagVector.end(); it++ )
+  for( it = this->TagVector.begin(); it != this->TagVector.end(); ++it )
   {
     delete (*it);
   }
