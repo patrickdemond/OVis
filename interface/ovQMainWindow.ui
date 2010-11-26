@@ -75,6 +75,9 @@
             <height>0</height>
            </size>
           </property>
+          <property name="cursor">
+           <cursorShape>CrossCursor</cursorShape>
+          </property>
          </widget>
         </item>
         <item>
@@ -595,6 +598,8 @@
      <addaction name="actionSetLayoutStrategyToCircular"/>
      <addaction name="actionSetLayoutStrategyToSpanTree"/>
     </widget>
+    <addaction name="actionReCenterGraph"/>
+    <addaction name="separator"/>
     <addaction name="menuSet_Background"/>
     <addaction name="menuViewSetVertexStyle"/>
     <addaction name="menuSet_Layout_Strategy"/>
@@ -894,6 +899,14 @@
    </property>
    <property name="text">
     <string>SpanTree</string>
+   </property>
+  </action>
+  <action name="actionReCenterGraph">
+   <property name="text">
+    <string>Re-Center Graph</string>
+   </property>
+   <property name="shortcut">
+    <string>R, Shift+R</string>
    </property>
   </action>
  </widget>

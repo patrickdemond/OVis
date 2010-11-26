@@ -27,8 +27,8 @@ public:
   //destructor
   ~ovQMainWindow();
   
-  // Update the graph view based on the current state of the UI
-  virtual void UpdateGraphView( bool resetCamera = false );
+  virtual void RenderGraph( bool resetCamera = false );
+  virtual void UpdateIncludeTags();
   virtual void SetVertexStyle( int );
   virtual void SetLayoutStrategy( const char* );
 
@@ -37,6 +37,8 @@ public slots:
   virtual void slotFileOpen();
   virtual void slotFileExit();
 
+  virtual void slotReCenterGraph();
+  
   virtual void slotSetBackgroundSolid();
   virtual void slotSetBackgroundTop();
   virtual void slotSetBackgroundBottom();
@@ -100,7 +102,7 @@ private:
   vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
 
   // Set to false to disable automatic updating of graph
-  bool AutoUpdateGraphView;
+  bool AutoUpdateIncludeTags;
 };
 
 #endif

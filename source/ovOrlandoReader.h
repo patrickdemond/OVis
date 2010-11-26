@@ -124,7 +124,6 @@ protected:
   struct _ovXMLNode
   {
     const xmlChar* Name;
-    const xmlChar* Value;
     const xmlChar* Content;
     int Depth;
     int NodeType;
@@ -135,7 +134,6 @@ protected:
     void Clear()
     {
       this->Name = NULL;
-      this->Value = NULL;
       this->Content = NULL;
       this->Depth = 0;
       this->NodeType = 0;
@@ -148,8 +146,6 @@ protected:
     {
       os << indent << "Name: "
          << ( NULL == this->Name ? "(null)" : ( char* )( this->Name ) ) << endl;
-      os << indent << "Value: "
-         << ( NULL == this->Value ? "(null)" : ( char* )( this->Value ) ) << endl;
       os << indent << "Content: "
          << ( NULL == this->Content ? "(null)" : ( char* )( this->Content ) ) << endl;
       os << indent << "Depth: " << this->Depth << endl;

@@ -148,7 +148,7 @@ int ovOrlandoReader::ProcessRequest(
     genderArray->SetName( "gender" );
     graph->GetVertexData()->AddArray( genderArray );
     vtkSmartPointer< vtkIntArray > writerTypeArray = vtkSmartPointer< vtkIntArray >::New();
-    writerTypeArray->SetName( "writerTypes" );
+    writerTypeArray->SetName( "writerType" );
     graph->GetVertexData()->AddArray( writerTypeArray );
 
     // the tag array is used to keep a list of tags which associates the two vertices
@@ -326,18 +326,28 @@ int ovOrlandoReader::ProcessRequest(
               // Is this a date inside a birth tag?
               if( inBirthTag && 
                   this->CurrentNode.IsOpeningElement() &&
-                  0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+                  ( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) ||
+                    0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATESTRUCT" ) ||
+                    0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATERANGE" ) ) )
               {
-                ovDate newDate( ( char* )( this->CurrentNode.Value ) );
+                ovDate newDate( ( char* )(
+                  xmlTextReaderGetAttribute( this->Reader, 
+                  0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATERANGE" ) ?
+                  BAD_CAST "FROM" : BAD_CAST "VALUE" ) ) );
                 ovDate curDate( ( birthArray->GetValue( currentVertexId ) ) );
-  
-                // there might be more than one date in the birth tag, so use the earliest date
-                if( curDate > newDate )
+                
+                // make sure the date is valid
+                if( newDate.IsSet() )
                 {
-                  // make sure the earlier date has as much information as the current or more
-                  if( 0 < newDate.day ||
-                      ( 0 < newDate.month && 0 == curDate.day ) ||
-                      0 == curDate.month )
+                  // if we don't currently have a date, use the new one
+                  if( !curDate.IsSet() )
+                  {
+                    birthArray->SetValue( currentVertexId, newDate.ToInt() );
+                  }
+                  // we already have a date, so make sure the new date is earlier and has as much information
+                  else if( ( curDate > newDate ) &&
+                           ( 0 == curDate.day || 0 < newDate.day ) &&
+                           ( 0 == curDate.month || 0 < newDate.month ) )
                   {
                     birthArray->SetValue( currentVertexId, newDate.ToInt() );
                   }
@@ -346,18 +356,28 @@ int ovOrlandoReader::ProcessRequest(
               // ...or maybe a date inside a death tag?
               else if( inDeathTag &&
                        this->CurrentNode.IsOpeningElement() &&
-                       0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+                       ( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) ||
+                         0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATESTRUCT" ) ||
+                         0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATERANGE" ) ) )
               {
-                ovDate newDate( ( char* )( this->CurrentNode.Value ) );
-                ovDate curDate( birthArray->GetValue( currentVertexId ) );
+                ovDate newDate( ( char* )(
+                  xmlTextReaderGetAttribute( this->Reader, 
+                  0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATERANGE" ) ?
+                  BAD_CAST "TO" : BAD_CAST "VALUE" ) ) );
+                ovDate curDate( deathArray->GetValue( currentVertexId ) );
   
-                // there might be more than one date in the death tag, so use the latest date
-                if( curDate < newDate )
+                // make sure the date is valid
+                if( newDate.IsSet() )
                 {
-                  // make sure the earlier date has as much information as the current or more
-                  if( 0 < newDate.day ||
-                      ( 0 < newDate.month && 0 == curDate.day ) ||
-                      0 == curDate.month )
+                  // if we don't currently have a date, use the new one
+                  if( !curDate.IsSet() )
+                  {
+                    deathArray->SetValue( currentVertexId, newDate.ToInt() );
+                  }
+                  // we already have a date, so make sure the new date is later and has as much information
+                  else if( ( curDate < newDate ) &&
+                           ( 0 == curDate.day || 0 < newDate.day ) &&
+                           ( 0 == curDate.month || 0 < newDate.month ) )
                   {
                     deathArray->SetValue( currentVertexId, newDate.ToInt() );
                   }
@@ -484,7 +504,6 @@ int ovOrlandoReader::ParseNode()
     this->CurrentNode.Name = xmlTextReaderConstName( this->Reader );
     if( this->CurrentNode.Name == NULL ) this->CurrentNode.Name = BAD_CAST "--";
     this->CurrentNode.Content = xmlTextReaderConstValue( this->Reader );
-    this->CurrentNode.Value = xmlTextReaderGetAttribute( this->Reader, BAD_CAST "VALUE" );
     this->CurrentNode.Depth = xmlTextReaderDepth( this->Reader );
     this->CurrentNode.NodeType = xmlTextReaderNodeType( this->Reader );
     this->CurrentNode.IsEmptyElement = xmlTextReaderIsEmptyElement( this->Reader );

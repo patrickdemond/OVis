@@ -43,18 +43,44 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   this->GenderTypeRestriction = ovRestrictGraphFilter::GenderTypeRestrictionAny;
   this->WriterTypeRestriction = ovRestrictGraphFilter::WriterTypeRestrictionAny;
   this->IncludeTags = NULL;
+  
+  // year 0 means no date
+  this->StartDate = new ovDate( 0 );
+  this->EndDate = new ovDate( 0 );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovRestrictGraphFilter::~ovRestrictGraphFilter()
 {
   this->SetIncludeTags( NULL );
+  delete this->StartDate;
+  delete this->EndDate;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovRestrictGraphFilter::PrintSelf( ostream& os, vtkIndent indent )
 {
   this->Superclass::PrintSelf( os, indent );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetStartDate( ovDate* date )
+{
+  if( date == this->StartDate ) return;
+
+  if( this->StartDate ) delete this->StartDate;
+  this->StartDate = date;
+  this->Modified();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetEndDate( ovDate* date )
+{
+  if( date == this->EndDate ) return;
+
+  if( this->EndDate ) delete this->EndDate;
+  this->EndDate = date;
+  this->Modified();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -153,11 +179,29 @@ int ovRestrictGraphFilter::RequestData(
     return 0;
   }
   
+  vtkIntArray *birthArray =
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "birth" ) );
+  if( NULL == birthArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a 'birth' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
+  vtkIntArray *deathArray =
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "death" ) );
+  if( NULL == deathArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a 'death' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
   vtkIntArray *writerTypeArray =
-    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "writerTypes" ) );
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "writerType" ) );
   if( NULL == writerTypeArray )
   {
-    vtkErrorMacro( << "Input graph vertex data does not have a 'writerTypes' array." );
+    vtkErrorMacro( << "Input graph vertex data does not have a 'writerType' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
@@ -285,8 +329,28 @@ int ovRestrictGraphFilter::RequestData(
       if( ovOrlandoReader::WriterTypeWriter == sourceWriterType ||
           ovOrlandoReader::WriterTypeWriter == targetWriterType ) continue;
     }
-
+    
     // STEP #2
+    // make sure both vertices are within the specified dates, if necessary
+    if( this->StartDate->IsSet() || this->EndDate->IsSet() )
+    {
+      int startDate = this->StartDate->ToInt();
+      int endDate = this->EndDate->ToInt();
+      int sourceBirthDate = birthArray->GetValue( e.Source );
+      int sourceDeathDate = deathArray->GetValue( e.Source );
+      int targetBirthDate = birthArray->GetValue( e.Target );
+      int targetDeathDate = deathArray->GetValue( e.Target );
+
+      // Don't include the edge if, for both the source and target, the death date occurs
+      // before the start date or the birth date occurs after the end date.  Since not all
+      // vertices have birth/death information, also make sure the dates are valid (not 0)
+      if( ( 0 < startDate && 0 < sourceDeathDate && sourceDeathDate < startDate ) ||
+          ( 0 < endDate   && 0 < sourceBirthDate && sourceBirthDate > endDate   ) ||
+          ( 0 < startDate && 0 < targetDeathDate && targetDeathDate < startDate ) ||
+          ( 0 < endDate   && 0 < targetBirthDate && targetBirthDate > endDate   ) ) continue;
+    }
+
+    // STEP #3
     // make sure that the edge itself is to be included
     vtkIdType matchIndex = -1;
     vtkstd::vector< vtkIdType >::iterator it;

@@ -95,6 +95,12 @@ public:
 
   vtkGetObjectMacro( IncludeTags, vtkStringArray );
   virtual void SetIncludeTags( vtkStringArray* );
+  
+  virtual ovDate* GetStartDate() { return this->StartDate; }
+  virtual void SetStartDate( ovDate* );
+
+  virtual ovDate* GetEndDate() { return this->EndDate; }
+  virtual void SetEndDate( ovDate* );
 
 protected:
   ovRestrictGraphFilter();
@@ -109,6 +115,8 @@ protected:
   int GenderTypeRestriction;
   int WriterTypeRestriction;
   vtkStringArray *IncludeTags;
+  ovDate *StartDate;
+  ovDate *EndDate;
   
 private:
   ovRestrictGraphFilter( const ovRestrictGraphFilter& ); // Not implemented

@@ -63,22 +63,18 @@ inline int ovGetMaxDays( int year, int month )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 struct ovDate
 {
-  unsigned short year;
-  unsigned short month;
-  unsigned short day;
+  int year;
+  int month;
+  int day;
   ovDate() : year( 0 ), month( 0 ), day( 0 ) {}
-  ovDate( unsigned short y, unsigned short m, unsigned short d ) : year( y ), month( m ), day( d )
+  ovDate( int y, int m, int d ) : year( y ), month( m ), day( d )
   { this->Validate(); }
 
-  ovDate( int date )
-  {
-    this->day = date % 100;
-    this->month = ( ( date - this->day ) % 10000 ) / 100;
-    this->year = ( date - this->month - this->day ) / 10000;
-    this->Validate();
-  }
+  ovDate( int date ) { this->SetDate( date ); }
 
-  ovDate( const char *date )
+  ovDate( const char *date ) { this->SetDate( date ); }
+
+  void SetDate( const char *date )
   {
     this->year = 0;
     this->month = 0;
@@ -100,6 +96,16 @@ struct ovDate
     }
     this->Validate();
   }
+
+  void SetDate( int date )
+  {
+    this->day = date % 100;
+    this->month = ( ( date - this->day ) % 10000 ) / 100;
+    this->year = ( date - this->month - this->day ) / 10000;
+    this->Validate();
+  }
+  
+  bool IsSet() { return 0 < this->year; }
 
   int ToInt() { return 10000 * this->year + 100 * month + day; }
 
