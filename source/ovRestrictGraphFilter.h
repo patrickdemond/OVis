@@ -38,6 +38,36 @@ public:
   vtkGetMacro( AuthorsOnly, int );
   vtkBooleanMacro( AuthorsOnly, int );
 
+  // Description:
+  // Set/get the Tags array name
+  virtual ovString GetTagsArrayName() { return this->TagsArrayName; }
+  virtual void SetTagsArrayName( const ovString &name );
+  
+  // Description:
+  // Set/get the Gender array name
+  virtual ovString GetGenderArrayName() { return this->GenderArrayName; }
+  virtual void SetGenderArrayName( const ovString &name );
+  
+  // Description:
+  // Set/get the Birth array name
+  virtual ovString GetBirthArrayName() { return this->BirthArrayName; }
+  virtual void SetBirthArrayName( const ovString &name );
+  
+  // Description:
+  // Set/get the Death array name
+  virtual ovString GetDeathArrayName() { return this->DeathArrayName; }
+  virtual void SetDeathArrayName( const ovString &name );
+  
+  // Description:
+  // Set/get the WriterType array name
+  virtual ovString GetWriterTypeArrayName() { return this->WriterTypeArrayName; }
+  virtual void SetWriterTypeArrayName( const ovString &name );
+  
+  // Description:
+  // Set/get the EdgeColor array name
+  virtual ovString GetEdgeColorArrayName() { return this->EdgeColorArrayName; }
+  virtual void SetEdgeColorArrayName( const ovString &name );
+  
   enum GenderTypeRestriction
   {
     GenderTypeRestrictionMale,
@@ -110,7 +140,15 @@ protected:
     vtkInformation*, 
     vtkInformationVector**, 
     vtkInformationVector* );
- 
+  
+  // array names
+  ovString TagsArrayName;
+  ovString GenderArrayName;
+  ovString BirthArrayName;
+  ovString DeathArrayName;
+  ovString WriterTypeArrayName;
+  ovString EdgeColorArrayName;
+
   int AuthorsOnly;
   int GenderTypeRestriction;
   int WriterTypeRestriction;

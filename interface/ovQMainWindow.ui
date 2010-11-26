@@ -906,7 +906,7 @@
     <string>Re-Center Graph</string>
    </property>
    <property name="shortcut">
-    <string>R, Shift+R</string>
+    <string>Shift+R</string>
    </property>
   </action>
  </widget>

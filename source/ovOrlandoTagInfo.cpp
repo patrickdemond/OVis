@@ -217,19 +217,13 @@ int ovOrlandoTagInfo::FindTagIndex( ovString name )
   int index = -1; // assume the tag isn't present
   ovTag *tag;
   
-  tag = new ovTag( name );
-  ovTagVectorRange range = 
-    vtkstd::equal_range(
-      this->TagVector.begin(),
-      this->TagVector.end(), tag,
-      ovTagSort );
-  delete tag;
-
-  // if the range is 0 (ends are equal) then the tag wasn't found
-  if( range.first != range.second )
+  for( ovTagVector::iterator it = this->TagVector.begin(); it != this->TagVector.end(); ++it )
   {
-    tag = *( range.first );
-    index = static_cast< int >( range.first - this->TagVector.begin() );
+    if( (*it)->name == name )
+    {
+      index = static_cast< int >( it - this->TagVector.begin() );
+      break;
+    }
   }
 
   return index;

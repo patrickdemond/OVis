@@ -37,8 +37,8 @@
 #include "vtkViewTheme.h"
 
 // experimental
-//#include "vtkDataSetAttributes.h"
-//#include "vtkVariantArray.h"
+#include "vtkDataSetAttributes.h"
+#include "vtkVariantArray.h"
 
 #include "ovQDateDialog.h"
 #include "source/ovOrlandoReader.h"
@@ -639,7 +639,7 @@ void ovQMainWindow::slotTagTreeItemChanged( QTreeWidgetItem* item, int column )
   if( this->AutoUpdateIncludeTags )
   {
     this->UpdateIncludeTags();
-    this->RenderGraph();
+    this->RenderGraph( true );
   }
 }
 
@@ -691,4 +691,7 @@ void ovQMainWindow::RenderGraph( bool resetCamera )
     this->RestrictGraphFilter->GetOutput()->GetNumberOfVertices(),
     this->RestrictGraphFilter->GetOutput()->GetNumberOfEdges() );
   this->ui->statusbar->showMessage( buffer );
+
+  vtkVariantArray *colorArray = vtkVariantArray::SafeDownCast(
+    this->RestrictGraphFilter->GetOutput()->GetEdgeData()->GetAbstractArray( "color" ) );
 }

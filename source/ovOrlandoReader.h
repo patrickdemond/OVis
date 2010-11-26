@@ -42,7 +42,7 @@ public:
   // Description:
   // Set/get the file name
   virtual ovString GetFileName() { return this->FileName; }
-  virtual void SetFileName( ovString name );
+  virtual void SetFileName( const ovString &fileName );
   
   // Description:
   // Get the output of this reader.

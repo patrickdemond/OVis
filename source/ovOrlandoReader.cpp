@@ -300,6 +300,10 @@ int ovOrlandoReader::ProcessRequest(
               int index = -1;
               if( !( this->CurrentNode.IsEmptyElement ) && this->CurrentNode.IsOpeningElement() )
               {
+if( 0 == xmlStrcmp( BAD_CAST "RECEPTION", this->CurrentNode.Name ) )
+{
+  int asdf = 0;
+}
                 index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
                 if( 0 <= index ) // we found a match
                 {
@@ -459,7 +463,7 @@ void ovOrlandoReader::PrintSelf( ostream &os, vtkIndent indent )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::SetFileName( ovString fileName )
+void ovOrlandoReader::SetFileName( const ovString &fileName )
 {
   vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
                  << "FileName to " << fileName.c_str() );

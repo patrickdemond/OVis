@@ -47,6 +47,15 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   // year 0 means no date
   this->StartDate = new ovDate( 0 );
   this->EndDate = new ovDate( 0 );
+
+  // default array names
+  this->SetTagsArrayName( "tags" );
+  this->SetGenderArrayName( "gender" );
+  this->SetBirthArrayName( "birth" );
+  this->SetDeathArrayName( "death" );
+  this->SetWriterTypeArrayName( "writerType" );
+  this->SetEdgeColorArrayName( "color" );
+
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -61,6 +70,84 @@ ovRestrictGraphFilter::~ovRestrictGraphFilter()
 void ovRestrictGraphFilter::PrintSelf( ostream& os, vtkIndent indent )
 {
   this->Superclass::PrintSelf( os, indent );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetTagsArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "TagsArrayName to " << name.c_str() );
+
+  if( name != this->TagsArrayName )
+  {
+    this->TagsArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetGenderArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "GenderArrayName to " << name.c_str() );
+
+  if( name != this->GenderArrayName )
+  {
+    this->GenderArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetBirthArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "BirthArrayName to " << name.c_str() );
+
+  if( name != this->BirthArrayName )
+  {
+    this->BirthArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetDeathArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "DeathArrayName to " << name.c_str() );
+
+  if( name != this->DeathArrayName )
+  {
+    this->DeathArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetWriterTypeArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "WriterTypeArrayName to " << name.c_str() );
+
+  if( name != this->WriterTypeArrayName )
+  {
+    this->WriterTypeArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetEdgeColorArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "EdgeColorArrayName to " << name.c_str() );
+
+  if( name != this->EdgeColorArrayName )
+  {
+    this->EdgeColorArrayName = name;
+    this->Modified();
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -162,46 +249,56 @@ int ovRestrictGraphFilter::RequestData(
 
   // Make sure we have all the necessary graph arrays
   vtkStringArray *tagBitArray =
-    vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray( "tags" ) );
+    vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray(
+      this->TagsArrayName.c_str() ) );
   if( NULL == tagBitArray )
   {
-    vtkErrorMacro( << "Input graph edge data does not have a 'tags' array." );
+    vtkErrorMacro( << "Input graph edge data does not have a '"
+                   << this->TagsArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
   
   vtkIntArray *genderArray =
-    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "gender" ) );
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->GenderArrayName.c_str() ) );
   if( NULL == genderArray )
   {
-    vtkErrorMacro( << "Input graph vertex data does not have a 'gender' array." );
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->GenderArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
   
   vtkIntArray *birthArray =
-    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "birth" ) );
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->BirthArrayName.c_str() ) );
   if( NULL == birthArray )
   {
-    vtkErrorMacro( << "Input graph vertex data does not have a 'birth' array." );
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->BirthArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
   
   vtkIntArray *deathArray =
-    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "death" ) );
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->DeathArrayName.c_str() ) );
   if( NULL == deathArray )
   {
-    vtkErrorMacro( << "Input graph vertex data does not have a 'death' array." );
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->DeathArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
   
   vtkIntArray *writerTypeArray =
-    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray( "writerType" ) );
+    vtkIntArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->WriterTypeArrayName.c_str() ) );
   if( NULL == writerTypeArray )
   {
-    vtkErrorMacro( << "Input graph vertex data does not have a 'writerType' array." );
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->WriterTypeArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
@@ -246,10 +343,11 @@ int ovRestrictGraphFilter::RequestData(
   builder->GetGraph()->SetPoints( builderPoints );
 
   vtkVariantArray *colorArray = vtkVariantArray::SafeDownCast(
-    builderEdgeData->GetAbstractArray( "color" ) );
+    builderEdgeData->GetAbstractArray( this->EdgeColorArrayName.c_str() ) );
   if( NULL == colorArray )
   {
-    vtkErrorMacro( << "Input graph edge data does not have a 'color' array." );
+    vtkErrorMacro( << "Input graph edge data does not have a '"
+                   << this->EdgeColorArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
