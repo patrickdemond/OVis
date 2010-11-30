@@ -28,8 +28,19 @@ SET( OVIS_SOURCE
   source/ovOrlandoReader.cpp
   source/ovOrlandoTagInfo.cpp
   source/ovRestrictGraphFilter.cpp
+  source/ovSession.cpp
+  source/ovSessionReader.cpp
+  source/ovSessionWriter.cpp
+  source/ovXMLReader.cpp
+  source/ovXMLWriter.cpp
   interface/ovQDateDialog.cpp
   interface/ovQMainWindow.cpp
+)
+
+SET_SOURCE_FILES_PROPERTIES(
+  ovXMLReader.cxx
+  ovXMLWriter.cxx
+  ABSTRACT
 )
 
 SET( OVIS_UIS

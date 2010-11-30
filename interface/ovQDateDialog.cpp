@@ -313,7 +313,7 @@ void ovQDateDialog::slotMonthComboBoxCurrentIndexChanged( int index )
   {
     // determine how many days should be in the day drop down
     char buffer[64];
-    int maxDays = ovGetMaxDays( year, month );
+    int maxDays = ovDate::DaysInMonth( year, month );
     this->ui->dayComboBox->clear();
     this->ui->dayComboBox->addItem( "none" );
     for( int i = 1; i <= maxDays; i++ )

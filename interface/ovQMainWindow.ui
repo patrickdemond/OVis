@@ -116,6 +116,9 @@
         <property name="topMargin">
          <number>0</number>
         </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="QLabel" name="displayPropertiesLabel">
           <property name="minimumSize">
@@ -321,6 +324,27 @@
               <string>BRW or IBR</string>
              </property>
             </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="vertexColorLayout">
+          <property name="topMargin">
+           <number>4</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="authorVertexColorPushButton">
+            <property name="text">
+             <string>Author Color</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="associationVertexColorPushButton">
+            <property name="text">
+             <string>Association Color</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -604,8 +628,18 @@
     <addaction name="menuViewSetVertexStyle"/>
     <addaction name="menuSet_Layout_Strategy"/>
    </widget>
+   <widget class="QMenu" name="menuSession">
+    <property name="title">
+     <string>Session</string>
+    </property>
+    <addaction name="actionOpenSession"/>
+    <addaction name="actionReloadSession"/>
+    <addaction name="actionSaveSession"/>
+    <addaction name="actionSaveSessionAs"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuSession"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionFileOpen">
@@ -907,6 +941,29 @@
    </property>
    <property name="shortcut">
     <string>Shift+R</string>
+   </property>
+  </action>
+  <action name="actionOpenSession">
+   <property name="text">
+    <string>Open Session</string>
+   </property>
+  </action>
+  <action name="actionSaveSession">
+   <property name="text">
+    <string>Save Session</string>
+   </property>
+  </action>
+  <action name="actionSaveSessionAs">
+   <property name="text">
+    <string>Save Session As...</string>
+   </property>
+  </action>
+  <action name="actionReloadSession">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Reload Session</string>
    </property>
   </action>
  </widget>

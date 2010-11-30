@@ -25,10 +25,9 @@
 #include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkVariantArray.h"
 
-#include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
 
-vtkCxxRevisionMacro( ovOrlandoReader, "$Revision: 1.4 $" );
+vtkCxxRevisionMacro( ovOrlandoReader, "$Revision: $" );
 vtkStandardNewMacro( ovOrlandoReader );
 
 // this undef is required on the hp. vtkMutexLock ends up including
@@ -38,34 +37,16 @@ vtkStandardNewMacro( ovOrlandoReader );
 #endif
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovOrlandoReader::ovOrlandoReader()
-{
-  this->FileName = "";
-  this->Reader = NULL;
-  this->SetNumberOfInputPorts( 0 );
-  this->SetNumberOfOutputPorts( 1 );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovOrlandoReader::~ovOrlandoReader()
-{
-  if( NULL != this->Reader )
-  {
-    this->FreeReader();
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkGraph* ovOrlandoReader::GetOutput(int idx)
 {
   return vtkGraph::SafeDownCast( this->GetOutputDataObject( idx ) );
-}
+} 
 
 //----------------------------------------------------------------------------
 void ovOrlandoReader::SetOutput( vtkGraph *output )
 {
   this->GetExecutive()->SetOutputData( 0, output );
-}
+} 
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int ovOrlandoReader::RequestDataObject(
@@ -106,7 +87,6 @@ int ovOrlandoReader::ProcessRequest(
     return 1;
   }
 
-  
   if( request->Has( vtkDemandDrivenPipeline::REQUEST_DATA() ) &&
       0 == outInfo->Get( vtkStreamingDemandDrivenPipeline::UPDATE_PIECE_NUMBER() ) )
   {
@@ -300,10 +280,6 @@ int ovOrlandoReader::ProcessRequest(
               int index = -1;
               if( !( this->CurrentNode.IsEmptyElement ) && this->CurrentNode.IsOpeningElement() )
               {
-if( 0 == xmlStrcmp( BAD_CAST "RECEPTION", this->CurrentNode.Name ) )
-{
-  int asdf = 0;
-}
                 index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
                 if( 0 <= index ) // we found a match
                 {
@@ -440,7 +416,7 @@ if( 0 == xmlStrcmp( BAD_CAST "RECEPTION", this->CurrentNode.Name ) )
     }
   }
 
-  return this->Superclass::ProcessRequest(request, inputVector, outputVector);
+  return this->Superclass::ProcessRequest( request, inputVector, outputVector );
 }
 
 
@@ -449,95 +425,4 @@ int ovOrlandoReader::FillOutputPortInformation( int, vtkInformation* info )
 {
   info->Set( vtkDataObject::DATA_TYPE_NAME(), "vtkGraph" );
   return 1;
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::PrintSelf( ostream &os, vtkIndent indent )
-{
-  Superclass::PrintSelf( os, indent );
-
-  os << indent << "FileName: \"" << this->FileName << "\"" << endl;
-  os << indent << "Reader: " << this->Reader << endl;
-  os << indent << "CurrentNode: " << endl;
-  this->CurrentNode.PrintSelf( os, indent.GetNextIndent() );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::SetFileName( const ovString &fileName )
-{
-  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
-                 << "FileName to " << fileName.c_str() );
-
-  if( fileName != this->FileName )
-  {
-    this->FileName = fileName;
-    this->Modified();
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::CreateReader()
-{
-  this->Reader = xmlReaderForFile( this->FileName.c_str(), NULL, 0 );
-  if( NULL == this->Reader )
-  {
-    throw vtkstd::runtime_error( "Unable to open file." );
-  }
-  this->CurrentNode.Clear();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int ovOrlandoReader::ParseNode()
-{
-  if( NULL == this->Reader )
-  {
-    throw vtkstd::runtime_error( "No file opened." );
-  }
-
-  int result = xmlTextReaderRead( this->Reader );
-  if( -1 == result )
-  { // error
-    throw vtkstd::runtime_error( "Parse error." );
-  }
-  else if( 0 == result )
-  { // end of file
-    this->CurrentNode.Clear();
-  }
-  else
-  { // successful read
-    this->CurrentNode.Name = xmlTextReaderConstName( this->Reader );
-    if( this->CurrentNode.Name == NULL ) this->CurrentNode.Name = BAD_CAST "--";
-    this->CurrentNode.Content = xmlTextReaderConstValue( this->Reader );
-    this->CurrentNode.Depth = xmlTextReaderDepth( this->Reader );
-    this->CurrentNode.NodeType = xmlTextReaderNodeType( this->Reader );
-    this->CurrentNode.IsEmptyElement = xmlTextReaderIsEmptyElement( this->Reader );
-    this->CurrentNode.HasContent = xmlTextReaderHasValue( this->Reader );
-  }
-
-  return result;
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::RewindReader()
-{
-  if( NULL == this->Reader )
-  {
-    throw vtkstd::runtime_error( "No file opened." );
-  }
-  
-  // close and reopen the current file
-  this->FreeReader();
-  this->CreateReader();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoReader::FreeReader()
-{
-  if( NULL == this->Reader )
-  {
-    throw vtkstd::runtime_error( "No file opened." );
-  }
-
-  xmlFreeTextReader( this->Reader );
-  this->Reader = NULL;
 }

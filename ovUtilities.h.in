@@ -34,31 +34,7 @@ typedef vtkstd::string ovString;
 typedef vtkstd::vector< ovString > ovStringVector;
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-inline int ovGetMaxDays( int year, int month )
-{
-  if( 1 == month || 3 == month || 5 == month || 7 == month ||
-      8 == month || 10 == month || 12 == month )
-  {
-    return 31;
-  }
-
-  if( 4 == month || 6 == month || 9 == month || 11 == month )
-  {
-    return 30;
-  }
-  
-  // The only month left is February, the "our calendar doesn't actually work
-  // so let's use this month to try and fix it" month.  We need to determine
-  // whether or not the given year is a leap year.  The algorithm to determine
-  // whether this is a leap year taken from wikipedia:
-  // http://en.wikipedia.org/wiki/Leap_year
-  bool leapYear = 0 == year % 400 ? true
-                : 0 == year % 100 ? false
-                : 0 == year % 4 ? true
-                : false;
-
-  return leapYear ? 29 : 28;
-}
+inline bool ovIsOppositeColorWhite( double r, double g, double b ) { return r + g <= 1.7; }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 struct ovDate
@@ -67,12 +43,28 @@ struct ovDate
   int month;
   int day;
   ovDate() : year( 0 ), month( 0 ), day( 0 ) {}
-  ovDate( int y, int m, int d ) : year( y ), month( m ), day( d )
-  { this->Validate(); }
-
+  ovDate( int y, int m, int d ) : year( y ), month( m ), day( d ) { this->Validate(); }
   ovDate( int date ) { this->SetDate( date ); }
-
   ovDate( const char *date ) { this->SetDate( date ); }
+
+  static int DaysInMonth( int year, int month )
+  {
+    if( 1 == month || 3 == month || 5 == month || 7 == month ||
+        8 == month || 10 == month || 12 == month ) return 31;
+    if( 4 == month || 6 == month || 9 == month || 11 == month ) return 30;
+    
+    // The only month left is February, the "our calendar doesn't actually work
+    // so let's use this month to try and fix it" month.  We need to determine
+    // whether or not the given year is a leap year.  The algorithm to determine
+    // whether this is a leap year taken from wikipedia:
+    // http://en.wikipedia.org/wiki/Leap_year
+    bool leapYear = 0 == year % 400 ? true
+                  : 0 == year % 100 ? false
+                  : 0 == year % 4 ? true
+                  : false;
+  
+    return leapYear ? 29 : 28;
+  }
 
   void SetDate( const char *date )
   {
@@ -105,11 +97,9 @@ struct ovDate
     this->Validate();
   }
   
-  bool IsSet() { return 0 < this->year; }
-
-  int ToInt() { return 10000 * this->year + 100 * month + day; }
-
-  void ToString( ovString &dateString )
+  bool IsSet() { return 0 < this->year; } const
+  int ToInt() { return 10000 * this->year + 100 * month + day; } const
+  void ToString( ovString &dateString ) const
   {
     char buffer[64];
     sprintf( buffer, this->year ? "%d-%02d-%02d" : "", this->year, this->month, this->day );
@@ -123,17 +113,17 @@ struct ovDate
     if( 0 > this->month || 12 < this->month ) this->month = 0;
 
     // not necessary to bother with exact number of days per month
-    if( 0 > this->day || ovGetMaxDays( this->year, this->month ) < this->day ) this->day = 0;
+    if( 0 > this->day || ovDate::DaysInMonth( this->year, this->month ) < this->day ) this->day = 0;
   }
 
-  bool operator == ( ovDate rhs )
+  bool operator == ( const ovDate &rhs ) const
   {
     return this->year == rhs.year &&
            this->month == rhs.month &&
            this->day == rhs.day;
   }
 
-  bool operator < ( ovDate rhs )
+  bool operator < ( const ovDate &rhs ) const
   {
     return this->year < rhs.year ||
            ( this->year == rhs.year &&
@@ -143,10 +133,10 @@ struct ovDate
              this->day < rhs.day );
   }
 
-  bool operator <= ( ovDate rhs ) { return *this == rhs || *this < rhs; }
-  bool operator > ( ovDate rhs ) { return rhs < *this; }
-  bool operator >= ( ovDate rhs ) { return rhs <= *this; }
-  bool operator != ( ovDate rhs ) { return !( *this == rhs ); }
+  bool operator <= ( const ovDate &rhs ) const { return *this == rhs || *this < rhs; }
+  bool operator > ( const ovDate &rhs ) const { return rhs < *this; }
+  bool operator >= ( const ovDate &rhs ) const { return rhs <= *this; }
+  bool operator != ( const ovDate &rhs ) const { return !( *this == rhs ); }
 };
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

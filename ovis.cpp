@@ -18,16 +18,12 @@
 // main function
 int main( int argc, char** argv )
 {
-  // create application
+  // create application and set some defaults
   QApplication application( argc, argv );
 
-  // create main window
-  ovQMainWindow mainWindow;
-
   // set main widget for the application to the main window
+  ovQMainWindow mainWindow;
   application.setMainWidget( &mainWindow );  
-  
-  // show the main window
   mainWindow.show();
 
   // return the result of the executed application

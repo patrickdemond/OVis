@@ -15,10 +15,12 @@
 #include <time.h>
 
 #include <QActionGroup>
+#include <QCloseEvent>
 #include <QColorDialog>
 #include <QComboBox>
-#include <QMessageBox>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QSettings>
 #include <QTreeWidget>
 
 #include "vtkCommand.h"
@@ -118,9 +120,13 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->actionFileOpen, SIGNAL( triggered() ),
     this, SLOT( slotFileOpen() ) );
-  QObject::connect(
-    this->ui->actionFileExit, SIGNAL( triggered() ),
-    this, SLOT( slotFileExit() ) );
+
+  this->ui->actionFileExit->setShortcuts( QKeySequence::Quit );
+  QObject::connect( this->ui->actionFileExit, SIGNAL( triggered() ),
+    qApp, SLOT( closeAllWindows() ) );
+//  QObject::connect(
+//    this->ui->actionFileExit, SIGNAL( triggered() ),
+//    this, SLOT( slotFileExit() ) );
   
   // connect the view menu items
   QObject::connect(
@@ -267,10 +273,37 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->GraphLayoutViewTheme->SetBackgroundColor2( 0.9, 0.9, 0.9 );
   this->GraphLayoutViewTheme->SetPointSize( this->ui->vertexSizeSlider->value() );
   this->GraphLayoutViewTheme->SetLineWidth( this->ui->edgeSizeSlider->value() );
-  vtkLookupTable *lut =
-    vtkLookupTable::SafeDownCast( this->GraphLayoutViewTheme->GetCellLookupTable() );
-  lut->SetAlphaRange( 1.0, 1.0 );
+  this->GraphLayoutViewTheme->ScalePointLookupTableOff();
+  this->GraphLayoutViewTheme->ScaleCellLookupTableOff();
+  // TODO: authors are set to 1 and associations to 0.  This isn't very well designed, but
+  //       things have been left this way for now since likely vertex coloring will expand
+  //       substantially from its current behaviour
+  vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+    this->GraphLayoutViewTheme->GetPointLookupTable() );
+  lut->SetTableRange( 0, 1 );
+  lut->SetNumberOfTableValues( 2 );
+  lut->Build();
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  
+  // set the colors of the vertex butons
+  double *tableColor;
+  char buffer[512];
+  
+  tableColor = lut->GetTableValue( 0 );
+  sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
+    ovIsOppositeColorWhite( tableColor[0], tableColor[1], tableColor[2] ) ? "white" : "black",
+    static_cast< int >( tableColor[0]*255 ),
+    static_cast< int >( tableColor[1]*255 ),
+    static_cast< int >( tableColor[2]*255 ) );
+  this->ui->associationVertexColorPushButton->setStyleSheet( buffer );
+
+  tableColor = lut->GetTableValue( 1 );
+  sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
+    ovIsOppositeColorWhite( tableColor[0], tableColor[1], tableColor[2] ) ? "white" : "black",
+    static_cast< int >( tableColor[0]*255 ),
+    static_cast< int >( tableColor[1]*255 ),
+    static_cast< int >( tableColor[2]*255 ) );
+  this->ui->authorVertexColorPushButton->setStyleSheet( buffer );
   
   // set up the reader and filters
   this->OrlandoReader = vtkSmartPointer< ovOrlandoReader >::New();
@@ -295,6 +328,12 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->edgeSizeSlider, SIGNAL( valueChanged( int ) ),
     this, SLOT( slotEdgeSizeSliderValueChanged( int ) ) );
+  QObject::connect(
+    this->ui->authorVertexColorPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotAuthorVertexColorPushButtonClicked() ) );
+  QObject::connect(
+    this->ui->associationVertexColorPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotAssociationVertexColorPushButtonClicked() ) );
   
   // set up the date restriction widgets
   QObject::connect(
@@ -312,6 +351,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
 
   // set up the tag tree
   this->ui->tagTreeWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
+  this->ui->tagTreeWidget->setExpandsOnDoubleClick( false );
   QObject::connect(
     this->ui->tagTreeCheckButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotTagTreeCheckButtonClicked() ) );
@@ -324,6 +364,8 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->tagTreeWidget, SIGNAL( itemDoubleClicked( QTreeWidgetItem*, int ) ),
     this, SLOT( slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int ) ) );
+  
+  this->readSettings();
 
   // start updating the include tags automatically
   this->AutoUpdateIncludeTags = true;
@@ -332,6 +374,74 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovQMainWindow::~ovQMainWindow()
 {
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::closeEvent( QCloseEvent *event )
+{
+  if( this->maybeSave() )
+  {
+    writeSettings();
+    event->accept();
+  }
+  else
+  {
+    event->ignore();
+  }
+}
+
+bool ovQMainWindow::maybeSave()
+{
+  if( false /* TODO: check if session has changed */ )
+  {
+    QMessageBox::StandardButton messageBox;
+    messageBox = QMessageBox::warning( this, tr("Application"),
+      tr("The document has been modified.\n"
+         "Do you want to save your changes?"),
+      QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel );
+
+    if( messageBox == QMessageBox::Save )
+    {
+      // TODO: save session here
+      return true;
+    }
+    else if (messageBox == QMessageBox::Cancel)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::writeSettings()
+{
+  QSettings settings( "sharcnet", "ovis" );
+  settings.beginGroup( "MainWindow" );
+  settings.setValue( "size", this->size() );
+  settings.setValue( "pos", this->pos() );
+  settings.setValue( "maximized", this->isMaximized() );
+  settings.endGroup();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::readSettings()
+{
+  QSettings settings( "sharcnet", "ovis" );
+  settings.beginGroup( "MainWindow" );
+  if( settings.contains( "size" ) )
+  {
+    this->resize( settings.value( "size" ).toSize() );
+  }
+  if( settings.contains( "pos" ) )
+  {
+    this->move( settings.value( "pos" ).toPoint() );
+  }
+  if( settings.contains( "maximized" ) && settings.value( "maximized" ).toBool() )
+  {
+    this->showMaximized();
+  }
+  settings.endGroup();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -350,7 +460,8 @@ void ovQMainWindow::slotFileOpen()
     ovTagVector tags;
     ovTagVector::iterator it;
     QTreeWidgetItem *item, *parent;
-    ovOrlandoTagInfo::GetInfo()->GetTags( tags );
+    ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
+    tagInfo->GetTags( tags );
     
     bool tagParentError = false; // we only want to display the tag tree error once
     this->ui->tagTreeWidget->clear();
@@ -398,8 +509,27 @@ void ovQMainWindow::slotFileOpen()
       if( 0 == tag->parent.length() ) this->ui->tagTreeWidget->addTopLevelItem( item );
     }
     
-    // manually update the graph view
-    //this->UpdateIncludeTags();
+    // define the range of the edge lookup table based on the number of available tags
+    double rgb[3], range[] = { 0, tags.size() - 1 };
+    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+      this->GraphLayoutViewTheme->GetCellLookupTable() );
+    lut->SetTableRange( range );
+    lut->SetNumberOfTableValues( tags.size() );
+    lut->Build();
+    
+    // color tag names in the tree widget based on the LUT
+    QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+    while( *treeIt )
+    {
+      int index = tagInfo->FindTagIndex( (*treeIt)->text( 0 ).toStdString().c_str() );
+      lut->GetColor( index, rgb );
+      (*treeIt)->setBackground( 0, QColor( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 ) );
+      (*treeIt)->setForeground( 0, ovIsOppositeColorWhite( rgb[0], rgb[1], rgb[2] )
+        ? QColor(255, 255, 255, 255)
+        : QColor(0, 0, 0, 255) );
+      treeIt++;
+    }
+
     this->AutoUpdateIncludeTags = true;
     
     // load the orlando file and render
@@ -408,12 +538,6 @@ void ovQMainWindow::slotFileOpen()
     this->UpdateIncludeTags();
     this->RenderGraph( true );
   }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotFileExit()
-{
-  qApp->exit();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -528,6 +652,66 @@ void ovQMainWindow::slotVertexSizeSliderValueChanged( int value )
   this->GraphLayoutViewTheme->SetPointSize( value * ( VTK_VERTEX_GLYPH == type ? 1 : 2 ) );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotAuthorVertexColorPushButtonClicked()
+{
+  QColor color = QColorDialog::getColor(
+    this->ui->authorVertexColorPushButton->palette().color( QPalette::Active, QPalette::Button ),
+    this, "Select author vertex color" );
+
+  if( color.isValid() )
+  {
+    // change the button color
+    char buffer[512];
+    sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
+      ovIsOppositeColorWhite( color.redF(), color.greenF(), color.blueF() ) ? "white" : "black",
+      color.red(), color.green(), color.blue() );
+    this->ui->authorVertexColorPushButton->setStyleSheet( buffer );
+    
+    // change the LUT color
+    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+      this->GraphLayoutViewTheme->GetPointLookupTable() );
+    lut->SetTableValue( 1, color.redF(), color.greenF(), color.blueF() );
+
+    // Calling Render() should be enough to update the graph view, but for some reason
+    // it is also necessary to simulate a left mouse button click.  This seems harmless
+    // enough.
+    this->GraphLayoutView->Render();
+    this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonPressEvent );
+    this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonReleaseEvent );
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotAssociationVertexColorPushButtonClicked()
+{
+  QColor color = QColorDialog::getColor(
+    this->ui->associationVertexColorPushButton->palette().color( QPalette::Active, QPalette::Button ),
+    this, "Select association vertex color" );
+
+  if( color.isValid() )
+  {
+    // change the button color
+    char buffer[512];
+    sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
+      ovIsOppositeColorWhite( color.redF(), color.greenF(), color.blueF() ) ? "white" : "black",
+      color.red(), color.green(), color.blue() );
+    this->ui->associationVertexColorPushButton->setStyleSheet( buffer );
+    
+    // change the LUT color
+    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+      this->GraphLayoutViewTheme->GetPointLookupTable() );
+    lut->SetTableValue( 0, color.redF(), color.greenF(), color.blueF() );
+
+    // Calling Render() should be enough to update the graph view, but for some reason
+    // it is also necessary to simulate a left mouse button click.  This seems harmless
+    // enough.
+    this->GraphLayoutView->Render();
+    this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonPressEvent );
+    this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonReleaseEvent );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -646,9 +830,39 @@ void ovQMainWindow::slotTagTreeItemChanged( QTreeWidgetItem* item, int column )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotTagTreeItemDoubleClicked( QTreeWidgetItem* item, int column )
 {
-  // TODO: implement
-  // the checked state of the item may have changed, update the tag info singleton
-  // cout << item->text( column ).toStdString() << endl;
+  // open a color-selection dialog using the item's color
+  char buffer[512];
+  sprintf( buffer, "Select color for %s", item->text( column ).toStdString().c_str() );
+  QColor color =
+    QColorDialog::getColor( item->background( column ), this, buffer );
+
+  if( color.isValid() )
+  {
+    // block the tree widget's signals, otherwise itemChanged() will signal the
+    // slotTagTreeItemChanged() method which we don't want
+    this->ui->tagTreeWidget->blockSignals( true );
+
+    // change the item's color
+    item->setBackground( 0, color );
+    item->setForeground( 0, ovIsOppositeColorWhite( color.redF(), color.greenF(), color.blueF() )
+      ? QColor(255, 255, 255, 255)
+      : QColor(0, 0, 0, 255) );
+    this->ui->tagTreeWidget->blockSignals( false );
+
+    // update the LUT with the new color
+    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+      this->GraphLayoutViewTheme->GetCellLookupTable() );
+    lut->SetTableValue(
+      ovOrlandoTagInfo::GetInfo()->FindTagIndex( item->text( column ).toStdString().c_str() ),
+      color.redF(), color.greenF(), color.blueF() );
+
+    // Calling Render() should be enough to update the graph view, but for some reason
+    // it is also necessary to simulate a left mouse button click.  This seems harmless
+    // enough.
+    this->GraphLayoutView->Render();
+    this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonPressEvent );
+    this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonReleaseEvent );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -691,7 +905,4 @@ void ovQMainWindow::RenderGraph( bool resetCamera )
     this->RestrictGraphFilter->GetOutput()->GetNumberOfVertices(),
     this->RestrictGraphFilter->GetOutput()->GetNumberOfEdges() );
   this->ui->statusbar->showMessage( buffer );
-
-  vtkVariantArray *colorArray = vtkVariantArray::SafeDownCast(
-    this->RestrictGraphFilter->GetOutput()->GetEdgeData()->GetAbstractArray( "color" ) );
 }

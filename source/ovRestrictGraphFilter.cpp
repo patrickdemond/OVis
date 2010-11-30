@@ -33,7 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // ovRestrictGraphFilter
 
-vtkCxxRevisionMacro( ovRestrictGraphFilter, "$Revision: 1.2 $" );
+vtkCxxRevisionMacro( ovRestrictGraphFilter, "$Revision: $" );
 vtkStandardNewMacro( ovRestrictGraphFilter );
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

@@ -27,18 +27,10 @@ public:
   //destructor
   ~ovQMainWindow();
   
-  virtual void RenderGraph( bool resetCamera = false );
-  virtual void UpdateIncludeTags();
-  virtual void SetVertexStyle( int );
-  virtual void SetLayoutStrategy( const char* );
-
 public slots:
   //event functions
   virtual void slotFileOpen();
-  virtual void slotFileExit();
-
   virtual void slotReCenterGraph();
-  
   virtual void slotSetBackgroundSolid();
   virtual void slotSetBackgroundTop();
   virtual void slotSetBackgroundBottom();
@@ -74,6 +66,8 @@ public slots:
   virtual void slotWriterComboBoxCurrentIndexChanged( const QString& );
   virtual void slotVertexSizeSliderValueChanged( int );
   virtual void slotEdgeSizeSliderValueChanged( int );
+  virtual void slotAuthorVertexColorPushButtonClicked();
+  virtual void slotAssociationVertexColorPushButtonClicked();
   virtual void slotStartLineEditTextChanged( const QString& );
   virtual void slotStartSetPushButtonClicked();
   virtual void slotEndLineEditTextChanged( const QString& );
@@ -84,6 +78,16 @@ public slots:
   virtual void slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int );
 
 protected:
+  virtual void readSettings();
+  virtual void writeSettings();
+  virtual bool maybeSave();
+  virtual void closeEvent( QCloseEvent *event );
+
+  virtual void RenderGraph( bool resetCamera = false );
+  virtual void UpdateIncludeTags();
+  virtual void SetVertexStyle( int );
+  virtual void SetLayoutStrategy( const char* );
+
   vtkSmartPointer< vtkGraphLayoutView > GraphLayoutView;
   vtkSmartPointer< vtkViewTheme > GraphLayoutViewTheme;
   vtkSmartPointer< ovOrlandoReader > OrlandoReader;
@@ -103,6 +107,7 @@ private:
 
   // Set to false to disable automatic updating of graph
   bool AutoUpdateIncludeTags;
+  bool SkipRenderGraph;
 };
 
 #endif

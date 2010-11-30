@@ -16,7 +16,7 @@
 #include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
 
-vtkCxxRevisionMacro( ovOrlandoTagInfo, "$Revision: 1.4 $" );
+vtkCxxRevisionMacro( ovOrlandoTagInfo, "$Revision: $" );
 
 vtkSmartPointer< ovOrlandoTagInfo > ovOrlandoTagInfo::Instance = NULL; // set the initial singleton
 
