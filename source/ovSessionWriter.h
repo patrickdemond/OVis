@@ -26,7 +26,7 @@
 #include "ovUtilities.h"
 
 class ovSession;
-class vtkStringArray;
+class vtkCamera;
 
 class ovSessionWriter : public ovXMLWriter
 {
@@ -40,11 +40,41 @@ protected:
   ovSessionWriter() {}
   ~ovSessionWriter() {}
 
-  virtual void WriteColor( double[3] );
-  virtual void WriteDate( ovDate& );
-  virtual void WriteTagArray( vtkStringArray* );
-  virtual void WritePosition( double[3] );
-  virtual void WriteClippingRange( double[2] );
+  // Description:
+  // Write an integer element
+  virtual void Write( ovString name, int );
+
+  // Description:
+  // Write a double element
+  virtual void Write( ovString name, double );
+  
+  // Description:
+  // Write a string element
+  virtual void Write( ovString name, ovString );
+  
+  // Description:
+  // Write an rgba color element
+  virtual void WriteColor( ovString name, double[4] );
+  
+  // Description:
+  // Write a date element
+  virtual void Write( ovString name, ovDate );
+  
+  // Description:
+  // Write a tag list element
+  virtual void Write( ovTagVector* );
+  
+  // Description:
+  // Write a coordinates element
+  virtual void WriteCoordinates( ovString name, double[3] );
+  
+  // Description:
+  // Write a distance range element
+  virtual void WriteDistanceRange( ovString name, double[2] );
+
+  // Description:
+  // Write a camera element
+  virtual void Write( vtkCamera* );
 
 private:
   ovSessionWriter( const ovSessionWriter& );  // Not implemented.

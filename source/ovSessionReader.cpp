@@ -12,6 +12,7 @@
 #include "ovOrlandoTagInfo.h"
 #include "ovSession.h"
 
+#include "vtkCamera.h"
 #include "vtkCommand.h"
 #include "vtkDataSetAttributes.h"
 #include "vtkDoubleArray.h"
@@ -20,10 +21,10 @@
 #include "vtkIntArray.h"
 #include "vtkObjectFactory.h"
 #include "vtkSmartPointer.h"
-#include "vtkStringArray.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkVariantArray.h"
 
+#include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
 
 vtkCxxRevisionMacro( ovSessionReader, "$Revision: $" );
@@ -92,7 +93,10 @@ int ovSessionReader::ProcessRequest(
 
     try
     {
-      ovString currentTagName, openTagName;
+      int intVal;
+      double doubleVal;
+      ovString string;
+      vtkstd::runtime_error e( "Error reading ovis session file." );
 
       this->CreateReader();
       
@@ -105,131 +109,106 @@ int ovSessionReader::ProcessRequest(
         // --------------------------------------------------------------------------
         if( 0 == xmlStrcmp( BAD_CAST "DataFile", this->CurrentNode.Name ) )
         {
-          output->SetDataFile( ( char* )( xmlTextReaderReadString( this->Reader ) ) );
+          this->ReadString( string );
+          output->SetDataFile( string );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "BackgroundColor1", this->CurrentNode.Name ) )
         {
-          double rgb[] = { 0, 0, 0 };
-          this->ReadColor( rgb );
-          output->SetBackgroundColor1( rgb );
+          double rgba[] = { 0, 0, 0, 0 };
+          this->ReadColor( rgba );
+          output->SetBackgroundColor1( rgba );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "BackgroundColor2", this->CurrentNode.Name ) )
         {
-          double rgb[] = { 0, 0, 0 };
-          this->ReadColor( rgb );
-          output->SetBackgroundColor2( rgb );
+          double rgba[] = { 0, 0, 0, 0 };
+          this->ReadColor( rgba );
+          output->SetBackgroundColor2( rgba );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "VertexStyle", this->CurrentNode.Name ) )
         {
-          output->SetVertexStyle( atoi( ( char* )( xmlTextReaderReadString( this->Reader ) ) ) );
+          this->ReadInt( intVal );
+          output->SetVertexStyle( intVal );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "LayoutStrategy", this->CurrentNode.Name ) )
         {
-          output->SetLayoutStrategy( ( char* )( xmlTextReaderReadString( this->Reader ) ) );
+          this->ReadString( string );
+          output->SetLayoutStrategy( string );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "AuthorsOnly", this->CurrentNode.Name ) )
         {
-          output->SetAuthorsOnly( atoi( ( char* )( xmlTextReaderReadString( this->Reader ) ) ) );
+          this->ReadInt( intVal );
+          output->SetAuthorsOnly( intVal );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "GenderTypeRestriction", this->CurrentNode.Name ) )
         {
-          output->SetGenderTypeRestriction( atoi( ( char* )( xmlTextReaderReadString( this->Reader ) ) ) );
+          this->ReadInt( intVal );
+          output->SetGenderTypeRestriction( intVal );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "WriterTypeRestriction", this->CurrentNode.Name ) )
         {
-          output->SetWriterTypeRestriction( atoi( ( char* )( xmlTextReaderReadString( this->Reader ) ) ) );
+          this->ReadInt( intVal );
+          output->SetWriterTypeRestriction( intVal );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "VertexSize", this->CurrentNode.Name ) )
         {
-          output->SetVertexSize( atoi( ( char* )( xmlTextReaderReadString( this->Reader ) ) ) );
+          this->ReadInt( intVal );
+          output->SetVertexSize( intVal );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "EdgeSize", this->CurrentNode.Name ) )
         {
-          output->SetEdgeSize( atoi( ( char* )( xmlTextReaderReadString( this->Reader ) ) ) );
+          this->ReadInt( intVal );
+          output->SetEdgeSize( intVal );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "AuthorVertexColor", this->CurrentNode.Name ) )
         {
-          double rgb[] = { 0, 0, 0 };
-          this->ReadColor( rgb );
-          output->SetAuthorVertexColor( rgb );
+          double rgba[] = { 0, 0, 0, 0 };
+          this->ReadColor( rgba );
+          output->SetAuthorVertexColor( rgba );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "AssociationVertexColor", this->CurrentNode.Name ) )
         {
-          double rgb[] = { 0, 0, 0 };
-          this->ReadColor( rgb );
-          output->SetAssociationVertexColor( rgb );
+          double rgba[] = { 0, 0, 0, 0 };
+          this->ReadColor( rgba );
+          output->SetAssociationVertexColor( rgba );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "StartDate", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "StartDateRestriction", this->CurrentNode.Name ) )
         {
           ovDate date;
           this->ReadDate( date );
-          output->SetStartDate( date );
+          output->SetStartDateRestriction( date );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "EndDate", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "EndDateRestriction", this->CurrentNode.Name ) )
         {
           ovDate date;
           this->ReadDate( date );
-          output->SetEndDate( date );
+          output->SetEndDateRestriction( date );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "ActiveTags", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "TagList", this->CurrentNode.Name ) )
         {
-          vtkSmartPointer< vtkStringArray > array = vtkSmartPointer< vtkStringArray >::New();
-          this->ReadTagArray( array );
-          output->SetActiveTags( array );
+          vtkstd::for_each( output->GetTagList()->begin(), output->GetTagList()->end(), safe_delete() );
+          output->GetTagList()->empty();
+          if( !this->CurrentNode.IsEmptyElement ) this->ReadTagList( output->GetTagList() );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "CameraPosition", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "Camera", this->CurrentNode.Name ) )
         {
-          double xyz[] = { 0, 0, 0 };
-          this->ReadPosition( xyz );
-          output->SetCameraPosition( xyz );
-        }
-        // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "CameraFocalPoint", this->CurrentNode.Name ) )
-        {
-          double xyz[] = { 0, 0, 0 };
-          this->ReadPosition( xyz );
-          output->SetCameraFocalPoint( xyz );
-        }
-        // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "CameraViewUp", this->CurrentNode.Name ) )
-        {
-          double xyz[] = { 0, 0, 0 };
-          this->ReadPosition( xyz );
-          output->SetCameraViewUp( xyz );
-        }
-        // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "CameraClippingRange", this->CurrentNode.Name ) )
-        {
-          double range[] = { 0, 0 };
-          this->ReadClippingRange( range );
-          output->SetCameraClippingRange( range );
-        }
-        // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "CameraParallelScale", this->CurrentNode.Name ) )
-        {
-          output->SetCameraParallelScale( atof( ( char* )( xmlTextReaderReadString( this->Reader ) ) ) );
-        }
-        // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "CameraComputeViewPlaneNormal", this->CurrentNode.Name ) )
-        {
-          double xyz[] = { 0, 0, 0 };
-          this->ReadPosition( xyz );
-          output->SetCameraComputeViewPlaneNormal( xyz );
+          vtkSmartPointer< vtkCamera > camera = vtkSmartPointer< vtkCamera >::New();
+          this->ReadCamera( camera );
+          output->GetCamera()->DeepCopy( camera );
         }
       } // end while
 
@@ -240,53 +219,121 @@ int ovSessionReader::ProcessRequest(
       vtkErrorMacro( << e.what() );
       return 0;
     }
-    cout << *output << endl;
   }
+
 
   return this->Superclass::ProcessRequest( request, inputVector, outputVector );
 }
 
-//----------------------------------------------------------------------------
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int ovSessionReader::FillOutputPortInformation( int, vtkInformation* info )
 {
   info->Set( vtkDataObject::DATA_TYPE_NAME(), "ovSession" );
   return 1;
 }
 
-//----------------------------------------------------------------------------
-void ovSessionReader::ReadColor( double rgb[3] )
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadInt( int &value )
+{
+  xmlChar *read = xmlTextReaderReadString( this->Reader );
+  if( NULL == read ) throw( vtkstd::runtime_error( "Failed to read integer." ) );
+  value = atoi( ( char* )( read ) );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadDouble( double &value )
+{
+  xmlChar *read = xmlTextReaderReadString( this->Reader );
+  if( NULL == read ) throw( vtkstd::runtime_error( "Failed to read double." ) );
+  value = atof( ( char* )( read ) );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadString( ovString &string )
+{
+  xmlChar *read = xmlTextReaderReadString( this->Reader );
+  if( NULL == read ) throw( vtkstd::runtime_error( "Failed to read string." ) );
+  string = ( char* )( read );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadColor( double rgba[4] )
 {
   xmlNode *node = xmlTextReaderExpand( this->Reader );
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read color." ) );
   node = node->children;
+  
+  // loop until we find the Color element
+  while( node )
+  {
+    if( 0 == xmlStrcmp( BAD_CAST "Color", node->name ) )
+    {
+      break;
+    }
+    node = node->next;
+  }
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read color." ) );
+  node = node->children;
+
+  // loop until we find the red/green/blue elements
   while( node )
   {
     if( 0 == xmlStrcmp( BAD_CAST "Red", node->name ) &&
         node->children &&
         node->children->content )
     {
-      rgb[0] = atof( ( char* )( node->children->content ) );
+      rgba[0] = atof( ( char* )( node->children->content ) );
     }
     else if( 0 == xmlStrcmp( BAD_CAST "Green", node->name ) &&
         node->children &&
         node->children->content )
     {
-      rgb[1] = atof( ( char* )( node->children->content ) );
+      rgba[1] = atof( ( char* )( node->children->content ) );
     }
     else if( 0 == xmlStrcmp( BAD_CAST "Blue", node->name ) &&
         node->children &&
         node->children->content )
     {
-      rgb[2] = atof( ( char* )( node->children->content ) );
+      rgba[2] = atof( ( char* )( node->children->content ) );
+    }
+    else if( 0 == xmlStrcmp( BAD_CAST "Alpha", node->name ) &&
+        node->children &&
+        node->children->content )
+    {
+      rgba[3] = atof( ( char* )( node->children->content ) );
     }
     node = node->next;
   }
 }
 
-//----------------------------------------------------------------------------
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovSessionReader::ReadDate( ovDate &date )
 {
   xmlNode *node = xmlTextReaderExpand( this->Reader );
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read date." ) );
   node = node->children;
+  
+  // loop until we find the Date element
+  while( node )
+  {
+    if( 0 == xmlStrcmp( BAD_CAST "Date", node->name ) )
+    {
+      break;
+    }
+    node = node->next;
+  }
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read date." ) );
+  node = node->children;
+
+  // loop until we find the day/month/year elements
   while( node )
   {
     if( 0 == xmlStrcmp( BAD_CAST "Year", node->name ) &&
@@ -311,30 +358,94 @@ void ovSessionReader::ReadDate( ovDate &date )
   }
 }
 
-//----------------------------------------------------------------------------
-void ovSessionReader::ReadTagArray( vtkStringArray* array )
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadTagList( ovTagVector *tags )
 {
-  if( NULL == array ) return;
+  if( NULL == tags ) throw( vtkstd::runtime_error( "Failed to read tag list." ) );
 
-  xmlNode *node = xmlTextReaderExpand( this->Reader );
-  node = node->children;
-  while( node )
+  int intVal;
+  ovString string;
+  ovTag *tag = NULL;
+
+  while( this->ParseNode() )
   {
-    if( 0 == xmlStrcmp( BAD_CAST "Tag", node->name ) &&
-        node->children &&
-        node->children->content )
+    // ignore node type 14 (#text stuff that we don't need) and non-opening nodes
+    if( 14 == this->CurrentNode.NodeType ) continue;
+    
+    if( this->CurrentNode.IsClosingElement() &&
+        0 == xmlStrcmp( BAD_CAST "TagList", this->CurrentNode.Name ) )
     {
-      array->InsertNextValue( ( char* )( node->children->content ) );
+      // we're done, break out of the loop
+      break;
     }
-    node = node->next;
+    else if( 0 == xmlStrcmp( BAD_CAST "Tag", this->CurrentNode.Name ) )
+    {  
+      if( this->CurrentNode.IsOpeningElement() )
+      {
+        tag = new ovTag;
+      }
+      else if( this->CurrentNode.IsClosingElement() )
+      {
+        tags->push_back( tag );
+        tag = NULL;
+      }
+    }
+    else if( this->CurrentNode.IsOpeningElement() && tag )
+    {
+      if( 0 == xmlStrcmp( BAD_CAST "Parent", this->CurrentNode.Name ) )
+      {
+        this->ReadString( string );
+        tag->parent = string;
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "Name", this->CurrentNode.Name ) )
+      {
+        this->ReadString( string );
+        tag->name = string;
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "Active", this->CurrentNode.Name ) )
+      {
+        this->ReadInt( intVal );
+        tag->active = 0 != intVal;
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "Expanded", this->CurrentNode.Name ) )
+      {
+        this->ReadInt( intVal );
+        tag->expanded = 0 != intVal;
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "TagColor", this->CurrentNode.Name ) )
+      {
+        double rgba[] = { 0, 0, 0, 0 };
+        this->ReadColor( rgba );
+        for( int i = 0; i < 4; i++ ) tag->color[i] = rgba[i];
+      }
+    }
   }
 }
 
-//----------------------------------------------------------------------------
-void ovSessionReader::ReadPosition( double position[3] )
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadCoordinates( double position[3] )
 {
   xmlNode *node = xmlTextReaderExpand( this->Reader );
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read coordinates." ) );
   node = node->children;
+  
+  // loop until we find the Coordinates element
+  while( node )
+  {
+    if( 0 == xmlStrcmp( BAD_CAST "Coordinates", node->name ) )
+    {
+      break;
+    }
+    node = node->next;
+  }
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read coordinates." ) );
+  node = node->children;
+
+  // loop until we find the x/y/z elements
   while( node )
   {
     if( 0 == xmlStrcmp( BAD_CAST "X", node->name ) &&
@@ -359,11 +470,30 @@ void ovSessionReader::ReadPosition( double position[3] )
   }
 }
 
-//----------------------------------------------------------------------------
-void ovSessionReader::ReadClippingRange( double range[2] )
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadDistanceRange( double range[2] )
 {
   xmlNode *node = xmlTextReaderExpand( this->Reader );
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read distance range." ) );
   node = node->children;
+  
+  // loop until we find the DistanceRange element
+  while( node )
+  {
+    if( 0 == xmlStrcmp( BAD_CAST "DistanceRange", node->name ) )
+    {
+      break;
+    }
+    node = node->next;
+  }
+  
+  // make sure we have a node with children
+  if( !node || !node->children ) throw( vtkstd::runtime_error( "Failed to read distance range." ) );
+  node = node->children;
+
+  // loop until we find the near/far elements
   while( node )
   {
     if( 0 == xmlStrcmp( BAD_CAST "Near", node->name ) &&
@@ -379,5 +509,57 @@ void ovSessionReader::ReadClippingRange( double range[2] )
       range[1] = atof( ( char* )( node->children->content ) );
     }
     node = node->next;
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadCamera( vtkCamera* camera )
+{
+  if( NULL == camera ) throw( vtkstd::runtime_error( "Failed to read camera." ) );
+
+  while( this->ParseNode() )
+  {
+    // ignore node type 14 (#text stuff that we don't need) and non-opening nodes
+    if( 14 == this->CurrentNode.NodeType ) continue;
+    
+    if( this->CurrentNode.IsClosingElement() &&
+        0 == xmlStrcmp( BAD_CAST "Camera", this->CurrentNode.Name ) )
+    {
+      // we're done, break out of the loop
+      break;
+    }
+    else if( this->CurrentNode.IsOpeningElement() )
+    {
+      if( 0 == xmlStrcmp( BAD_CAST "Position", this->CurrentNode.Name ) )
+      {
+        double xyz[] = { 0, 0, 0 };
+        this->ReadCoordinates( xyz );
+        camera->SetPosition( xyz );
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "FocalPoint", this->CurrentNode.Name ) )
+      {
+        double xyz[] = { 0, 0, 0 };
+        this->ReadCoordinates( xyz );
+        camera->SetFocalPoint( xyz );
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "ViewUp", this->CurrentNode.Name ) )
+      {
+        double xyz[] = { 0, 0, 0 };
+        this->ReadCoordinates( xyz );
+        camera->SetViewUp( xyz );
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "ClippingRange", this->CurrentNode.Name ) )
+      {
+        double range[] = { 0, 0 };
+        this->ReadDistanceRange( range );
+        camera->SetClippingRange( range );
+      }
+      else if( 0 == xmlStrcmp( BAD_CAST "ParallelScale", this->CurrentNode.Name ) )
+      {
+        double value;
+        this->ReadDouble( value );
+        camera->SetParallelScale( value );
+      }
+    }
   }
 }

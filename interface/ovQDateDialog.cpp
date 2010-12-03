@@ -16,6 +16,8 @@
 #include <QComboBox>
 #include <QLineEdit>
 
+#include <vtkstd/algorithm>
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovQDateDialog::ovQDateDialog( QWidget* parent )
   : QDialog( parent )
@@ -201,21 +203,11 @@ ovQDateDialog::ovQDateDialog( QWidget* parent )
 ovQDateDialog::~ovQDateDialog()
 {
   // delete all periods
-  for( ovDatePeriodVector::iterator it = this->HistoricPeriodVector.begin(); 
-       it != this->HistoricPeriodVector.end();
-       ++it )
-  {
-    delete (*it);
-  }
-  this->HistoricPeriodVector.empty();
+  vtkstd::for_each(
+    this->HistoricPeriodVector.begin(), this->HistoricPeriodVector.end(), safe_delete() );
 
-  for( ovDatePeriodVector::iterator it = this->MonarchPeriodVector.begin();
-       it != this->MonarchPeriodVector.end();
-       ++it )
-  {
-    delete (*it);
-  }
-  this->MonarchPeriodVector.empty();
+  vtkstd::for_each(
+    this->MonarchPeriodVector.begin(), this->MonarchPeriodVector.end(), safe_delete() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

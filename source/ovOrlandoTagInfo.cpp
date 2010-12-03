@@ -30,11 +30,7 @@ ovOrlandoTagInfo::~ovOrlandoTagInfo()
 {
   // delete all tags
   ovTagVector::iterator it;
-  for( it = this->TagVector.begin(); it != this->TagVector.end(); ++it )
-  {
-    delete (*it);
-  }
-  this->TagVector.empty();
+  vtkstd::for_each( this->TagVector.begin(), this->TagVector.end(), safe_delete() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -227,17 +223,6 @@ int ovOrlandoTagInfo::FindTagIndex( ovString name )
   }
 
   return index;
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovOrlandoTagInfo::GetTags( ovTagVector &array )
-{
-  array.clear();
-  ovTagVector::iterator it;
-  for( it = this->TagVector.begin(); it != this->TagVector.end(); it++ )
-  {
-    array.push_back( (*it) );
-  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

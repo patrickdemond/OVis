@@ -12,9 +12,13 @@ class Ui_ovQMainWindow;
 class ovQMainWindowProgressCommand;
 class ovOrlandoReader;
 class ovRestrictGraphFilter;
+class ovSession;
+
 class QActionGroup;
 class QTreeWidgetItem;
+
 class vtkGraphLayoutView;
+class vtkStringArray;
 class vtkViewTheme;
 
 class ovQMainWindow : public QMainWindow
@@ -29,7 +33,8 @@ public:
   
 public slots:
   //event functions
-  virtual void slotFileOpen();
+  virtual void slotOpenData();
+  virtual void slotTakeScreenshot();
   virtual void slotReCenterGraph();
   virtual void slotSetBackgroundSolid();
   virtual void slotSetBackgroundTop();
@@ -60,6 +65,22 @@ public slots:
   virtual void slotSetLayoutStrategyToCosmicTree() { this->SetLayoutStrategy( "Cosmic Tree" ); }
   virtual void slotSetLayoutStrategyToCone() { this->SetLayoutStrategy( "Cone" ); }
   virtual void slotSetLayoutStrategyToSpanTree() { this->SetLayoutStrategy( "Span Tree" ); }
+  
+  virtual void slotSetSnapshotMagnificationTo1() { this->SnapshotMagnification = 1; }
+  virtual void slotSetSnapshotMagnificationTo2() { this->SnapshotMagnification = 2; }
+  virtual void slotSetSnapshotMagnificationTo3() { this->SnapshotMagnification = 3; }
+  virtual void slotSetSnapshotMagnificationTo4() { this->SnapshotMagnification = 4; }
+  virtual void slotSetSnapshotMagnificationTo5() { this->SnapshotMagnification = 5; }
+  virtual void slotSetSnapshotMagnificationTo6() { this->SnapshotMagnification = 6; }
+  virtual void slotSetSnapshotMagnificationTo7() { this->SnapshotMagnification = 7; }
+  virtual void slotSetSnapshotMagnificationTo8() { this->SnapshotMagnification = 8; }
+  virtual void slotSetSnapshotMagnificationTo9() { this->SnapshotMagnification = 9; }
+  virtual void slotSetSnapshotMagnificationTo10() { this->SnapshotMagnification = 10; }
+  
+  virtual void slotOpenSession();
+  virtual void slotReloadSession();
+  virtual void slotSaveSession();
+  virtual void slotSaveSessionAs();
 
   virtual void slotAuthorCheckBoxStateChanged( int );
   virtual void slotGenderComboBoxCurrentIndexChanged( const QString& );
@@ -68,9 +89,7 @@ public slots:
   virtual void slotEdgeSizeSliderValueChanged( int );
   virtual void slotAuthorVertexColorPushButtonClicked();
   virtual void slotAssociationVertexColorPushButtonClicked();
-  virtual void slotStartLineEditTextChanged( const QString& );
   virtual void slotStartSetPushButtonClicked();
-  virtual void slotEndLineEditTextChanged( const QString& );
   virtual void slotEndSetPushButtonClicked();
   virtual void slotTagTreeCheckButtonClicked();
   virtual void slotTagTreeUnCheckButtonClicked();
@@ -78,21 +97,44 @@ public slots:
   virtual void slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int );
 
 protected:
-  virtual void readSettings();
-  virtual void writeSettings();
-  virtual bool maybeSave();
   virtual void closeEvent( QCloseEvent *event );
 
-  virtual void RenderGraph( bool resetCamera = false );
-  virtual void UpdateIncludeTags();
-  virtual void SetVertexStyle( int );
-  virtual void SetLayoutStrategy( const char* );
+  virtual void ReadSettings();
+  virtual void WriteSettings();
+  virtual bool MaybeSave();
+  virtual void LoadData();
+  virtual void ApplyStateToSession();
+  virtual void ApplySessionToState();
 
+  virtual void RenderGraph( bool resetCamera = false );
+  virtual void GetTagList( ovTagVector* );
+  virtual void SetTagList( ovTagVector* );
+  virtual void GetActiveTags( vtkStringArray* );
+  virtual void UpdateActiveTags();
+  virtual void SetVertexStyle( int );
+  virtual void SetLayoutStrategy( const ovString& );
+  virtual void SetVertexSize( int );
+  virtual void SetEdgeSize( int );
+  virtual void SetAuthorVertexColor( double rgba[4] );
+  virtual void SetAssociationVertexColor( double rgba[4] );
+  virtual void SetStartDate( const ovDate& );
+  virtual void SetEndDate( const ovDate& );
+
+  vtkSmartPointer< ovSession > Session;
   vtkSmartPointer< vtkGraphLayoutView > GraphLayoutView;
   vtkSmartPointer< vtkViewTheme > GraphLayoutViewTheme;
   vtkSmartPointer< ovOrlandoReader > OrlandoReader;
   vtkSmartPointer< ovRestrictGraphFilter > RestrictGraphFilter;
-
+  vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
+  
+  ovString CurrentDataFileName;
+  ovString CurrentSessionFileName;
+  ovString CurrentLayoutStrategy;
+  int SnapshotMagnification;
+  bool IsLoadingData;
+  bool IsLoadingSession;
+  bool IsCheckingMultipleTags;
+  bool SkipRenderGraph;
 protected slots:
 
 private:
@@ -102,12 +144,7 @@ private:
   // Action groups for radio-based menu items
   QActionGroup *vertexStyleActionGroup;
   QActionGroup *layoutStrategyActionGroup;
-  
-  vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
-
-  // Set to false to disable automatic updating of graph
-  bool AutoUpdateIncludeTags;
-  bool SkipRenderGraph;
+  QActionGroup *snapshotMagnificationActionGroup;
 };
 
 #endif

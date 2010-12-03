@@ -123,14 +123,14 @@ public:
          : WriterTypeRestrictionAny;
   }
 
-  vtkGetObjectMacro( IncludeTags, vtkStringArray );
-  virtual void SetIncludeTags( vtkStringArray* );
+  vtkGetObjectMacro( ActiveTags, vtkStringArray );
+  virtual void SetActiveTags( vtkStringArray* );
   
-  virtual ovDate* GetStartDate() { return this->StartDate; }
-  virtual void SetStartDate( ovDate* );
+  virtual ovDate* GetStartDate() { return &( this->StartDate ); }
+  virtual void SetStartDate( const ovDate& );
 
-  virtual ovDate* GetEndDate() { return this->EndDate; }
-  virtual void SetEndDate( ovDate* );
+  virtual ovDate* GetEndDate() { return &( this->EndDate ); }
+  virtual void SetEndDate( const ovDate& );
 
 protected:
   ovRestrictGraphFilter();
@@ -152,9 +152,9 @@ protected:
   int AuthorsOnly;
   int GenderTypeRestriction;
   int WriterTypeRestriction;
-  vtkStringArray *IncludeTags;
-  ovDate *StartDate;
-  ovDate *EndDate;
+  vtkStringArray *ActiveTags;
+  ovDate StartDate;
+  ovDate EndDate;
   
 private:
   ovRestrictGraphFilter( const ovRestrictGraphFilter& ); // Not implemented

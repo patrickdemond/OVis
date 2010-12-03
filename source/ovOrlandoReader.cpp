@@ -132,9 +132,6 @@ int ovOrlandoReader::ProcessRequest(
     graph->GetVertexData()->AddArray( writerTypeArray );
 
     // the tag array is used to keep a list of tags which associates the two vertices
-    ovTagVector tags;
-    ovTagVector::iterator it;
-    tagInfo->GetTags( tags );
     vtkSmartPointer< vtkStringArray > tagArray = vtkSmartPointer< vtkStringArray >::New();
     tagArray->SetName( "tags" );
     graph->GetEdgeData()->AddArray( tagArray );
@@ -251,7 +248,7 @@ int ovOrlandoReader::ProcessRequest(
               array->SetNumberOfComponents( 2 );
               array->SetNumberOfTuples( 1 );
               array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
-              array->SetValue( 1, vtkVariant( ovHash( currentTagArray ) ) ); // color
+              array->SetValue( 1, 0 ); // color (set by the restrict filter)
               graph->AddEdge( currentVertexPedigree, pedigree, array );
   
               // determine the connecting vertex' id if this isn't an empty element

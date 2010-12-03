@@ -42,12 +42,8 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   this->AuthorsOnly = false;
   this->GenderTypeRestriction = ovRestrictGraphFilter::GenderTypeRestrictionAny;
   this->WriterTypeRestriction = ovRestrictGraphFilter::WriterTypeRestrictionAny;
-  this->IncludeTags = NULL;
+  this->ActiveTags = NULL;
   
-  // year 0 means no date
-  this->StartDate = new ovDate( 0 );
-  this->EndDate = new ovDate( 0 );
-
   // default array names
   this->SetTagsArrayName( "tags" );
   this->SetGenderArrayName( "gender" );
@@ -61,9 +57,7 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovRestrictGraphFilter::~ovRestrictGraphFilter()
 {
-  this->SetIncludeTags( NULL );
-  delete this->StartDate;
-  delete this->EndDate;
+  this->SetActiveTags( NULL );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -151,42 +145,44 @@ void ovRestrictGraphFilter::SetEdgeColorArrayName( const ovString &name )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovRestrictGraphFilter::SetStartDate( ovDate* date )
+void ovRestrictGraphFilter::SetStartDate( const ovDate &date )
 {
   if( date == this->StartDate ) return;
 
-  if( this->StartDate ) delete this->StartDate;
-  this->StartDate = date;
+  this->StartDate.year = date.year;
+  this->StartDate.month = date.month;
+  this->StartDate.day = date.day;
   this->Modified();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovRestrictGraphFilter::SetEndDate( ovDate* date )
+void ovRestrictGraphFilter::SetEndDate( const ovDate &date )
 {
   if( date == this->EndDate ) return;
 
-  if( this->EndDate ) delete this->EndDate;
-  this->EndDate = date;
+  this->EndDate.year = date.year;
+  this->EndDate.month = date.month;
+  this->EndDate.day = date.day;
   this->Modified();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovRestrictGraphFilter::SetIncludeTags( vtkStringArray* newTagArray )
+void ovRestrictGraphFilter::SetActiveTags( vtkStringArray* newTagArray )
 {
   // make sure the new array holds different values from the current
   // array before causing the filter to re-run itself
   bool isDifferent = false;
   
-  if( newTagArray != this->IncludeTags )
+  if( newTagArray != this->ActiveTags )
   {
-    if( NULL == newTagArray || NULL == this->IncludeTags )
+    if( NULL == newTagArray || NULL == this->ActiveTags )
     {
       isDifferent = true;
     }
     else
     {
       int numValues = newTagArray->GetNumberOfValues();
-      if( numValues != this->IncludeTags->GetNumberOfValues() )
+      if( numValues != this->ActiveTags->GetNumberOfValues() )
       {
         isDifferent = true;
       }
@@ -196,7 +192,7 @@ void ovRestrictGraphFilter::SetIncludeTags( vtkStringArray* newTagArray )
         ovStringVector::iterator oldIt, newIt;
         for( int index = 0; index < numValues; index++ )
         {
-          oldStrings.push_back( this->IncludeTags->GetValue( index ) );
+          oldStrings.push_back( this->ActiveTags->GetValue( index ) );
           newStrings.push_back( newTagArray->GetValue( index ) );
           vtkstd::sort( oldStrings.begin(), oldStrings.end() );
           vtkstd::sort( newStrings.begin(), newStrings.end() );
@@ -217,9 +213,9 @@ void ovRestrictGraphFilter::SetIncludeTags( vtkStringArray* newTagArray )
   
   if( isDifferent )
   {
-    vtkStringArray* oldTagArray = this->IncludeTags;
-    this->IncludeTags = newTagArray;
-    if( NULL != this->IncludeTags ) { this->IncludeTags->Register( this ); }
+    vtkStringArray* oldTagArray = this->ActiveTags;
+    this->ActiveTags = newTagArray;
+    if( NULL != this->ActiveTags ) { this->ActiveTags->Register( this ); }
     if( NULL != oldTagArray ) { oldTagArray->UnRegister( this ); }
     this->Modified();
   }
@@ -235,14 +231,14 @@ int ovRestrictGraphFilter::RequestData(
   vtkGraph* output = vtkGraph::GetData( outputVector );
 
   // If we have no include tags then do nothing
-  if( NULL == this->IncludeTags )
+  if( NULL == this->ActiveTags )
   {
     output->ShallowCopy( input );
     return 1;
   }
   
   // If the include tags array is empty then display an empty graph
-  if( 0 == this->IncludeTags->GetNumberOfValues() )
+  if( 0 == this->ActiveTags->GetNumberOfValues() )
   {
     return 1;
   }
@@ -307,9 +303,9 @@ int ovRestrictGraphFilter::RequestData(
   ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
   int numTags = tagInfo->GetNumberOfTags();
   vtkstd::vector< vtkIdType > includeIndices;
-  for( vtkIdType i = 0; i < this->IncludeTags->GetNumberOfValues(); ++i )
+  for( vtkIdType i = 0; i < this->ActiveTags->GetNumberOfValues(); ++i )
   {
-    int tagIndex = tagInfo->FindTagIndex( this->IncludeTags->GetValue( i ) );
+    int tagIndex = tagInfo->FindTagIndex( this->ActiveTags->GetValue( i ) );
     if( 0 <= tagIndex && tagIndex < numTags ) includeIndices.push_back( tagIndex );
   }
   
@@ -430,10 +426,10 @@ int ovRestrictGraphFilter::RequestData(
     
     // STEP #2
     // make sure both vertices are within the specified dates, if necessary
-    if( this->StartDate->IsSet() || this->EndDate->IsSet() )
+    if( this->StartDate.IsSet() || this->EndDate.IsSet() )
     {
-      int startDate = this->StartDate->ToInt();
-      int endDate = this->EndDate->ToInt();
+      int startDate = this->StartDate.ToInt();
+      int endDate = this->EndDate.ToInt();
       int sourceBirthDate = birthArray->GetValue( e.Source );
       int sourceDeathDate = deathArray->GetValue( e.Source );
       int targetBirthDate = birthArray->GetValue( e.Target );
@@ -454,9 +450,10 @@ int ovRestrictGraphFilter::RequestData(
     vtkstd::vector< vtkIdType >::iterator it;
     for( it = includeIndices.begin(); it != includeIndices.end(); ++it )
     {
-      if( '1' == tagBitArray->GetValue( e.Id ).at( *it ) )
+      vtkIdType id = *it;
+      if( '1' == tagBitArray->GetValue( e.Id ).at( id ) )
       {
-        matchIndex = *it;
+        matchIndex = id;
         break;
       }
     }

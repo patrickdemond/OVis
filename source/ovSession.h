@@ -23,7 +23,7 @@
 
 #include "ovUtilities.h"
 
-class vtkStringArray;
+class vtkCamera;
 
 class ovSession : public vtkDataObject
 {
@@ -35,6 +35,8 @@ public:
   bool operator == ( const ovSession& ) const;
   bool operator != ( const ovSession &rhs ) const { return !( *this == rhs ); }
   
+  virtual void DeepCopy( ovSession* );
+
   // Description:
   // Set/get the path of the data file currently loaded
   virtual ovString GetDataFile() { return this->DataFile; }
@@ -42,13 +44,13 @@ public:
 
   // Description:
   // Set/get the first background color
-  vtkGetVector3Macro( BackgroundColor1, double );
-  vtkSetVector3Macro( BackgroundColor1, double );
+  vtkGetVector4Macro( BackgroundColor1, double );
+  vtkSetVector4Macro( BackgroundColor1, double );
 
   // Description:
   // Set/get the second background color
-  vtkGetVector3Macro( BackgroundColor2, double );
-  vtkSetVector3Macro( BackgroundColor2, double );
+  vtkGetVector4Macro( BackgroundColor2, double );
+  vtkSetVector4Macro( BackgroundColor2, double );
   
   // Description:
   // Set/get the vertex style
@@ -88,66 +90,41 @@ public:
   
   // Description:
   // Set/get the author vertices color
-  vtkGetVector3Macro( AuthorVertexColor, double );
-  vtkSetVector3Macro( AuthorVertexColor, double );
+  vtkGetVector4Macro( AuthorVertexColor, double );
+  vtkSetVector4Macro( AuthorVertexColor, double );
 
   // Description:
   // Set/get the association vertices color
-  vtkGetVector3Macro( AssociationVertexColor, double );
-  vtkSetVector3Macro( AssociationVertexColor, double );
+  vtkGetVector4Macro( AssociationVertexColor, double );
+  vtkSetVector4Macro( AssociationVertexColor, double );
 
   // Description:
   // Set/get the start date
-  virtual ovDate GetStartDate() { return this->StartDate; }
-  virtual void SetStartDate( const ovDate& );
+  virtual ovDate GetStartDateRestriction() { return this->StartDateRestriction; }
+  virtual void SetStartDateRestriction( const ovDate& );
 
   // Description:
   // Set/get the end date
-  virtual ovDate GetEndDate() { return this->EndDate; }
-  virtual void SetEndDate( const ovDate& );
+  virtual ovDate GetEndDateRestriction() { return this->EndDateRestriction; }
+  virtual void SetEndDateRestriction( const ovDate& );
 
   // Description:
   // Set/get the active tags
-  virtual vtkStringArray* GetActiveTags() { return this->ActiveTags; }
-  virtual void SetActiveTags( vtkStringArray* );
-  
-  // Description:
-  // Set/get the camera's position
-  vtkGetVector3Macro( CameraPosition, double );
-  vtkSetVector3Macro( CameraPosition, double );
+  virtual ovTagVector* GetTagList() { return &( this->TagList ); }
 
   // Description:
-  // Set/get the camera's focal point
-  vtkGetVector3Macro( CameraFocalPoint, double );
-  vtkSetVector3Macro( CameraFocalPoint, double );
-
-  // Description:
-  // Set/get the camera's view up vector
-  vtkGetVector3Macro( CameraViewUp, double );
-  vtkSetVector3Macro( CameraViewUp, double );
-
-  // Description:
-  // Set/get the camera's clipping range
-  vtkGetVector2Macro( CameraClippingRange, double );
-  vtkSetVector2Macro( CameraClippingRange, double );
-
-  // Description:
-  // Set/get the camera's parallel scale
-  vtkGetMacro( CameraParallelScale, double );
-  vtkSetMacro( CameraParallelScale, double );
-  
-  // Description:
-  // Set/get the camera's compute view plane normal
-  vtkGetVector3Macro( CameraComputeViewPlaneNormal, double );
-  vtkSetVector3Macro( CameraComputeViewPlaneNormal, double );
+  // Set/get the camera
+  virtual vtkCamera* GetCamera() { return this->Camera; }
   
 protected:
   ovSession();
   ~ovSession();
   
+  virtual void SetCamera( vtkCamera* );
+
   ovString DataFile;
-  double BackgroundColor1[3];
-  double BackgroundColor2[3];
+  double BackgroundColor1[4];
+  double BackgroundColor2[4];
   int VertexStyle;
   ovString LayoutStrategy;
   bool AuthorsOnly;
@@ -155,17 +132,12 @@ protected:
   int WriterTypeRestriction;
   int VertexSize;
   int EdgeSize;
-  double AuthorVertexColor[3];
-  double AssociationVertexColor[3];
-  ovDate StartDate;
-  ovDate EndDate;
-  vtkStringArray *ActiveTags;
-  double CameraPosition[3];
-  double CameraFocalPoint[3];
-  double CameraViewUp[3];
-  double CameraClippingRange[2];
-  double CameraParallelScale;
-  double CameraComputeViewPlaneNormal[3];
+  double AuthorVertexColor[4];
+  double AssociationVertexColor[4];
+  ovDate StartDateRestriction;
+  ovDate EndDateRestriction;
+  ovTagVector TagList;
+  vtkCamera *Camera;
 
 private:
   ovSession( const ovSession& );  // Not implemented.

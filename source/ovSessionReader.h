@@ -26,7 +26,7 @@
 #include "ovUtilities.h"
 
 class ovSession;
-class vtkStringArray;
+class vtkCamera;
 
 class ovSessionReader : public ovXMLReader
 {
@@ -52,11 +52,15 @@ protected:
 
   virtual int FillOutputPortInformation( int, vtkInformation* );
 
-  virtual void ReadColor( double[3] );
+  virtual void ReadInt( int& );
+  virtual void ReadDouble( double& );
+  virtual void ReadString( ovString& );
+  virtual void ReadColor( double[4] );
   virtual void ReadDate( ovDate& );
-  virtual void ReadTagArray( vtkStringArray* );
-  virtual void ReadPosition( double[3] );
-  virtual void ReadClippingRange( double[2] );
+  virtual void ReadTagList( ovTagVector* );
+  virtual void ReadCoordinates( double[3] );
+  virtual void ReadDistanceRange( double[2] );
+  virtual void ReadCamera( vtkCamera* );
 
 private:
   ovSessionReader( const ovSessionReader& );  // Not implemented.

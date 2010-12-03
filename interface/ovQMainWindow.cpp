@@ -23,6 +23,7 @@
 #include <QSettings>
 #include <QTreeWidget>
 
+#include "vtkCamera.h"
 #include "vtkCommand.h"
 #include "vtkGlyphSource2D.h"
 #include "vtkGraph.h"
@@ -30,6 +31,7 @@
 #include "vtkGraphLayoutView.h"
 #include "vtkLookupTable.h"
 #include "vtkMath.h"
+#include "vtkPNGWriter.h"
 #include "vtkRenderedGraphRepresentation.h"
 #include "vtkRenderer.h"
 #include "vtkRendererCollection.h"
@@ -37,6 +39,7 @@
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
 #include "vtkViewTheme.h"
+#include "vtkWindowToImageFilter.h"
 
 // experimental
 #include "vtkDataSetAttributes.h"
@@ -46,7 +49,11 @@
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
 #include "source/ovRestrictGraphFilter.h"
+#include "source/ovSession.h"
+#include "source/ovSessionReader.h"
+#include "source/ovSessionWriter.h"
 
+#include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
 
 class ovQMainWindowProgressCommand : public vtkCommand
@@ -55,9 +62,6 @@ public:
   static ovQMainWindowProgressCommand *New() { return new ovQMainWindowProgressCommand; }
   void Execute( vtkObject *caller, unsigned long eventId, void *callData );
   Ui_ovQMainWindow *ui;
-
-  // Set to true when a file is being loaded
-  bool IsLoadingFile;
 
 protected:
   ovQMainWindowProgressCommand() { this->ui = NULL; }
@@ -111,22 +115,29 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   : QMainWindow( parent )
 {
   QMenu *menu;
-  this->AutoUpdateIncludeTags = false;
+  this->IsLoadingData = false;
+  this->IsLoadingSession = false;
+  this->IsCheckingMultipleTags = false;
+  this->IsCheckingMultipleTags = false;
+  this->SnapshotMagnification = 1;
+  this->CurrentDataFileName = "";
+  this->CurrentSessionFileName = "";
+  this->CurrentLayoutStrategy = "Clustering2D";
+  this->Session = vtkSmartPointer< ovSession >::New();
   
   this->ui = new Ui_ovQMainWindow;
   this->ui->setupUi( this );
 
   // connect the file menu items
   QObject::connect(
-    this->ui->actionFileOpen, SIGNAL( triggered() ),
-    this, SLOT( slotFileOpen() ) );
-
-  this->ui->actionFileExit->setShortcuts( QKeySequence::Quit );
-  QObject::connect( this->ui->actionFileExit, SIGNAL( triggered() ),
+    this->ui->actionOpenData, SIGNAL( triggered() ),
+    this, SLOT( slotOpenData() ) );
+  QObject::connect(
+    this->ui->actionTakeScreenshot, SIGNAL( triggered() ),
+    this, SLOT( slotTakeScreenshot() ) );
+  this->ui->actionExit->setShortcuts( QKeySequence::Quit );
+  QObject::connect( this->ui->actionExit, SIGNAL( triggered() ),
     qApp, SLOT( closeAllWindows() ) );
-//  QObject::connect(
-//    this->ui->actionFileExit, SIGNAL( triggered() ),
-//    this, SLOT( slotFileExit() ) );
   
   // connect the view menu items
   QObject::connect(
@@ -215,6 +226,37 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     this->ui->actionSetLayoutStrategyToSpanTree, SIGNAL( triggered() ),
     this, SLOT( slotSetLayoutStrategyToSpanTree() ) );
   
+  QObject::connect(
+    this->ui->actionMag1, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo1() ) );
+  QObject::connect(
+    this->ui->actionMag2, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo2() ) );
+  QObject::connect(
+    this->ui->actionMag3, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo3() ) );
+  QObject::connect(
+    this->ui->actionMag4, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo4() ) );
+  QObject::connect(
+    this->ui->actionMag5, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo5() ) );
+  QObject::connect(
+    this->ui->actionMag6, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo6() ) );
+  QObject::connect(
+    this->ui->actionMag7, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo7() ) );
+  QObject::connect(
+    this->ui->actionMag8, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo8() ) );
+  QObject::connect(
+    this->ui->actionMag9, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo9() ) );
+  QObject::connect(
+    this->ui->actionMag10, SIGNAL( triggered() ),
+    this, SLOT( slotSetSnapshotMagnificationTo10() ) );
+
   // set up the menu action groups
   this->vertexStyleActionGroup = new QActionGroup( this );
   this->vertexStyleActionGroup->addAction( this->ui->actionSetVertexStyleToNone );
@@ -242,6 +284,32 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   //this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCosmicTree );
   //this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToCone );
   this->layoutStrategyActionGroup->addAction( this->ui->actionSetLayoutStrategyToSpanTree );
+  
+  this->snapshotMagnificationActionGroup = new QActionGroup( this );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag1 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag2 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag3 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag4 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag5 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag6 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag7 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag8 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag9 );
+  this->snapshotMagnificationActionGroup->addAction( this->ui->actionMag10 );
+
+  // connect the session menu items
+  QObject::connect(
+    this->ui->actionOpenSession, SIGNAL( triggered() ),
+    this, SLOT( slotOpenSession() ) );
+  QObject::connect(
+    this->ui->actionReloadSession, SIGNAL( triggered() ),
+    this, SLOT( slotReloadSession() ) );
+  QObject::connect(
+    this->ui->actionSaveSession, SIGNAL( triggered() ),
+    this, SLOT( slotSaveSession() ) );
+  QObject::connect(
+    this->ui->actionSaveSessionAs, SIGNAL( triggered() ),
+    this, SLOT( slotSaveSessionAs() ) );
 
   // set up the observer to update the progress bar
   this->ProgressObserver = vtkSmartPointer< ovQMainWindowProgressCommand >::New();
@@ -250,7 +318,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
 
   // set up the graph layout view
   this->GraphLayoutView = vtkSmartPointer< vtkGraphLayoutView >::New();
-  this->GraphLayoutView->SetLayoutStrategyToClustering2D();
+  this->GraphLayoutView->SetLayoutStrategy( this->CurrentLayoutStrategy.c_str() );
   this->GraphLayoutView->GetLayoutStrategy()->AddObserver(
     vtkCommand::ProgressEvent, this->ProgressObserver );
   this->GraphLayoutView->DisplayHoverTextOn();
@@ -290,19 +358,21 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   char buffer[512];
   
   tableColor = lut->GetTableValue( 0 );
-  sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
-    ovIsOppositeColorWhite( tableColor[0], tableColor[1], tableColor[2] ) ? "white" : "black",
+  sprintf( buffer, "color: %s; background-color: rgba( %d, %d, %d, %d )",
+    ovIsOppositeColorWhite( tableColor ) ? "white" : "black",
     static_cast< int >( tableColor[0]*255 ),
     static_cast< int >( tableColor[1]*255 ),
-    static_cast< int >( tableColor[2]*255 ) );
+    static_cast< int >( tableColor[2]*255 ),
+    static_cast< int >( tableColor[3]*255 ) );
   this->ui->associationVertexColorPushButton->setStyleSheet( buffer );
 
   tableColor = lut->GetTableValue( 1 );
-  sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
-    ovIsOppositeColorWhite( tableColor[0], tableColor[1], tableColor[2] ) ? "white" : "black",
+  sprintf( buffer, "color: %s; background-color: rgba( %d, %d, %d, %d )",
+    ovIsOppositeColorWhite( tableColor ) ? "white" : "black",
     static_cast< int >( tableColor[0]*255 ),
     static_cast< int >( tableColor[1]*255 ),
-    static_cast< int >( tableColor[2]*255 ) );
+    static_cast< int >( tableColor[2]*255 ),
+    static_cast< int >( tableColor[3]*255 ) );
   this->ui->authorVertexColorPushButton->setStyleSheet( buffer );
   
   // set up the reader and filters
@@ -337,14 +407,8 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   
   // set up the date restriction widgets
   QObject::connect(
-    this->ui->startLineEdit, SIGNAL( textChanged( const QString& ) ),
-    this, SLOT( slotStartLineEditTextChanged( const QString& ) ) );
-  QObject::connect(
     this->ui->startSetPushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotStartSetPushButtonClicked() ) );
-  QObject::connect(
-    this->ui->endLineEdit, SIGNAL( textChanged( const QString& ) ),
-    this, SLOT( slotEndLineEditTextChanged( const QString& ) ) );
   QObject::connect(
     this->ui->endSetPushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotEndSetPushButtonClicked() ) );
@@ -365,10 +429,8 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     this->ui->tagTreeWidget, SIGNAL( itemDoubleClicked( QTreeWidgetItem*, int ) ),
     this, SLOT( slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int ) ) );
   
-  this->readSettings();
-
-  // start updating the include tags automatically
-  this->AutoUpdateIncludeTags = true;
+  this->ReadSettings();
+  this->ApplyStateToSession();
 };
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -379,9 +441,9 @@ ovQMainWindow::~ovQMainWindow()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::closeEvent( QCloseEvent *event )
 {
-  if( this->maybeSave() )
+  if( this->MaybeSave() )
   {
-    writeSettings();
+    WriteSettings();
     event->accept();
   }
   else
@@ -390,7 +452,7 @@ void ovQMainWindow::closeEvent( QCloseEvent *event )
   }
 }
 
-bool ovQMainWindow::maybeSave()
+bool ovQMainWindow::MaybeSave()
 {
   if( false /* TODO: check if session has changed */ )
   {
@@ -414,7 +476,7 @@ bool ovQMainWindow::maybeSave()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::writeSettings()
+void ovQMainWindow::WriteSettings()
 {
   QSettings settings( "sharcnet", "ovis" );
   settings.beginGroup( "MainWindow" );
@@ -425,7 +487,7 @@ void ovQMainWindow::writeSettings()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::readSettings()
+void ovQMainWindow::ReadSettings()
 {
   QSettings settings( "sharcnet", "ovis" );
   settings.beginGroup( "MainWindow" );
@@ -445,99 +507,136 @@ void ovQMainWindow::readSettings()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotFileOpen()
+void ovQMainWindow::slotOpenData()
 {
   QString fileName = QFileDialog::getOpenFileName(
     this, tr( "Open Orlando File" ), "data", tr( "Orlando XML Files (*.xml)" ) );
   
   if( "" != fileName )
   {
-    // define the tag list based on orlando tags
-    // don't update the graph view until we're done checking tags
-    this->AutoUpdateIncludeTags = false;
-    
-    ovTag *tag;
-    ovTagVector tags;
-    ovTagVector::iterator it;
-    QTreeWidgetItem *item, *parent;
-    ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
-    tagInfo->GetTags( tags );
-    
-    bool tagParentError = false; // we only want to display the tag tree error once
-    this->ui->tagTreeWidget->clear();
-    for( it = tags.begin(); it != tags.end(); it++ )
-    {
-      tag = *it;
-      if( tag->parent.length() )
-      {
-        // find the item with the parent's name
+    this->CurrentDataFileName = fileName.toStdString().c_str();
+    this->LoadData();
+  }
+}
 
-        parent = NULL;
-        QTreeWidgetItemIterator it( this->ui->tagTreeWidget );
-        while( *it )
-        {
-          if( tag->parent == (*it)->text( 0 ).toStdString() ) parent = *it;
-          it++;
-        }
-        
-        // If we can't find a parent then something is wrong, let the user know
-        // Should this error ever occur then likely ovOrlandoTagInfo::Add() is being
-        // called improperly somewhere (make sure parents are added before children)
-        if( NULL == parent && !tagParentError )
-        {
-          tagParentError = true;
-          QMessageBox errorMessage( this );
-          errorMessage.setWindowModality( Qt::WindowModal );
-          errorMessage.setIcon( QMessageBox::Warning );
-          errorMessage.setText( "Some tags may be missing from the tag tree." );
-          errorMessage.exec();
-        }
-        else
-        {
-          item = new QTreeWidgetItem( parent );
-        }
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTakeScreenshot()
+{
+  QString fileName = QFileDialog::getSaveFileName(
+    this, tr( "Save Snapshot" ), ".", tr( "PNG Files (*.png)" ) );
+  
+  if( "" != fileName )
+  {
+    // add .png if it isn't already there
+    if( !fileName.endsWith( ".png" ) ) fileName.append( ".png" );
+
+    vtkSmartPointer< vtkWindowToImageFilter > filter =
+      vtkSmartPointer< vtkWindowToImageFilter >::New();
+    vtkSmartPointer< vtkPNGWriter > writer = vtkSmartPointer< vtkPNGWriter >::New();
+  
+    filter->SetInput( this->GraphLayoutView->GetRenderWindow() );
+    filter->SetMagnification( this->SnapshotMagnification );
+    filter->Update();
+    writer->SetInput( filter->GetOutput() );
+    writer->SetFileName( fileName.toStdString().c_str() );
+    writer->Write();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::LoadData()
+{
+  if( "" == this->CurrentDataFileName ) return;
+
+  // define the tag list based on orlando tags
+  // don't update the graph view until we're done checking tags
+  this->IsLoadingData = true;
+  
+  ovTag *tag;
+  QTreeWidgetItem *item, *parent;
+  ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
+  ovTagVector *tags = tagInfo->GetTags();
+  
+  bool tagParentError = false; // we only want to display the tag tree error once
+  this->ui->tagTreeWidget->clear();
+  for( ovTagVector::iterator it = tags->begin(); it != tags->end(); it++ )
+  {
+    tag = *it;
+    if( tag->parent.length() )
+    {
+      // find the item with the parent's name
+
+      parent = NULL;
+      QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+      while( *treeIt )
+      {
+        if( tag->parent == (*treeIt)->text( 0 ).toStdString() ) parent = *treeIt;
+        treeIt++;
+      }
+      
+      // If we can't find a parent then something is wrong, let the user know
+      // Should this error ever occur then likely ovOrlandoTagInfo::Add() is being
+      // called improperly somewhere (make sure parents are added before children)
+      if( NULL == parent && !tagParentError )
+      {
+        tagParentError = true;
+        QMessageBox errorMessage( this );
+        errorMessage.setWindowModality( Qt::WindowModal );
+        errorMessage.setIcon( QMessageBox::Warning );
+        errorMessage.setText( "Some tags may be missing from the tag tree." );
+        errorMessage.exec();
       }
       else
       {
-        item = new QTreeWidgetItem( this->ui->tagTreeWidget );
+        item = new QTreeWidgetItem( parent );
       }
-      item->setText(0, (*it)->name.c_str() );
-      item->setCheckState( 0, (*it)->active ? Qt::Checked : Qt::Unchecked );
-      item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable );
-      
-      // top level items have to be explicitely added to the tree
-      if( 0 == tag->parent.length() ) this->ui->tagTreeWidget->addTopLevelItem( item );
     }
-    
-    // define the range of the edge lookup table based on the number of available tags
-    double rgb[3], range[] = { 0, tags.size() - 1 };
-    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
-      this->GraphLayoutViewTheme->GetCellLookupTable() );
-    lut->SetTableRange( range );
-    lut->SetNumberOfTableValues( tags.size() );
-    lut->Build();
-    
-    // color tag names in the tree widget based on the LUT
-    QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
-    while( *treeIt )
+    else
     {
-      int index = tagInfo->FindTagIndex( (*treeIt)->text( 0 ).toStdString().c_str() );
-      lut->GetColor( index, rgb );
-      (*treeIt)->setBackground( 0, QColor( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 ) );
-      (*treeIt)->setForeground( 0, ovIsOppositeColorWhite( rgb[0], rgb[1], rgb[2] )
-        ? QColor(255, 255, 255, 255)
-        : QColor(0, 0, 0, 255) );
-      treeIt++;
+      item = new QTreeWidgetItem( this->ui->tagTreeWidget );
     }
-
-    this->AutoUpdateIncludeTags = true;
+    item->setText(0, tag->name.c_str() );
+    item->setCheckState( 0, tag->active ? Qt::Checked : Qt::Unchecked );
+    item->setExpanded( tag->expanded );
+    item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable );
     
-    // load the orlando file and render
-    this->OrlandoReader->SetFileName( fileName.toStdString() );
-    this->GraphLayoutView->SetRepresentationFromInput( this->RestrictGraphFilter->GetOutput() );
-    this->UpdateIncludeTags();
-    this->RenderGraph( true );
+    // top level items have to be explicitely added to the tree
+    if( 0 == tag->parent.length() ) this->ui->tagTreeWidget->addTopLevelItem( item );
   }
+  
+  // define the range of the edge lookup table based on the number of available tags
+  // we add 1 to the number of tags because of the artificial "unsorted" tag
+  double rgba[4], range[] = { 0, tags->size() };
+  vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+    this->GraphLayoutViewTheme->GetCellLookupTable() );
+  lut->SetTableRange( range );
+  lut->SetHueRange( 0, 1 );
+  lut->SetSaturationRange( 1, 1 );
+  lut->SetValueRange( 1, 1 );
+  lut->SetAlphaRange( 1, 1 );
+  lut->SetNumberOfTableValues( tags->size() + 1 );
+  lut->Build();
+  
+  // color tag names in the tree widget based on the LUT
+  QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+  while( *treeIt )
+  {
+    int index = tagInfo->FindTagIndex( (*treeIt)->text( 0 ).toStdString().c_str() );
+    lut->GetTableValue( index, rgba );
+    (*treeIt)->setBackground( 0, QColor( rgba[0]*255, rgba[1]*255, rgba[2]*255, rgba[3]*255 ) );
+    (*treeIt)->setForeground( 0, ovIsOppositeColorWhite( rgba )
+      ? QColor(255, 255, 255, 255)
+      : QColor(0, 0, 0, 255) );
+    treeIt++;
+  }
+
+  this->IsLoadingData = false;
+  
+  // load the orlando file and render
+  this->OrlandoReader->SetFileName( this->CurrentDataFileName );
+  this->GraphLayoutView->SetRepresentationFromInput( this->RestrictGraphFilter->GetOutput() );
+  this->UpdateActiveTags();
+  this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -550,16 +649,17 @@ void ovQMainWindow::slotReCenterGraph()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotSetBackgroundSolid()
 {
-  double rgb[3];
-  this->GraphLayoutViewTheme->GetBackgroundColor( rgb );
-  QColor c( 255. * rgb[0], 255. * rgb[1], 255. * rgb[2] );
+  double rgba[4];
+  this->GraphLayoutViewTheme->GetBackgroundColor( rgba );
+  QColor c( 255. * rgba[0], 255. * rgba[1], 255. * rgba[2], 255 );
   c = QColorDialog::getColor( c, this );
-  rgb[0] = static_cast< double >( c.red() ) / 255.;
-  rgb[1] = static_cast< double >( c.green() ) / 255.;
-  rgb[2] = static_cast< double >( c.blue() ) / 255.;
+  rgba[0] = c.redF();
+  rgba[1] = c.greenF();
+  rgba[2] = c.blueF();
+  rgba[3] = c.alphaF();
 
-  this->GraphLayoutViewTheme->SetBackgroundColor( rgb[0], rgb[1], rgb[2] );
-  this->GraphLayoutViewTheme->SetBackgroundColor2( rgb[0], rgb[1], rgb[2] );
+  this->GraphLayoutViewTheme->SetBackgroundColor( rgba );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( rgba );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   this->GraphLayoutView->Render();
 }
@@ -567,15 +667,16 @@ void ovQMainWindow::slotSetBackgroundSolid()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotSetBackgroundTop()
 {
-  double rgb[3];
-  this->GraphLayoutViewTheme->GetBackgroundColor2( rgb );
-  QColor c( 255. * rgb[0], 255. * rgb[1], 255. * rgb[2] );
+  double rgba[4];
+  this->GraphLayoutViewTheme->GetBackgroundColor2( rgba );
+  QColor c( 255. * rgba[0], 255. * rgba[1], 255. * rgba[2], 255 );
   c = QColorDialog::getColor( c, this );
-  rgb[0] = static_cast< double >( c.red() ) / 255.;
-  rgb[1] = static_cast< double >( c.green() ) / 255.;
-  rgb[2] = static_cast< double >( c.blue() ) / 255.;
+  rgba[0] = c.redF();
+  rgba[1] = c.greenF();
+  rgba[2] = c.blueF();
+  rgba[3] = c.alphaF();
 
-  this->GraphLayoutViewTheme->SetBackgroundColor2( rgb[0], rgb[1], rgb[2] );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( rgba );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   this->GraphLayoutView->Render();
 }
@@ -583,17 +684,172 @@ void ovQMainWindow::slotSetBackgroundTop()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotSetBackgroundBottom()
 {
-  double rgb[3];
-  this->GraphLayoutViewTheme->GetBackgroundColor( rgb );
-  QColor c( 255. * rgb[0], 255. * rgb[1], 255. * rgb[2] );
+  double rgba[4];
+  this->GraphLayoutViewTheme->GetBackgroundColor( rgba );
+  QColor c( 255. * rgba[0], 255. * rgba[1], 255. * rgba[2], 255 );
   c = QColorDialog::getColor( c, this );
-  rgb[0] = static_cast< double >( c.red() ) / 255.;
-  rgb[1] = static_cast< double >( c.green() ) / 255.;
-  rgb[2] = static_cast< double >( c.blue() ) / 255.;
+  rgba[0] = c.redF();
+  rgba[1] = c.greenF();
+  rgba[2] = c.blueF();
+  rgba[3] = c.alphaF();
 
-  this->GraphLayoutViewTheme->SetBackgroundColor( rgb[0], rgb[1], rgb[2] );
+  this->GraphLayoutViewTheme->SetBackgroundColor( rgba );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotOpenSession()
+{
+  QString fileName = QFileDialog::getOpenFileName(
+    this, tr( "Open Ovis Session" ), ".", tr( "Ovis Session Files (*.ovx)" ) );
+  
+  if( "" != fileName )
+  {
+    vtkSmartPointer< ovSessionReader > reader = vtkSmartPointer< ovSessionReader >::New();
+    try
+    {
+      reader->SetFileName( fileName.toStdString().c_str() );
+      reader->Update();
+      this->Session->DeepCopy( reader->GetOutput() );
+      this->CurrentSessionFileName = fileName.toStdString().c_str();
+      this->ApplySessionToState();
+    }
+    catch( vtkstd::exception &e )
+    {
+      QMessageBox errorMessage( this );
+      errorMessage.setWindowModality( Qt::WindowModal );
+      errorMessage.setIcon( QMessageBox::Warning );
+      errorMessage.setText( "There was an error while attempting to open the session." );
+      errorMessage.exec();
+    }
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotReloadSession()
+{
+  this->ApplySessionToState();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotSaveSession()
+{
+  // make sure we have a session file name
+  if( "" == this->CurrentSessionFileName )
+  {
+    this->slotSaveSessionAs();
+  }
+  else
+  {
+    vtkSmartPointer< ovSessionWriter > writer = vtkSmartPointer< ovSessionWriter >::New();
+    try
+    {
+      this->ApplyStateToSession();
+      writer->SetFileName( this->CurrentSessionFileName );
+      writer->SetInput( this->Session );
+      writer->Update();
+    }
+    catch( vtkstd::exception &e )
+    {
+      QMessageBox errorMessage( this );
+      errorMessage.setWindowModality( Qt::WindowModal );
+      errorMessage.setIcon( QMessageBox::Warning );
+      errorMessage.setText( "There was an error while attempting to save the session." );
+      errorMessage.exec();
+    }
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotSaveSessionAs()
+{
+  QString fileName = QFileDialog::getSaveFileName(
+    this, tr( "Save Ovis Session" ), ".", tr( "Ovis Session Files (*.ovx)" ) );
+  
+  if( "" != fileName )
+  {
+    // add .ovx if it isn't already there
+    if( !fileName.endsWith( ".ovx" ) ) fileName.append( ".ovx" );
+    this->CurrentSessionFileName = fileName.toStdString().c_str();
+    this->slotSaveSession();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::ApplySessionToState()
+{
+  this->IsLoadingSession = true;
+  
+  if( this->Session->GetDataFile() != this->CurrentDataFileName )
+  {
+    this->CurrentDataFileName = this->Session->GetDataFile();
+    this->LoadData();
+  }
+  this->GraphLayoutViewTheme->SetBackgroundColor(
+    this->Session->GetBackgroundColor1() );
+  this->GraphLayoutViewTheme->SetBackgroundColor2(
+    this->Session->GetBackgroundColor2() );
+  this->SetVertexStyle( this->Session->GetVertexStyle() );
+  this->SetLayoutStrategy( this->Session->GetLayoutStrategy() );
+  this->RestrictGraphFilter->SetAuthorsOnly( this->Session->GetAuthorsOnly() );
+  this->RestrictGraphFilter->SetGenderTypeRestriction(
+    this->Session->GetGenderTypeRestriction() );
+  this->RestrictGraphFilter->SetWriterTypeRestriction(
+    this->Session->GetWriterTypeRestriction() );
+  this->SetVertexSize( this->Session->GetVertexSize() ); 
+  this->SetEdgeSize( this->Session->GetEdgeSize() ); 
+  this->SetAuthorVertexColor( this->Session->GetAuthorVertexColor() );
+  this->SetAssociationVertexColor( this->Session->GetAssociationVertexColor() );
+  this->SetStartDate( this->Session->GetStartDateRestriction() );
+  this->SetEndDate( this->Session->GetEndDateRestriction() );
+  this->SetTagList( this->Session->GetTagList() );
+  vtkCamera *camera = this->GraphLayoutView->GetRenderer()->GetActiveCamera();
+  camera->SetPosition( this->Session->GetCamera()->GetPosition() );
+  camera->SetFocalPoint( this->Session->GetCamera()->GetFocalPoint() );
+  camera->SetViewUp( this->Session->GetCamera()->GetViewUp() );
+  camera->SetClippingRange( this->Session->GetCamera()->GetClippingRange() );
+  camera->SetParallelScale( this->Session->GetCamera()->GetParallelScale() );
+
+  this->IsLoadingSession = false;
+  this->UpdateActiveTags();
+  this->RenderGraph();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::ApplyStateToSession()
+{
+  this->Session->SetDataFile( this->CurrentDataFileName );
+  this->Session->SetBackgroundColor1(
+    this->GraphLayoutViewTheme->GetBackgroundColor() );
+  this->Session->SetBackgroundColor2(
+    this->GraphLayoutViewTheme->GetBackgroundColor2() );
+  this->Session->SetVertexStyle( this->GraphLayoutView->GetGlyphType() );
+  this->Session->SetLayoutStrategy( this->CurrentLayoutStrategy );
+  this->Session->SetAuthorsOnly( this->RestrictGraphFilter->GetAuthorsOnly() );
+  this->Session->SetGenderTypeRestriction(
+    this->RestrictGraphFilter->GetGenderTypeRestriction() );
+  this->Session->SetWriterTypeRestriction(
+    this->RestrictGraphFilter->GetWriterTypeRestriction() );
+  this->Session->SetVertexSize(
+    this->GraphLayoutViewTheme->GetPointSize() );
+  this->Session->SetEdgeSize(
+    this->GraphLayoutViewTheme->GetLineWidth() );
+  vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+    this->GraphLayoutViewTheme->GetPointLookupTable() );
+  this->Session->SetAuthorVertexColor( lut->GetTableValue( 1 ) );
+  this->Session->SetAssociationVertexColor( lut->GetTableValue( 0 ) );
+  this->Session->SetStartDateRestriction(
+    this->RestrictGraphFilter->GetStartDate()->ToInt() );
+  this->Session->SetEndDateRestriction(
+    this->RestrictGraphFilter->GetEndDate()->ToInt() );
+  this->GetTagList( this->Session->GetTagList() );
+  vtkCamera *camera = this->GraphLayoutView->GetRenderer()->GetActiveCamera();
+  this->Session->GetCamera()->SetPosition( camera->GetPosition() );
+  this->Session->GetCamera()->SetFocalPoint( camera->GetFocalPoint() );
+  this->Session->GetCamera()->SetViewUp( camera->GetViewUp() );
+  this->Session->GetCamera()->SetClippingRange( camera->GetClippingRange() );
+  this->Session->GetCamera()->SetParallelScale( camera->GetParallelScale() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -610,15 +866,42 @@ void ovQMainWindow::SetVertexStyle( int type )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::SetLayoutStrategy( const char* strategy )
+void ovQMainWindow::SetLayoutStrategy( const ovString &strategy )
 {
-  this->GraphLayoutView->GetLayoutStrategy()->RemoveObserver(
-    vtkCommand::ProgressEvent );
-  this->GraphLayoutView->SetLayoutStrategy( strategy );
-  this->GraphLayoutView->GetLayoutStrategy()->AddObserver(
-    vtkCommand::ProgressEvent, this->ProgressObserver );
-  
-  this->RenderGraph( true );
+  if( this->CurrentLayoutStrategy != strategy )
+  {
+    // update the GUI
+    if( "Random" == strategy )
+      this->ui->actionSetLayoutStrategyToRandom->setChecked( true );
+    else if( "Force Directed" == strategy )
+      this->ui->actionSetLayoutStrategyToForceDirected->setChecked( true );
+    else if( "Simple 2D" == strategy )
+      this->ui->actionSetLayoutStrategyToSimple2D->setChecked( true );
+    else if( "Clustering 2D" == strategy )
+      this->ui->actionSetLayoutStrategyToClustering2D->setChecked( true );
+    else if( "Community 2D" == strategy )
+      this->ui->actionSetLayoutStrategyToCommunity2D->setChecked( true );
+    else if( "Fast 2D" == strategy )
+      this->ui->actionSetLayoutStrategyToFast2D->setChecked( true );
+    else if( "Circular" == strategy )
+      this->ui->actionSetLayoutStrategyToCircular->setChecked( true );
+    //else if( "Cosmic Tree" == strategy )
+    //  this->ui->actionSetLayoutStrategyToCosmicTree->setChecked( true );
+    //else if( "Cone" == strategy )
+    //  this->ui->actionSetLayoutStrategyToCone->setChecked( true );
+    else if( "Span Tree" == strategy )
+      this->ui->actionSetLayoutStrategyToSpanTree->setChecked( true );
+
+    // update the graph
+    this->CurrentLayoutStrategy = strategy;
+    this->GraphLayoutView->GetLayoutStrategy()->RemoveObserver(
+      vtkCommand::ProgressEvent );
+    this->GraphLayoutView->SetLayoutStrategy( this->CurrentLayoutStrategy.c_str() );
+    this->GraphLayoutView->GetLayoutStrategy()->AddObserver(
+      vtkCommand::ProgressEvent, this->ProgressObserver );
+    
+    this->RenderGraph( true );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -645,13 +928,40 @@ void ovQMainWindow::slotWriterComboBoxCurrentIndexChanged( const QString& index 
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotVertexSizeSliderValueChanged( int value )
+void ovQMainWindow::SetVertexSize( int value )
 {
   // we need to double the point size for all but the vertex type
   int type = this->GraphLayoutView->GetGlyphType();
-  this->GraphLayoutViewTheme->SetPointSize( value * ( VTK_VERTEX_GLYPH == type ? 1 : 2 ) );
+  value *= VTK_VERTEX_GLYPH == type ? 1 : 2;
+  this->GraphLayoutViewTheme->SetPointSize( value );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  this->ui->vertexSizeSlider->setValue( value );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotVertexSizeSliderValueChanged( int value )
+{
+  this->SetVertexSize( value );
   this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetAuthorVertexColor( double rgba[4] )
+{
+  // change the button color
+  char buffer[512];
+  sprintf( buffer, "color: %s; background-color: rgba( %d, %d, %d, %d )",
+    ovIsOppositeColorWhite( rgba ) ? "white" : "black",
+    static_cast< int >( rgba[0]*255 ),
+    static_cast< int >( rgba[1]*255 ),
+    static_cast< int >( rgba[2]*255 ),
+    static_cast< int >( rgba[3]*255 ) );
+  this->ui->authorVertexColorPushButton->setStyleSheet( buffer );
+    
+  // change the LUT color
+  vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+    this->GraphLayoutViewTheme->GetPointLookupTable() );
+  lut->SetTableValue( 1, rgba );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -663,17 +973,8 @@ void ovQMainWindow::slotAuthorVertexColorPushButtonClicked()
 
   if( color.isValid() )
   {
-    // change the button color
-    char buffer[512];
-    sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
-      ovIsOppositeColorWhite( color.redF(), color.greenF(), color.blueF() ) ? "white" : "black",
-      color.red(), color.green(), color.blue() );
-    this->ui->authorVertexColorPushButton->setStyleSheet( buffer );
-    
-    // change the LUT color
-    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
-      this->GraphLayoutViewTheme->GetPointLookupTable() );
-    lut->SetTableValue( 1, color.redF(), color.greenF(), color.blueF() );
+    double rgba[] = { color.redF(), color.greenF(), color.blueF(), color.alphaF() };
+    this->SetAuthorVertexColor( rgba );
 
     // Calling Render() should be enough to update the graph view, but for some reason
     // it is also necessary to simulate a left mouse button click.  This seems harmless
@@ -682,6 +983,25 @@ void ovQMainWindow::slotAuthorVertexColorPushButtonClicked()
     this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonPressEvent );
     this->GraphLayoutView->GetInteractor()->InvokeEvent( vtkCommand::LeftButtonReleaseEvent );
   }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetAssociationVertexColor( double rgba[4] )
+{
+  // change the button color
+  char buffer[512];
+  sprintf( buffer, "color: %s; background-color: rgba( %d, %d, %d, %d )",
+    ovIsOppositeColorWhite( rgba ) ? "white" : "black",
+    static_cast< int >( rgba[0]*255 ),
+    static_cast< int >( rgba[1]*255 ),
+    static_cast< int >( rgba[2]*255 ),
+    static_cast< int >( rgba[3]*255 ) );
+  this->ui->associationVertexColorPushButton->setStyleSheet( buffer );
+    
+  // change the LUT color
+  vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+    this->GraphLayoutViewTheme->GetPointLookupTable() );
+  lut->SetTableValue( 0, rgba );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -693,17 +1013,8 @@ void ovQMainWindow::slotAssociationVertexColorPushButtonClicked()
 
   if( color.isValid() )
   {
-    // change the button color
-    char buffer[512];
-    sprintf( buffer, "color: %s; background-color: rgb( %d, %d, %d )",
-      ovIsOppositeColorWhite( color.redF(), color.greenF(), color.blueF() ) ? "white" : "black",
-      color.red(), color.green(), color.blue() );
-    this->ui->associationVertexColorPushButton->setStyleSheet( buffer );
-    
-    // change the LUT color
-    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
-      this->GraphLayoutViewTheme->GetPointLookupTable() );
-    lut->SetTableValue( 0, color.redF(), color.greenF(), color.blueF() );
+    double rgba[] = { color.redF(), color.greenF(), color.blueF(), color.alphaF() };
+    this->SetAssociationVertexColor( rgba );
 
     // Calling Render() should be enough to update the graph view, but for some reason
     // it is also necessary to simulate a left mouse button click.  This seems harmless
@@ -715,17 +1026,30 @@ void ovQMainWindow::slotAssociationVertexColorPushButtonClicked()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
+void ovQMainWindow::SetEdgeSize( int value )
 {
   this->GraphLayoutViewTheme->SetLineWidth( value );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
+  this->ui->edgeSizeSlider->setValue( value );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
+{
+  this->SetEdgeSize( value );
   this->GraphLayoutView->Render();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotStartLineEditTextChanged( const QString& text )
+void ovQMainWindow::SetStartDate( const ovDate &date )
 {
-  this->RestrictGraphFilter->GetStartDate()->SetDate( text.toStdString().c_str() );
+  // update the GUI
+  ovString dateString;
+  date.ToString( dateString );
+  this->ui->startLineEdit->setText( dateString.c_str() );
+  
+  // update the graph
+  this->RestrictGraphFilter->SetStartDate( date );
   this->RestrictGraphFilter->Modified();
   this->RenderGraph();
 }
@@ -740,16 +1064,20 @@ void ovQMainWindow::slotStartSetPushButtonClicked()
   
   if( QDialog::Accepted == dialog.exec() )
   {
-    ovString dateString;
-    dialog.getDate().ToString( dateString );
-    this->ui->startLineEdit->setText( dateString.c_str() );
+    this->SetStartDate( dialog.getDate() );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotEndLineEditTextChanged( const QString& text )
+void ovQMainWindow::SetEndDate( const ovDate &date )
 {
-  this->RestrictGraphFilter->GetEndDate()->SetDate( text.toStdString().c_str() );
+  // update the GUI
+  ovString dateString;
+  date.ToString( dateString );
+  this->ui->endLineEdit->setText( dateString.c_str() );
+  
+  // update the graph
+  this->RestrictGraphFilter->SetEndDate( date );
   this->RestrictGraphFilter->Modified();
   this->RenderGraph();
 }
@@ -764,9 +1092,7 @@ void ovQMainWindow::slotEndSetPushButtonClicked()
   
   if( QDialog::Accepted == dialog.exec() )
   {
-    ovString dateString;
-    dialog.getDate().ToString( dateString );
-    this->ui->endLineEdit->setText( dateString.c_str() );
+    this->SetEndDate( dialog.getDate() );
   }
 }
 
@@ -774,7 +1100,7 @@ void ovQMainWindow::slotEndSetPushButtonClicked()
 void ovQMainWindow::slotTagTreeCheckButtonClicked()
 {
   // don't update the graph view until we're done checking tags
-  this->AutoUpdateIncludeTags = false;
+  this->IsCheckingMultipleTags = true;
   
   // check all selected tree items
   QTreeWidgetItem *item;
@@ -787,16 +1113,16 @@ void ovQMainWindow::slotTagTreeCheckButtonClicked()
   }
 
   // manually update the graph view
-  this->UpdateIncludeTags();
+  this->IsCheckingMultipleTags = false;
+  this->UpdateActiveTags();
   this->RenderGraph( true );
-  this->AutoUpdateIncludeTags = true;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotTagTreeUnCheckButtonClicked()
 {
   // don't update the graph view until we're done checking tags
-  this->AutoUpdateIncludeTags = false;
+  this->IsCheckingMultipleTags = true;
 
   // check all selected tree items
   QTreeWidgetItem *item;
@@ -809,9 +1135,9 @@ void ovQMainWindow::slotTagTreeUnCheckButtonClicked()
   }
 
   // manually update the graph view
-  this->UpdateIncludeTags();
+  this->IsCheckingMultipleTags = false;
+  this->UpdateActiveTags();
   this->RenderGraph( true );
-  this->AutoUpdateIncludeTags = true;
 }
  
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -820,11 +1146,8 @@ void ovQMainWindow::slotTagTreeItemChanged( QTreeWidgetItem* item, int column )
   // the checked state of the item may have changed, update the tag info singleton
   ovTag *tag = ovOrlandoTagInfo::GetInfo()->FindTag( item->text( column ).toStdString() );
   if( tag ) tag->active = Qt::Checked == item->checkState( column ) ? true : false;
-  if( this->AutoUpdateIncludeTags )
-  {
-    this->UpdateIncludeTags();
-    this->RenderGraph( true );
-  }
+  this->UpdateActiveTags();
+  this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -866,26 +1189,128 @@ void ovQMainWindow::slotTagTreeItemDoubleClicked( QTreeWidgetItem* item, int col
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::UpdateIncludeTags()
+void ovQMainWindow::GetTagList( ovTagVector *tags )
 {
-  // build a string array from all the currently active tags
-  vtkSmartPointer< vtkStringArray > tags = vtkSmartPointer< vtkStringArray >::New();
+  if( NULL == tags ) return;
+  double *rgba;
+  QTreeWidgetItem *parent;
   
-  QTreeWidgetItemIterator it( this->ui->tagTreeWidget );
-  while( *it )
+  vtkstd::for_each( tags->begin(), tags->end(), safe_delete() );
+  tags->clear();
+  QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+  while( *treeIt )
   {
-    if( Qt::Checked == (*it)->checkState( 0 ) )
-    {
-      tags->InsertNextValue( (*it)->text( 0 ).toStdString() );
-    }
-    it++;
-  }
+    QTreeWidgetItem *item = *treeIt;
+    parent = item->parent();
+    ovTag *tag = new ovTag;
+    tag->parent = parent ? parent->text( 0 ).toStdString().c_str() : "";
+    tag->name = item->text( 0 ).toStdString().c_str();
+    tag->active = Qt::Checked == item->checkState( 0 );
+    tag->expanded = item->isExpanded();
 
-  this->RestrictGraphFilter->SetIncludeTags( tags );
+    // get the tag color from the LUT
+    vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+      this->GraphLayoutViewTheme->GetCellLookupTable() );
+    rgba = lut->GetTableValue(
+      ovOrlandoTagInfo::GetInfo()->FindTagIndex( tag->name.c_str() ) );
+    for( int i = 0; i < 4; i++ ) tag->color[i] = rgba[i];
+
+    // store the tag and go to the next tree widget item
+    tags->push_back( tag );
+    treeIt++;
+  }
 }
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetTagList( ovTagVector *tags )
+{
+  if( NULL == tags ) return;
+  
+  this->IsCheckingMultipleTags = true;
+    
+  // block the tree widget's signals, otherwise itemChanged() will signal the
+  // slotTagTreeItemChanged() method which we don't want
+  this->ui->tagTreeWidget->blockSignals( true );
+  
+  if( 0 == tags->size() )
+  {
+    this->ui->tagTreeWidget->clear();
+  }
+  else
+  {
+    // go through the tag list and apply it to the tree widget
+    ovTag *tag;
+    for( ovTagVector::iterator it = tags->begin(); it != tags->end(); ++it )
+    {
+      tag = *it;
+      QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+      while( *treeIt )
+      {
+        QTreeWidgetItem *item = *treeIt;
+        if( 0 == strcmp( item->text( 0 ).toStdString().c_str(), tag->name.c_str() ) )
+        {
+          item->setCheckState( 0, tag->active ? Qt::Checked : Qt::Unchecked );
+          item->setExpanded( tag->expanded );
+  
+          // change the item's color
+          item->setBackground( 0, QColor(
+            tag->color[0]*255,
+            tag->color[1]*255,
+            tag->color[2]*255,
+            tag->color[3]*255 ) );
+          item->setForeground( 0, ovIsOppositeColorWhite( tag->color )
+            ? QColor(255, 255, 255, 255)
+            : QColor(0, 0, 0, 255) );
+      
+          // update the LUT with the new color
+          vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
+            this->GraphLayoutViewTheme->GetCellLookupTable() );
+          lut->SetTableValue(
+            ovOrlandoTagInfo::GetInfo()->FindTagIndex( item->text( 0 ).toStdString().c_str() ),
+            tag->color );
+          break;
+        }
+        treeIt++;
+      }
+    }
+  }
+
+  this->ui->tagTreeWidget->blockSignals( false );
+  this->IsCheckingMultipleTags = false;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::UpdateActiveTags()
+{
+  if( this->IsCheckingMultipleTags ) return;
+  
+  vtkSmartPointer< vtkStringArray > tags = vtkSmartPointer< vtkStringArray >::New();
+  this->GetActiveTags( tags );
+  this->RestrictGraphFilter->SetActiveTags( tags );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::GetActiveTags( vtkStringArray* array )
+{
+  if( NULL == array ) return;
+  
+  QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+  while( *treeIt )
+  {
+    QTreeWidgetItem *item = *treeIt;
+    if( Qt::Checked == item->checkState( 0 ) )
+    {
+      array->InsertNextValue( item->text( 0 ).toStdString() );
+    }
+    treeIt++;
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::RenderGraph( bool resetCamera )
 {
+  if( this->IsLoadingSession || this->IsLoadingData || this->IsCheckingMultipleTags ) return;
+
   // we're about to do an operation that might take a while, so update the GUI and cursor
   this->repaint();
   this->setCursor( Qt::WaitCursor );

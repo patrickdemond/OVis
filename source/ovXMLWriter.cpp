@@ -61,9 +61,9 @@ void ovXMLWriter::CreateWriter()
     throw vtkstd::runtime_error( "Unable to open file." );
   }
 
-  // Start the document with the xml default for the version, encoding ISO 8859-1
+  // Start the document with the xml default for the version, encoding UTF-8
   // and the default for the standalone declaration.
-  if( xmlTextWriterStartDocument( this->Writer, NULL, "ISO-8859-1", NULL ) < 0 )
+  if( xmlTextWriterStartDocument( this->Writer, NULL, "UTF-8", NULL ) < 0 )
   {
     throw vtkstd::runtime_error( "Unable to start document." );
   }

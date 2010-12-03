@@ -55,7 +55,7 @@ public:
 
   // Description:
   // Populates a string array with the tags.
-  virtual void GetTags( ovTagVector &array );
+  virtual ovTagVector* GetTags() { return &( this->TagVector ); }
 
 protected:
   ovOrlandoTagInfo();
