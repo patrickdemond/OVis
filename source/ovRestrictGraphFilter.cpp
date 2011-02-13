@@ -445,10 +445,12 @@ int ovRestrictGraphFilter::RequestData(
     }
 
     // STEP #3
-    // make sure that the edge itself is to be included
+    // Make sure that the edge itself is to be included
+    // In order to make deeper items in the list take precedence over more shallow items
+    // we go through the list in reverse order
     vtkIdType matchIndex = -1;
-    vtkstd::vector< vtkIdType >::iterator it;
-    for( it = includeIndices.begin(); it != includeIndices.end(); ++it )
+    vtkstd::vector< vtkIdType >::reverse_iterator it;
+    for( it = includeIndices.rbegin(); it != includeIndices.rend(); ++it )
     {
       vtkIdType id = *it;
       if( '1' == tagBitArray->GetValue( e.Id ).at( id ) )

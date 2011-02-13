@@ -93,6 +93,8 @@ public slots:
   virtual void slotEndSetPushButtonClicked();
   virtual void slotTagTreeCheckButtonClicked();
   virtual void slotTagTreeUnCheckButtonClicked();
+  virtual void slotTagTreeExpandButtonClicked();
+  virtual void slotTagTreeCollapseButtonClicked();
   virtual void slotTagTreeItemChanged( QTreeWidgetItem*, int );
   virtual void slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int );
 

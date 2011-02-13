@@ -135,7 +135,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->actionTakeScreenshot, SIGNAL( triggered() ),
     this, SLOT( slotTakeScreenshot() ) );
-  this->ui->actionExit->setShortcuts( QKeySequence::Quit );
+  //this->ui->actionExit->setShortcuts( QKeySequence::Quit );
   QObject::connect( this->ui->actionExit, SIGNAL( triggered() ),
     qApp, SLOT( closeAllWindows() ) );
   
@@ -423,6 +423,12 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     this->ui->tagTreeUnCheckButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotTagTreeUnCheckButtonClicked() ) );
   QObject::connect(
+    this->ui->tagTreeExpandButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagTreeExpandButtonClicked() ) );
+  QObject::connect(
+    this->ui->tagTreeCollapseButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagTreeCollapseButtonClicked() ) );
+  QObject::connect(
     this->ui->tagTreeWidget, SIGNAL( itemChanged( QTreeWidgetItem*, int ) ),
     this, SLOT( slotTagTreeItemChanged( QTreeWidgetItem*, int ) ) );
   QObject::connect(
@@ -565,7 +571,6 @@ void ovQMainWindow::LoadData()
     if( tag->parent.length() )
     {
       // find the item with the parent's name
-
       parent = NULL;
       QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
       while( *treeIt )
@@ -617,7 +622,7 @@ void ovQMainWindow::LoadData()
   lut->SetNumberOfTableValues( tags->size() + 1 );
   lut->Build();
   
-  // color tag names in the tree widget based on the LUT
+  // color tag names in the tree widget based on the LUT (expand the tab while we're at it
   QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
   while( *treeIt )
   {
@@ -627,6 +632,8 @@ void ovQMainWindow::LoadData()
     (*treeIt)->setForeground( 0, ovIsOppositeColorWhite( rgba )
       ? QColor(255, 255, 255, 255)
       : QColor(0, 0, 0, 255) );
+
+    (*treeIt)->setExpanded( true );
     treeIt++;
   }
 
@@ -1138,6 +1145,32 @@ void ovQMainWindow::slotTagTreeUnCheckButtonClicked()
   this->IsCheckingMultipleTags = false;
   this->UpdateActiveTags();
   this->RenderGraph( true );
+}
+ 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagTreeExpandButtonClicked()
+{
+  // expand all tree items
+  QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+  while( *treeIt )
+  {
+    QTreeWidgetItem *item = *treeIt;
+    item->setExpanded( true );
+    treeIt++;
+  }
+}
+ 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagTreeCollapseButtonClicked()
+{
+  // expand all tree items
+  QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+  while( *treeIt )
+  {
+    QTreeWidgetItem *item = *treeIt;
+    item->setExpanded( false );
+    treeIt++;
+  }
 }
  
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
