@@ -4,19 +4,10 @@
 #include <QDialog>
 
 #include "ovUtilities.h"
-#include "vtkSmartPointer.h"
 
 #include <QtCore/qstring.h>
 
 class Ui_ovQDateDialog;
-
-class ovQDateDialogProgressCommand;
-class ovOrlandoReader;
-class ovRestrictGraphFilter;
-class QActionGroup;
-class QTreeWidgetItem;
-class vtkGraphLayoutView;
-class vtkViewTheme;
 
 class ovQDateDialog : public QDialog
 {
