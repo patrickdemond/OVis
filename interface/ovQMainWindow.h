@@ -89,6 +89,8 @@ public slots:
   virtual void slotEdgeSizeSliderValueChanged( int );
   virtual void slotAuthorVertexColorPushButtonClicked();
   virtual void slotAssociationVertexColorPushButtonClicked();
+  virtual void slotTextSearchSetPushButtonClicked();
+  virtual void slotAuthorSearchSetPushButtonClicked();
   virtual void slotStartSetPushButtonClicked();
   virtual void slotEndSetPushButtonClicked();
   virtual void slotTagTreeCheckButtonClicked();
@@ -119,6 +121,8 @@ protected:
   virtual void SetEdgeSize( int );
   virtual void SetAuthorVertexColor( double rgba[4] );
   virtual void SetAssociationVertexColor( double rgba[4] );
+  virtual void SetTextSearch( const char* );
+  virtual void SetAuthorSearch( const char* );
   virtual void SetStartDate( const ovDate& );
   virtual void SetEndDate( const ovDate& );
 

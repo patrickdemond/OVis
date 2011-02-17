@@ -46,6 +46,7 @@
 #include "vtkVariantArray.h"
 
 #include "ovQDateDialog.h"
+#include "ovQSearchDialog.h"
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
 #include "source/ovRestrictGraphFilter.h"
@@ -405,6 +406,14 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     this->ui->associationVertexColorPushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotAssociationVertexColorPushButtonClicked() ) );
   
+  // set up the search restriction widgets
+  QObject::connect(
+    this->ui->textSearchSetPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTextSearchSetPushButtonClicked() ) );
+  QObject::connect(
+    this->ui->authorSearchSetPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotAuthorSearchSetPushButtonClicked() ) );
+
   // set up the date restriction widgets
   QObject::connect(
     this->ui->startSetPushButton, SIGNAL( clicked( bool ) ),
@@ -1048,6 +1057,58 @@ void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetTextSearch( const char* text )
+{
+  // update the GUI
+  this->ui->textSearchLineEdit->setText( text );
+  
+  // update the graph
+  this->RestrictGraphFilter->SetTextSearch( text );
+  this->RestrictGraphFilter->Modified();
+  this->RenderGraph();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTextSearchSetPushButtonClicked()
+{
+  ovQSearchDialog dialog( this );
+  dialog.setModal( true );
+  dialog.setWindowTitle( tr( "Select text search" ) );
+  dialog.setSearch( this->ui->textSearchLineEdit->text().toStdString().c_str() );
+  
+  if( QDialog::Accepted == dialog.exec() )
+  {
+    this->SetTextSearch( dialog.getSearch().c_str() );
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetAuthorSearch( const char* text )
+{
+  // update the GUI
+  this->ui->textSearchLineEdit->setText( text );
+  
+  // update the graph
+  this->RestrictGraphFilter->SetAuthorSearch( text );
+  this->RestrictGraphFilter->Modified();
+  this->RenderGraph();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotAuthorSearchSetPushButtonClicked()
+{
+  ovQSearchDialog dialog( this );
+  dialog.setModal( true );
+  dialog.setWindowTitle( tr( "Select text search" ) );
+  dialog.setSearch( this->ui->textSearchLineEdit->text().toStdString().c_str() );
+  
+  if( QDialog::Accepted == dialog.exec() )
+  {
+    this->SetAuthorSearch( dialog.getSearch().c_str() );
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::SetStartDate( const ovDate &date )
 {
   // update the GUI
@@ -1360,7 +1421,7 @@ void ovQMainWindow::RenderGraph( bool resetCamera )
   char buffer[512];
   sprintf( buffer, "Processing time: %0.2fs    Number of vertices: %d     Number of edges: %d",
     static_cast< double >( end - start ) / CLOCKS_PER_SEC,
-    this->RestrictGraphFilter->GetOutput()->GetNumberOfVertices(),
-    this->RestrictGraphFilter->GetOutput()->GetNumberOfEdges() );
+    static_cast< int >( this->RestrictGraphFilter->GetOutput()->GetNumberOfVertices() ),
+    static_cast< int >( this->RestrictGraphFilter->GetOutput()->GetNumberOfEdges() ) );
   this->ui->statusbar->showMessage( buffer );
 }

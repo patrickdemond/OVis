@@ -141,6 +141,11 @@ int ovOrlandoReader::ProcessRequest(
     vtkSmartPointer< vtkVariantArray > edgeColorArray = vtkSmartPointer< vtkVariantArray >::New();
     edgeColorArray->SetName( "color" );
     graph->GetEdgeData()->AddArray( edgeColorArray );
+    
+    // the text array is used to keep a string of raw text associated with every edge
+    vtkSmartPointer< vtkStringArray > textArray = vtkSmartPointer< vtkStringArray >::New();
+    textArray->SetName( "text" );
+    graph->GetEdgeData()->AddArray( textArray );
 
     // A string to store the current active tags and mark them all as '0' chars to begin with.
     // Every time we open a tag in the association types vector we will set the tag to '1',
@@ -152,7 +157,7 @@ int ovOrlandoReader::ProcessRequest(
     {
       vtkIdType currentVertexId = -1, currentConnectingVertexId = -1;
       vtkStdString currentVertexPedigree = "";
-      bool inBirthTag = false, inDeathTag = false;
+      bool inBirthTag = false, inDeathTag = false, inOrlandoHeaderTag = false;
       this->CreateReader();
       
       // count how many entries are in the file (for progress reporting)
@@ -173,6 +178,22 @@ int ovOrlandoReader::ProcessRequest(
         // ignore node type 14 (#text stuff that we don't need)
         if( 14 == this->CurrentNode.NodeType ) continue;
         
+        // make sure to skip anything inside the orlando header tag
+        if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "ORLANDOHEADER" ) )
+        {
+          if( !( this->CurrentNode.IsEmptyElement ) && this->CurrentNode.IsOpeningElement() )
+          {
+            inOrlandoHeaderTag = true;
+          }
+          else if( this->CurrentNode.IsClosingElement() )
+          {
+            inOrlandoHeaderTag = false;
+          }
+          continue;
+        }
+
+        if( inOrlandoHeaderTag ) continue;
+
         // This node is an entry (vertex)
         if( 1 == this->CurrentNode.Depth &&
             0 == xmlStrcmp( BAD_CAST "ENTRY", this->CurrentNode.Name ) )
@@ -219,6 +240,16 @@ int ovOrlandoReader::ProcessRequest(
           }
           else
           {
+            ovString content;
+            if( this->CurrentNode.HasContent )
+            {
+              ovString content = ( char* )( this->CurrentNode.Content );
+              
+              size_t start = content.find_first_not_of(" \t\n\r");
+              if( start != vtkstd::string::npos )
+                content = content.substr( start, content.find_last_not_of(" \t\n\r") - start + 1 );
+            }
+
             // get the pedigree (associate's name) from this node's standard attribute
             const char *pedigree = ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "STANDARD" ) );
 
@@ -245,10 +276,11 @@ int ovOrlandoReader::ProcessRequest(
 
               // Create an edge from the current vertex to the new vertex
               vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-              array->SetNumberOfComponents( 2 );
+              array->SetNumberOfComponents( 3 );
               array->SetNumberOfTuples( 1 );
               array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
               array->SetValue( 1, 0 ); // color (set by the restrict filter)
+              array->SetValue( 2, vtkVariant( content ) ); // text
               graph->AddEdge( currentVertexPedigree, pedigree, array );
   
               // determine the connecting vertex' id if this isn't an empty element

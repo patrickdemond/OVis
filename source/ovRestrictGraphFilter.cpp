@@ -51,7 +51,9 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   this->SetDeathArrayName( "death" );
   this->SetWriterTypeArrayName( "writerType" );
   this->SetEdgeColorArrayName( "color" );
-
+  
+  this->SetTextSearch( "" );
+  this->SetAuthorSearch( "" );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -140,6 +142,32 @@ void ovRestrictGraphFilter::SetEdgeColorArrayName( const ovString &name )
   if( name != this->EdgeColorArrayName )
   {
     this->EdgeColorArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetTextSearch( const ovString &text )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "TextSearch to " << text.c_str() );
+
+  if( text != this->TextSearch )
+  {
+    this->TextSearch = text;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetAuthorSearch( const ovString &text )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "AuthorSearch to " << text.c_str() );
+
+  if( text != this->AuthorSearch )
+  {
+    this->AuthorSearch = text;
     this->Modified();
   }
 }
@@ -448,6 +476,7 @@ int ovRestrictGraphFilter::RequestData(
     // Make sure that the edge itself is to be included
     // In order to make deeper items in the list take precedence over more shallow items
     // we go through the list in reverse order
+    // TODO: add in text and author searching
     vtkIdType matchIndex = -1;
     vtkstd::vector< vtkIdType >::reverse_iterator it;
     for( it = includeIndices.rbegin(); it != includeIndices.rend(); ++it )

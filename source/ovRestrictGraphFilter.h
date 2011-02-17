@@ -126,6 +126,12 @@ public:
   vtkGetObjectMacro( ActiveTags, vtkStringArray );
   virtual void SetActiveTags( vtkStringArray* );
   
+  virtual ovString GetTextSearch() { return this->TextSearch; }
+  virtual void SetTextSearch( const ovString &text );
+
+  virtual ovString GetAuthorSearch() { return this->AuthorSearch; }
+  virtual void SetAuthorSearch( const ovString &author );
+
   virtual ovDate* GetStartDate() { return &( this->StartDate ); }
   virtual void SetStartDate( const ovDate& );
 
@@ -153,6 +159,8 @@ protected:
   int GenderTypeRestriction;
   int WriterTypeRestriction;
   vtkStringArray *ActiveTags;
+  ovString TextSearch;
+  ovString AuthorSearch;
   ovDate StartDate;
   ovDate EndDate;
   
