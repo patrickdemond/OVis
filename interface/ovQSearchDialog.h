@@ -26,10 +26,11 @@ public:
 
 public slots:
   //event functions
+  void slotTermTableWidgetCellClicked( int row, int column );
+  void slotAddPushButton();
+  void slotRemovePushButton();
 
 protected:
-
-  ovString search;
 
 protected slots:
 
