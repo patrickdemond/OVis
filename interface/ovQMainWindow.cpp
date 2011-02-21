@@ -50,6 +50,7 @@
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
 #include "source/ovRestrictGraphFilter.h"
+#include "source/ovSearchPhrase.h"
 #include "source/ovSession.h"
 #include "source/ovSessionReader.h"
 #include "source/ovSessionWriter.h"
@@ -382,6 +383,10 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->RestrictGraphFilter = vtkSmartPointer< ovRestrictGraphFilter >::New();
   this->RestrictGraphFilter->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
   this->RestrictGraphFilter->SetInput( this->OrlandoReader->GetOutput() );
+  
+  // set up the search phrases
+  this->TextSearchPhrase = vtkSmartPointer< ovSearchPhrase >::New();
+  this->AuthorSearchPhrase = vtkSmartPointer< ovSearchPhrase >::New();
   
   // set up the display property widgets
   QObject::connect(
@@ -1057,41 +1062,26 @@ void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::SetTextSearch( const char* text )
-{
-  // update the GUI
-  this->ui->textSearchLineEdit->setText( text );
-  
-  // update the graph
-  this->RestrictGraphFilter->SetTextSearch( text );
-  this->RestrictGraphFilter->Modified();
-  this->RenderGraph();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotTextSearchSetPushButtonClicked()
 {
   ovQSearchDialog dialog( this );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select text search" ) );
-  dialog.setSearch( this->ui->textSearchLineEdit->text().toStdString().c_str() );
+  dialog.setSearchPhrase( this->TextSearchPhrase );
   
   if( QDialog::Accepted == dialog.exec() )
   {
-    this->SetTextSearch( dialog.getSearch().c_str() );
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::SetAuthorSearch( const char* text )
-{
-  // update the GUI
-  this->ui->textSearchLineEdit->setText( text );
+    // update the text search from the dialog
+    dialog.getSearchPhrase( this->TextSearchPhrase );
   
-  // update the graph
-  this->RestrictGraphFilter->SetAuthorSearch( text );
-  this->RestrictGraphFilter->Modified();
-  this->RenderGraph();
+    // update the GUI
+    this->ui->textSearchLineEdit->setText( this->TextSearchPhrase->ToString().c_str() );
+    
+    // update the graph
+    this->RestrictGraphFilter->SetTextSearchPhrase( this->TextSearchPhrase );
+    this->RestrictGraphFilter->Modified();
+    this->RenderGraph();
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1100,11 +1090,20 @@ void ovQMainWindow::slotAuthorSearchSetPushButtonClicked()
   ovQSearchDialog dialog( this );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select text search" ) );
-  dialog.setSearch( this->ui->textSearchLineEdit->text().toStdString().c_str() );
+  dialog.setSearchPhrase( this->AuthorSearchPhrase );
   
   if( QDialog::Accepted == dialog.exec() )
   {
-    this->SetAuthorSearch( dialog.getSearch().c_str() );
+    // update the text search from the dialog
+    dialog.getSearchPhrase( this->AuthorSearchPhrase );
+  
+    // update the GUI
+    this->ui->textSearchLineEdit->setText( this->AuthorSearchPhrase->ToString().c_str() );
+    
+    // update the graph
+    this->RestrictGraphFilter->SetAuthorSearchPhrase( this->AuthorSearchPhrase );
+    this->RestrictGraphFilter->Modified();
+    this->RenderGraph();
   }
 }
 

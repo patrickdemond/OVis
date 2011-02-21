@@ -8,8 +8,8 @@
 #include <QtCore/qstring.h>
 
 class Ui_ovQSearchDialog;
+class ovSearchPhrase;
 
-// TODO: implement this dialog
 class ovQSearchDialog : public QDialog
 {
   Q_OBJECT
@@ -20,9 +20,9 @@ public:
   //destructor
   ~ovQSearchDialog();
   
-  // get/set date
-  ovString getSearch();
-  void setSearch( const ovString &search );
+  // get/set search phrase
+  void getSearchPhrase( ovSearchPhrase *search );
+  void setSearchPhrase( ovSearchPhrase *search );
 
 public slots:
   //event functions

@@ -115,6 +115,11 @@ int ovOrlandoReader::ProcessRequest(
     graph->GetVertexData()->AddArray( sizeArray );
     graph->GetVertexData()->SetActiveScalars( sizeArray->GetName() );
 
+    // the content array is used to track each entries full un-marked-up content
+    vtkSmartPointer< vtkStringArray > contentArray = vtkSmartPointer< vtkStringArray >::New();
+    contentArray->SetName( "content" );
+    graph->GetVertexData()->AddArray( contentArray );
+
     // the birth and death arrays track author birth and death dates
     vtkSmartPointer< vtkIntArray > birthArray = vtkSmartPointer< vtkIntArray >::New();
     birthArray->SetName( "birth" );
@@ -142,17 +147,15 @@ int ovOrlandoReader::ProcessRequest(
     edgeColorArray->SetName( "color" );
     graph->GetEdgeData()->AddArray( edgeColorArray );
     
-    // the text array is used to keep a string of raw text associated with every edge
-    vtkSmartPointer< vtkStringArray > textArray = vtkSmartPointer< vtkStringArray >::New();
-    textArray->SetName( "text" );
-    graph->GetEdgeData()->AddArray( textArray );
-
     // A string to store the current active tags and mark them all as '0' chars to begin with.
     // Every time we open a tag in the association types vector we will set the tag to '1',
     // and every time the tag closes we will set it back to '0'.  This string will then be
     // copied every time we add a new edge.
     ovString currentTagArray( tagInfo->GetNumberOfTags(), '0' );
     
+    // Keep track of the content so that it can be added to the author node
+    ovString authorContent;
+
     try
     {
       vtkIdType currentVertexId = -1, currentConnectingVertexId = -1;
@@ -204,27 +207,32 @@ int ovOrlandoReader::ProcessRequest(
             this->InvokeEvent( vtkCommand::ProgressEvent, &( progress ) );
             
             // get the pedigree (author's name) from this node's id attribute
-            const char *pedigree = ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "id" ) );
+            const char *pedigree =
+              ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "id" ) );
 
             // create a new vertex using the Id (author name) as the pedigree
             vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-            array->SetNumberOfComponents( 7 );
+            array->SetNumberOfComponents( 8 );
             array->SetNumberOfTuples( 1 );
             array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
             array->SetValue( 1, 1 ); // color
             array->SetValue( 2, 2 ); // size
-            array->SetValue( 3, 0 ); // birth date
-            array->SetValue( 4, 0 ); // death date
-            array->SetValue( 5, ovOrlandoReader::GenderTypeUnknown ); // gender
-            array->SetValue( 6, ovOrlandoReader::WriterTypeNone ); // writer type
+            array->SetValue( 3, vtkVariant( "" ) ); // content
+            array->SetValue( 4, 0 ); // birth date
+            array->SetValue( 5, 0 ); // death date
+            array->SetValue( 6, ovOrlandoReader::GenderTypeUnknown ); // gender
+            array->SetValue( 7, ovOrlandoReader::WriterTypeNone ); // writer type
             currentVertexId = graph->AddVertex( array );
             currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
           }
           
           if( this->CurrentNode.IsEmptyElement ||
               this->CurrentNode.IsClosingElement() )
-          {
-            // no more child vertices for this vertex
+          { // no more child vertices for this vertex
+
+            // add the matching content
+            contentArray->SetValue( currentVertexId, authorContent );
+            authorContent = "";
             currentVertexId = -1;
             numEntries++;
           }
@@ -240,47 +248,54 @@ int ovOrlandoReader::ProcessRequest(
           }
           else
           {
-            ovString content;
             if( this->CurrentNode.HasContent )
             {
+              // get and clean the content
               ovString content = ( char* )( this->CurrentNode.Content );
-              
               size_t start = content.find_first_not_of(" \t\n\r");
               if( start != vtkstd::string::npos )
                 content = content.substr( start, content.find_last_not_of(" \t\n\r") - start + 1 );
+              
+              if( 0 < content.length() )
+              {
+                authorContent.append( " " );
+                authorContent.append( vtksys::SystemTools::LowerCase( content ) );
+              }
             }
 
             // get the pedigree (associate's name) from this node's standard attribute
-            const char *pedigree = ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "STANDARD" ) );
+            const char *pedigree =
+              ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "STANDARD" ) );
 
             // This node describes an association (edge)
             if( this->CurrentNode.IsOpeningElement() &&
                 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "NAME" ) &&
                 currentVertexPedigree != vtkStdString( pedigree ) )
             {
-              // create a new vertex (if necessary) using the standard (association's name) as the pedigree
+              // Create a new vertex (if necessary) using the standard (association's name) as the
+              // pedigree
               if( -1 == graph->FindVertex( pedigree ) )
               {
                 vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-                array->SetNumberOfComponents( 7 );
+                array->SetNumberOfComponents( 8 );
                 array->SetNumberOfTuples( 1 );
                 array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
                 array->SetValue( 1, 0 ); // color
                 array->SetValue( 2, 1 ); // size
-                array->SetValue( 3, 0 ); // birth date
-                array->SetValue( 4, 0 ); // death date
-                array->SetValue( 5, ovOrlandoReader::GenderTypeUnknown ); // gender
-                array->SetValue( 6, ovOrlandoReader::WriterTypeNone ); // writer type
+                array->SetValue( 3, vtkVariant( "" ) ); // content
+                array->SetValue( 4, 0 ); // birth date
+                array->SetValue( 5, 0 ); // death date
+                array->SetValue( 6, ovOrlandoReader::GenderTypeUnknown ); // gender
+                array->SetValue( 7, ovOrlandoReader::WriterTypeNone ); // writer type
                 graph->AddVertex( array );
               }
-
+              
               // Create an edge from the current vertex to the new vertex
               vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-              array->SetNumberOfComponents( 3 );
+              array->SetNumberOfComponents( 2 );
               array->SetNumberOfTuples( 1 );
               array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
               array->SetValue( 1, 0 ); // color (set by the restrict filter)
-              array->SetValue( 2, vtkVariant( content ) ); // text
               graph->AddEdge( currentVertexPedigree, pedigree, array );
   
               // determine the connecting vertex' id if this isn't an empty element
@@ -353,7 +368,8 @@ int ovOrlandoReader::ProcessRequest(
                   {
                     birthArray->SetValue( currentVertexId, newDate.ToInt() );
                   }
-                  // we already have a date, so make sure the new date is earlier and has as much information
+                  // We already have a date, so make sure the new date is earlier and has as much
+                  // information
                   else if( ( curDate > newDate ) &&
                            ( 0 == curDate.day || 0 < newDate.day ) &&
                            ( 0 == curDate.month || 0 < newDate.month ) )
@@ -383,7 +399,8 @@ int ovOrlandoReader::ProcessRequest(
                   {
                     deathArray->SetValue( currentVertexId, newDate.ToInt() );
                   }
-                  // we already have a date, so make sure the new date is later and has as much information
+                  // We already have a date, so make sure the new date is later and has as much
+                  // information
                   else if( ( curDate < newDate ) &&
                            ( 0 == curDate.day || 0 < newDate.day ) &&
                            ( 0 == curDate.month || 0 < newDate.month ) )

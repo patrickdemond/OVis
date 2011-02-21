@@ -205,9 +205,11 @@ ovQDateDialog::~ovQDateDialog()
   // delete all periods
   vtkstd::for_each(
     this->HistoricPeriodVector.begin(), this->HistoricPeriodVector.end(), safe_delete() );
+  this->HistoricPeriodVector.clear();
 
   vtkstd::for_each(
     this->MonarchPeriodVector.begin(), this->MonarchPeriodVector.end(), safe_delete() );
+  this->MonarchPeriodVector.clear();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

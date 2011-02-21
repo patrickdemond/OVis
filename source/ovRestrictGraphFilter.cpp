@@ -11,6 +11,7 @@
 
 #include "ovOrlandoReader.h"
 #include "ovOrlandoTagInfo.h"
+#include "ovSearchPhrase.h"
 #include "ovUtilities.h"
 
 #include "vtkCommand.h"
@@ -27,6 +28,7 @@
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
 #include "vtkVariantArray.h"
+#include "vtkVertexListIterator.h"
 
 #include <vtkstd/algorithm>
 
@@ -35,6 +37,8 @@
 
 vtkCxxRevisionMacro( ovRestrictGraphFilter, "$Revision: $" );
 vtkStandardNewMacro( ovRestrictGraphFilter );
+vtkCxxSetObjectMacro( ovRestrictGraphFilter, TextSearchPhrase, ovSearchPhrase );
+vtkCxxSetObjectMacro( ovRestrictGraphFilter, AuthorSearchPhrase, ovSearchPhrase );
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovRestrictGraphFilter::ovRestrictGraphFilter()
@@ -43,23 +47,25 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   this->GenderTypeRestriction = ovRestrictGraphFilter::GenderTypeRestrictionAny;
   this->WriterTypeRestriction = ovRestrictGraphFilter::WriterTypeRestrictionAny;
   this->ActiveTags = NULL;
+  this->TextSearchPhrase = NULL;
+  this->AuthorSearchPhrase = NULL;
   
   // default array names
   this->SetTagsArrayName( "tags" );
+  this->SetContentArrayName( "content" );
   this->SetGenderArrayName( "gender" );
   this->SetBirthArrayName( "birth" );
   this->SetDeathArrayName( "death" );
   this->SetWriterTypeArrayName( "writerType" );
   this->SetEdgeColorArrayName( "color" );
-  
-  this->SetTextSearch( "" );
-  this->SetAuthorSearch( "" );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovRestrictGraphFilter::~ovRestrictGraphFilter()
 {
   this->SetActiveTags( NULL );
+  this->SetTextSearchPhrase( NULL );
+  this->SetAuthorSearchPhrase( NULL );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -77,6 +83,19 @@ void ovRestrictGraphFilter::SetTagsArrayName( const ovString &name )
   if( name != this->TagsArrayName )
   {
     this->TagsArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetContentArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "ContentArrayName to " << name.c_str() );
+
+  if( name != this->ContentArrayName )
+  {
+    this->ContentArrayName = name;
     this->Modified();
   }
 }
@@ -142,32 +161,6 @@ void ovRestrictGraphFilter::SetEdgeColorArrayName( const ovString &name )
   if( name != this->EdgeColorArrayName )
   {
     this->EdgeColorArrayName = name;
-    this->Modified();
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovRestrictGraphFilter::SetTextSearch( const ovString &text )
-{
-  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
-                 << "TextSearch to " << text.c_str() );
-
-  if( text != this->TextSearch )
-  {
-    this->TextSearch = text;
-    this->Modified();
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovRestrictGraphFilter::SetAuthorSearch( const ovString &text )
-{
-  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
-                 << "AuthorSearch to " << text.c_str() );
-
-  if( text != this->AuthorSearch )
-  {
-    this->AuthorSearch = text;
     this->Modified();
   }
 }
@@ -258,20 +251,16 @@ int ovRestrictGraphFilter::RequestData(
   vtkGraph* input = vtkGraph::GetData( inputVector[0] );
   vtkGraph* output = vtkGraph::GetData( outputVector );
 
-  // If we have no include tags then do nothing
-  if( NULL == this->ActiveTags )
+  // If we have no include tags or search phrases then do nothing
+  if( NULL == this->ActiveTags &&
+      NULL == this->TextSearchPhrase &&
+      NULL == this->AuthorSearchPhrase )
   {
     output->ShallowCopy( input );
     return 1;
   }
   
-  // If the include tags array is empty then display an empty graph
-  if( 0 == this->ActiveTags->GetNumberOfValues() )
-  {
-    return 1;
-  }
-
-  // Make sure we have all the necessary graph arrays
+  // test that we have the necessary graph arrays if the active tags list has values
   vtkStringArray *tagBitArray =
     vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray(
       this->TagsArrayName.c_str() ) );
@@ -279,6 +268,17 @@ int ovRestrictGraphFilter::RequestData(
   {
     vtkErrorMacro( << "Input graph edge data does not have a '"
                    << this->TagsArrayName.c_str() << "' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
+  vtkStringArray *contentArray =
+    vtkStringArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->ContentArrayName.c_str() ) );
+  if( NULL == contentArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->ContentArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
@@ -379,7 +379,33 @@ int ovRestrictGraphFilter::RequestData(
   // Vector keeps track of mapping of input vertex ids to output vertex ids
   vtkIdType numVert = input->GetNumberOfVertices();
   vtkstd::vector<int> outputVertex( numVert, -1 );
+  
+  // loop through all vertices, eliminating any which are not in the search
+  vtkSmartPointer<vtkVertexListIterator> vertexIter =
+    vtkSmartPointer<vtkVertexListIterator>::New();
+  input->GetVertices( vertexIter );
+  
+  vtkstd::vector<bool> findVertex( numVert, true );
 
+  if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() ||
+      this->AuthorSearchPhrase && this->AuthorSearchPhrase->GetNumberOfSearchTerms() )
+  {
+    ovString content;
+    while( vertexIter->HasNext() )
+    {
+      vtkIdType id = vertexIter->Next();
+
+      if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() )
+      { // search this node for the search term
+        content = contentArray->GetValue( id );
+        findVertex.at( id ) = 0 < content.length() && this->TextSearchPhrase->Find( content );
+      }
+      
+      // TODO: implement author search
+    }
+  }
+
+  // now loop through all edges
   vtkSmartPointer<vtkEdgeListIterator> edgeIter =
     vtkSmartPointer<vtkEdgeListIterator>::New();
   input->GetEdges( edgeIter );
@@ -393,6 +419,9 @@ int ovRestrictGraphFilter::RequestData(
 
     vtkEdgeType e = edgeIter->Next();
     
+    // skip if the author's vertex was not found
+    if( !findVertex.at( e.Source ) ) continue;
+
     // STEP #1
     // make sure that the edge's two vertices are both to be included
     bool sourceIsAuthor = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Source );
@@ -474,21 +503,25 @@ int ovRestrictGraphFilter::RequestData(
 
     // STEP #3
     // Make sure that the edge itself is to be included
-    // In order to make deeper items in the list take precedence over more shallow items
-    // we go through the list in reverse order
-    // TODO: add in text and author searching
     vtkIdType matchIndex = -1;
-    vtkstd::vector< vtkIdType >::reverse_iterator it;
-    for( it = includeIndices.rbegin(); it != includeIndices.rend(); ++it )
+    
+    // Start by searching for tags
+    if( 0 < this->ActiveTags->GetNumberOfValues() )
     {
-      vtkIdType id = *it;
-      if( '1' == tagBitArray->GetValue( e.Id ).at( id ) )
+      // In order to make deeper items in the list take precedence over more shallow items
+      // we go through the tag list in reverse order
+      vtkstd::vector< vtkIdType >::reverse_iterator it;
+      for( it = includeIndices.rbegin(); it != includeIndices.rend(); ++it )
       {
-        matchIndex = id;
-        break;
+        vtkIdType id = *it;
+        if( '1' == tagBitArray->GetValue( e.Id ).at( id ) )
+        {
+          matchIndex = id;
+          break;
+        }
       }
     }
-
+    
     if( 0 <= matchIndex )
     {
       vtkIdType source = outputVertex[e.Source];

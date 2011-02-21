@@ -46,6 +46,7 @@ ovSession::ovSession()
 ovSession::~ovSession()
 {
   vtkstd::for_each( this->TagList.begin(), this->TagList.end(), safe_delete() );
+  this->TagList.clear();
   this->SetCamera( NULL );
 }
 

@@ -10,6 +10,7 @@
 #include "ovQSearchDialog.h"
 
 #include "ui_ovQSearchDialog.h"
+#include "source/ovSearchPhrase.h"
 
 #include <vtkstd/algorithm>
 
@@ -45,43 +46,62 @@ ovQSearchDialog::~ovQSearchDialog()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovString ovQSearchDialog::getSearch()
+void ovQSearchDialog::getSearchPhrase( ovSearchPhrase *phrase )
 {
-  ovString search = "";
+  if( NULL == phrase ) return;
+  phrase->Clear();
+
   QTableWidgetItem *item;
   int rows = this->ui->termTableWidget->rowCount();
   
   for( int row = 0; row < rows; row++ )
   {
-    if( 0 != row )
-    { // add the AND/OR and NOT terms
-      item = this->ui->termTableWidget->item( row, 2 );
-      search += " ";
-      search += item->text().toStdString();
-    }
-    
-    // add the NOT term, if needed
-    item = this->ui->termTableWidget->item( row, 1 );
-    if( "NOT" == item->text() ) search += " NOT";
-    
-    // add the search term, stripped of double-quotes
     ovString term = this->ui->termTableWidget->item( row, 0 )->text().toStdString();
-    term.erase( vtkstd::remove( term.begin(), term.end(), '"' ), term.end() );
-    search += " \"";
-    search += term;
-    search += '"';
+    bool notLogic = "NOT" == this->ui->termTableWidget->item( row, 1 )->text();
+    bool andLogic = "AND" == this->ui->termTableWidget->item( row, 2 )->text();
+    
+    phrase->Add( term, notLogic, andLogic );
   }
 
-  // get rid of the space at the beginning of the string
-  if( 1 < search.length() ) search = search.substr( 1 );
-
-  return search;
+  return;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQSearchDialog::setSearch( const ovString &search )
+void ovQSearchDialog::setSearchPhrase( ovSearchPhrase *search )
 {
-  // TODO: implement
+  // clean out the table widget
+  this->ui->termTableWidget->clearContents();
+  
+  if( NULL == search ) return;
+
+  ovSearchTermVector *terms = search->GetSearchTerms();
+  this->ui->termTableWidget->setRowCount( terms->size() );
+  
+  int row = 0;
+  QTableWidgetItem *item;
+  ovSearchTerm *term;
+  ovSearchTermVector::iterator it;
+  for( it = terms->begin(); it != terms->end(); it++ )
+  {
+    term = *it;
+    int column = 0;
+  
+    item = new QTableWidgetItem( term->term.c_str() );
+    item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
+    this->ui->termTableWidget->setItem( row, column++, item );
+  
+    item = new QTableWidgetItem( term->notLogic ? "NOT" : "" );
+    item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    item->setFlags( Qt::ItemIsEnabled );
+    this->ui->termTableWidget->setItem( row, column++, item );
+    
+    item = new QTableWidgetItem( 0 == row ? "" : term->andLogic ? "AND" : "OR" );
+    item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    item->setFlags( Qt::ItemIsEnabled );
+    this->ui->termTableWidget->setItem( row, column++, item );
+
+    row++;
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

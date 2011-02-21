@@ -31,7 +31,28 @@
 #include <vtkstd/vector>
 
 typedef vtkstd::string ovString;
+typedef vtkstd::stack< ovString > ovStringStack;
 typedef vtkstd::vector< ovString > ovStringVector;
+
+struct ovSearchTerm
+{
+  ovString term;
+  bool notLogic;
+  bool andLogic;
+  
+  ovSearchTerm()
+  {
+    this->Clear();
+  }
+  void Clear()
+  {
+    this->term = "";
+    this->notLogic = false;
+    this->andLogic = true;
+  }
+};
+
+typedef vtkstd::vector< ovSearchTerm* > ovSearchTermVector;
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 struct safe_delete

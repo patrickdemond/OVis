@@ -25,6 +25,7 @@
 #include "ovUtilities.h"
 #include "vtksys/SystemTools.hxx"
 
+class ovSearchPhrase;
 class vtkStringArray;
 
 class ovRestrictGraphFilter : public vtkGraphAlgorithm
@@ -42,6 +43,11 @@ public:
   // Set/get the Tags array name
   virtual ovString GetTagsArrayName() { return this->TagsArrayName; }
   virtual void SetTagsArrayName( const ovString &name );
+  
+  // Description:
+  // Set/get the Content array name
+  virtual ovString GetContentArrayName() { return this->ContentArrayName; }
+  virtual void SetContentArrayName( const ovString &name );
   
   // Description:
   // Set/get the Gender array name
@@ -126,11 +132,11 @@ public:
   vtkGetObjectMacro( ActiveTags, vtkStringArray );
   virtual void SetActiveTags( vtkStringArray* );
   
-  virtual ovString GetTextSearch() { return this->TextSearch; }
-  virtual void SetTextSearch( const ovString &text );
+  vtkGetObjectMacro( TextSearchPhrase, ovSearchPhrase );
+  virtual void SetTextSearchPhrase( ovSearchPhrase* );
 
-  virtual ovString GetAuthorSearch() { return this->AuthorSearch; }
-  virtual void SetAuthorSearch( const ovString &author );
+  vtkGetObjectMacro( AuthorSearchPhrase, ovSearchPhrase );
+  virtual void SetAuthorSearchPhrase( ovSearchPhrase* );
 
   virtual ovDate* GetStartDate() { return &( this->StartDate ); }
   virtual void SetStartDate( const ovDate& );
@@ -149,6 +155,7 @@ protected:
   
   // array names
   ovString TagsArrayName;
+  ovString ContentArrayName;
   ovString GenderArrayName;
   ovString BirthArrayName;
   ovString DeathArrayName;
@@ -159,8 +166,8 @@ protected:
   int GenderTypeRestriction;
   int WriterTypeRestriction;
   vtkStringArray *ActiveTags;
-  ovString TextSearch;
-  ovString AuthorSearch;
+  ovSearchPhrase *TextSearchPhrase;
+  ovSearchPhrase *AuthorSearchPhrase;
   ovDate StartDate;
   ovDate EndDate;
   

@@ -28,6 +28,7 @@ SET( OVIS_SOURCE
   source/ovOrlandoReader.cpp
   source/ovOrlandoTagInfo.cpp
   source/ovRestrictGraphFilter.cpp
+  source/ovSearchPhrase.cpp
   source/ovSession.cpp
   source/ovSessionReader.cpp
   source/ovSessionWriter.cpp

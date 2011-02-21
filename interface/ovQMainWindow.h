@@ -12,6 +12,7 @@ class Ui_ovQMainWindow;
 class ovQMainWindowProgressCommand;
 class ovOrlandoReader;
 class ovRestrictGraphFilter;
+class ovSearchPhrase;
 class ovSession;
 
 class QActionGroup;
@@ -121,8 +122,6 @@ protected:
   virtual void SetEdgeSize( int );
   virtual void SetAuthorVertexColor( double rgba[4] );
   virtual void SetAssociationVertexColor( double rgba[4] );
-  virtual void SetTextSearch( const char* );
-  virtual void SetAuthorSearch( const char* );
   virtual void SetStartDate( const ovDate& );
   virtual void SetEndDate( const ovDate& );
 
@@ -132,6 +131,8 @@ protected:
   vtkSmartPointer< ovOrlandoReader > OrlandoReader;
   vtkSmartPointer< ovRestrictGraphFilter > RestrictGraphFilter;
   vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
+  vtkSmartPointer< ovSearchPhrase > TextSearchPhrase;
+  vtkSmartPointer< ovSearchPhrase > AuthorSearchPhrase;
   
   ovString CurrentDataFileName;
   ovString CurrentSessionFileName;

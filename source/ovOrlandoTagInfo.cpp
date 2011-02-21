@@ -31,6 +31,7 @@ ovOrlandoTagInfo::~ovOrlandoTagInfo()
   // delete all tags
   ovTagVector::iterator it;
   vtkstd::for_each( this->TagVector.begin(), this->TagVector.end(), safe_delete() );
+  this->TagVector.clear();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
