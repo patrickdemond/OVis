@@ -75,15 +75,7 @@ Building ovis
 
 Once you've gone through the process of building VTK using CMake this will seem familiar.
 
-1. You can download the latest version of ovis by cloning the git repository:
-
-   git clone https://emondpd@www.sharcnet.ca/git/dp489
-    
-   Or if you're not familiar with git you can download the source from here:
-   https://www.sharcnet.ca/git/?p=dp489;a=snapshot;h=HEAD;sf=tgz
-
-   I believe you need a sharcnet account to access the source, so if neither work let me
-   know and I'll email you the source or something like that.
+1. Download and unpack ovis.
 
 2. Create a build directory somewhere OUTSIDE of the ovis source code tree (again, outside
    for the same reasons as I described in building VTK above).
