@@ -1,0 +1,107 @@
+How to build ovis
+=================
+
+Ovis uses CMake (http://cmake.org/) to configure its build process.  CMake is operating system
+independent, so in theory it should be possible to build this project under Linux, Windows or
+Macintosh.  I stree the words "in theory" since it has currently only been tested and developed
+under Linux.
+
+
+Required Libraries
+==================
+
+Ovis uses the VTK library for visualization purposes, the Qt library for its user interface and
+libxml2 for parsing Orlando data.  Furthermore it, along with VTK, is build using CMake.
+
+
+libxml2 (xmlsoft.org)
+---------------------
+You will need to install libxml2.  This can be done by downloading pre-compiled binaries or
+building from the source, both of which are available from the website.  Many linux package
+managers also include this library in their repositories.
+
+
+Qt4 (qt.nokia.com)
+------------------
+You will need the Qt4 development/framework libraries.  You can download these from the Qt
+website or install them using your distro's package manager.  The complete SDK isn't necessary.
+
+
+CMake (cmake.org)
+-----------------
+There are plenty of pre-compiled binaries of CMake available on the website, or you can download
+the source and build it yourself.  Also, many linux distros have it build into their package
+managers.  I recommend trying this option first since it's the quickest and easiest to do.
+
+
+VTK (vtk.org)
+-------------
+You will need the build VTK from the source code which can be downloaded from their website.
+VTK uses CMake to set up the build environment the same way that Ovis does:
+
+1. Download the source code version 5.6.1 or later and unpack the source code
+
+2. Create a build directory somewhere OUTSIDE of the VTK source code tree.  It's important to
+   do this somewhere other than the source tree so that if things go wrong you can just nuke
+   the build directory and start over without loosing any source files.
+
+3. Inside your build directory, run cmake:
+
+   For linux: cmake -g "Unix Makefiles" /path/to/VTK/source
+   
+   (If you want to build under a different operating system then just type cmake (without any
+   arguments) to see a list of options along with (at the bottom) a list of "generators" which
+   you can use in place of "Unix Makefiles" above.  Under windows it would be "Visual Studio" or
+   "NMake" under windows, or "XCode" under Mac.
+
+   If all goes well you should see cmake spit out a bunch of text but no errors.
+
+4. You should now have a CMakeCache.txt file (along with a bunch of other stuff).  Open it
+   with your favourite editor and set the following:
+
+   CMAKE_BUILD_TYPE:STRING=Release
+   VTK_USE_INFOVIS:BOOL=ON
+   VTK_USE_QT:BOOL=ON
+
+5. Re-run cmake by typing "cmake ." in the build directory.  When it is done you should a message
+   something like "Build files have been written to: ..."
+
+6. You are now ready to build the VTK libraries by typing "make".  This should take anywhere from
+   10 minutes to an hour or more, depending on the system.
+
+
+Building ovis
+=============
+
+Once you've gone through the process of building VTK using CMake this will seem familiar.
+
+1. You can download the latest version of ovis by cloning the git repository:
+
+   git clone https://emondpd@www.sharcnet.ca/git/dp489
+    
+   Or if you're not familiar with git you can download the source from here:
+   https://www.sharcnet.ca/git/?p=dp489;a=snapshot;h=HEAD;sf=tgz
+
+   I believe you need a sharcnet account to access the source, so if neither work let me
+   know and I'll email you the source or something like that.
+
+2. Create a build directory somewhere OUTSIDE of the ovis source code tree (again, outside
+   for the same reasons as I described in building VTK above).
+
+3. Inside your build directory, run cmake:
+
+   For linux: cmake -g "Unix Makefiles" /path/to/ovis/source
+
+   Unlike when preparing VTK, this time you should see cmake spit out some errors.  That's
+   fine, this is because cmake needs to know where you put VTK (and the other libraries if they
+   were not installed in a standard place)
+
+4. Ignore the errors for now and open the CMakeCache.txt file and change the following:
+
+   CMAKE_BUILD_TYPE:STRING=Release
+   VTK_DIR:PATH=/path/to/VTK/build/directory/
+
+5. Re-run cmake by typing "cmake ." in the build directory.  When it is done the error message
+   should go away and you see "Build files have been written to: ..." once more.
+
+6. You are now ready to build ovis by typing "make".
