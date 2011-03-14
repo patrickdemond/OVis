@@ -21,7 +21,7 @@ ovQSearchDialog::ovQSearchDialog( QWidget* parent )
   this->ui = new Ui_ovQSearchDialog;
   this->ui->setupUi( this );
   
-  this->ui->termTableWidget->setColumnWidth( 0, 400 );
+  this->ui->termTableWidget->setColumnWidth( 2, 400 );
   
   QObject::connect(
     this->ui->termTableWidget, SIGNAL( cellClicked ( int, int ) ),
@@ -56,9 +56,9 @@ void ovQSearchDialog::getSearchPhrase( ovSearchPhrase *phrase )
   
   for( int row = 0; row < rows; row++ )
   {
-    ovString term = this->ui->termTableWidget->item( row, 0 )->text().toStdString();
+    bool andLogic = "AND" == this->ui->termTableWidget->item( row, 0 )->text();
     bool notLogic = "NOT" == this->ui->termTableWidget->item( row, 1 )->text();
-    bool andLogic = "AND" == this->ui->termTableWidget->item( row, 2 )->text();
+    ovString term = this->ui->termTableWidget->item( row, 2 )->text().toStdString();
     
     phrase->Add( term, notLogic, andLogic );
   }
@@ -86,20 +86,20 @@ void ovQSearchDialog::setSearchPhrase( ovSearchPhrase *search )
     term = *it;
     int column = 0;
   
-    item = new QTableWidgetItem( term->term.c_str() );
-    item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
-    this->ui->termTableWidget->setItem( row, column++, item );
-  
-    item = new QTableWidgetItem( term->notLogic ? "NOT" : "" );
-    item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-    item->setFlags( Qt::ItemIsEnabled );
-    this->ui->termTableWidget->setItem( row, column++, item );
-    
     item = new QTableWidgetItem( 0 == row ? "" : term->andLogic ? "AND" : "OR" );
     item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     item->setFlags( Qt::ItemIsEnabled );
     this->ui->termTableWidget->setItem( row, column++, item );
 
+    item = new QTableWidgetItem( term->notLogic ? "NOT" : "" );
+    item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    item->setFlags( Qt::ItemIsEnabled );
+    this->ui->termTableWidget->setItem( row, column++, item );
+    
+    item = new QTableWidgetItem( term->term.c_str() );
+    item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
+    this->ui->termTableWidget->setItem( row, column++, item );
+  
     row++;
   }
 }
@@ -107,7 +107,7 @@ void ovQSearchDialog::setSearchPhrase( ovSearchPhrase *search )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQSearchDialog::slotTermTableWidgetCellClicked( int row, int column )
 {
-  if( 0 == column ) return;
+  if( 2 == column ) return;
   
   QTableWidgetItem *item = this->ui->termTableWidget->item( row, column );
   
@@ -115,7 +115,7 @@ void ovQSearchDialog::slotTermTableWidgetCellClicked( int row, int column )
   {
     item->setText( "NOT" == item->text() ? "" : "NOT" );
   }
-  else if( 2 == column && 0 != row )
+  else if( 0 == column && 0 != row )
   {
     item->setText( "AND" == item->text() ? "OR" : "AND" );
   }
@@ -130,8 +130,9 @@ void ovQSearchDialog::slotAddPushButton()
 
   QTableWidgetItem *item;
   
-  item = new QTableWidgetItem( "" );
-  item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
+  item = new QTableWidgetItem( 0 == row ? "" : "AND" );
+  item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+  item->setFlags( Qt::ItemIsEnabled );
   this->ui->termTableWidget->setItem( row, column++, item );
 
   item = new QTableWidgetItem( "" );
@@ -139,9 +140,8 @@ void ovQSearchDialog::slotAddPushButton()
   item->setFlags( Qt::ItemIsEnabled );
   this->ui->termTableWidget->setItem( row, column++, item );
   
-  item = new QTableWidgetItem( 0 == row ? "" : "AND" );
-  item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-  item->setFlags( Qt::ItemIsEnabled );
+  item = new QTableWidgetItem( "" );
+  item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
   this->ui->termTableWidget->setItem( row, column++, item );
 }
 

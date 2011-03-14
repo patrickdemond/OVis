@@ -32,6 +32,7 @@
 
 typedef vtkstd::string ovString;
 typedef vtkstd::stack< ovString > ovStringStack;
+typedef vtkstd::vector< int > ovIntVector;
 typedef vtkstd::vector< ovString > ovStringVector;
 
 struct ovSearchTerm

@@ -250,6 +250,7 @@ int ovRestrictGraphFilter::RequestData(
 {
   vtkGraph* input = vtkGraph::GetData( inputVector[0] );
   vtkGraph* output = vtkGraph::GetData( outputVector );
+  ovString content;
 
   // If we have no include tags or search phrases then do nothing
   if( NULL == this->ActiveTags &&
@@ -272,12 +273,23 @@ int ovRestrictGraphFilter::RequestData(
     return 0;
   }
   
-  vtkStringArray *contentArray =
+  vtkStringArray *authorContentArray =
     vtkStringArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->ContentArrayName.c_str() ) );
+  if( NULL == authorContentArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->ContentArrayName.c_str() << "' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
+  vtkStringArray *contentArray =
+    vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray(
       this->ContentArrayName.c_str() ) );
   if( NULL == contentArray )
   {
-    vtkErrorMacro( << "Input graph vertex data does not have a '"
+    vtkErrorMacro( << "Input graph edge data does not have a '"
                    << this->ContentArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
@@ -390,14 +402,13 @@ int ovRestrictGraphFilter::RequestData(
   if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() ||
       this->AuthorSearchPhrase && this->AuthorSearchPhrase->GetNumberOfSearchTerms() )
   {
-    ovString content;
     while( vertexIter->HasNext() )
     {
       vtkIdType id = vertexIter->Next();
 
       if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() )
       { // search this node for the search term
-        content = contentArray->GetValue( id );
+        content = authorContentArray->GetValue( id );
         findVertex.at( id ) = 0 < content.length() && this->TextSearchPhrase->Find( content );
       }
       
@@ -522,27 +533,43 @@ int ovRestrictGraphFilter::RequestData(
       }
     }
     
+    // if we are doing a text search, make sure this edge has content that matches the search
+    bool addEdge = false;
     if( 0 <= matchIndex )
     {
-      vtkIdType source = outputVertex[e.Source];
-      if( source < 0 )
+      if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() )
       {
-        source = builder->AddVertex();
-        outputVertex[e.Source] = source;
-        builderVertData->CopyData( inputVertData, e.Source, source );
-        builderPoints->InsertNextPoint( inputPoints->GetPoint( e.Source ) );
+        content = contentArray->GetValue( e.Id );
+        addEdge = 0 < content.length() && this->TextSearchPhrase->Find( content );
       }
-      vtkIdType target = outputVertex[e.Target];
-      if( target < 0 )
+      else
       {
-        target = builder->AddVertex();
-        outputVertex[e.Target] = target;
-        builderVertData->CopyData( inputVertData, e.Target, target );
-        builderPoints->InsertNextPoint( inputPoints->GetPoint( e.Target ) );
+        addEdge = true;
       }
-      vtkEdgeType outputEdge = builder->AddEdge( source, target );
-      builderEdgeData->CopyData( inputEdgeData, e.Id, outputEdge.Id );
-      colorArray->SetValue( outputEdge.Id, vtkVariant( matchIndex ) );
+      
+      if( addEdge )
+      {
+        // now add the edge
+        vtkIdType source = outputVertex[e.Source];
+        if( source < 0 )
+        {
+          source = builder->AddVertex();
+          outputVertex[e.Source] = source;
+          builderVertData->CopyData( inputVertData, e.Source, source );
+          builderPoints->InsertNextPoint( inputPoints->GetPoint( e.Source ) );
+        }
+        vtkIdType target = outputVertex[e.Target];
+        if( target < 0 )
+        {
+          target = builder->AddVertex();
+          outputVertex[e.Target] = target;
+          builderVertData->CopyData( inputVertData, e.Target, target );
+          builderPoints->InsertNextPoint( inputPoints->GetPoint( e.Target ) );
+        }
+        vtkEdgeType outputEdge = builder->AddEdge( source, target );
+        builderEdgeData->CopyData( inputEdgeData, e.Id, outputEdge.Id );
+        colorArray->SetValue( outputEdge.Id, vtkVariant( matchIndex ) );
+      }
     }
   }
 

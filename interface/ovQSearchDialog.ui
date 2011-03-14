@@ -40,7 +40,10 @@
    </property>
    <column>
     <property name="text">
-     <string>Search Term</string>
+     <string>And/Or</string>
+    </property>
+    <property name="textAlignment">
+     <set>AlignHCenter|AlignVCenter|AlignCenter</set>
     </property>
    </column>
    <column>
@@ -53,10 +56,7 @@
    </column>
    <column>
     <property name="text">
-     <string>And/Or</string>
-    </property>
-    <property name="textAlignment">
-     <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+     <string>Search Term</string>
     </property>
    </column>
   </widget>

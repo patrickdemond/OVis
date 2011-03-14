@@ -116,9 +116,9 @@ int ovOrlandoReader::ProcessRequest(
     graph->GetVertexData()->SetActiveScalars( sizeArray->GetName() );
 
     // the content array is used to track each entries full un-marked-up content
-    vtkSmartPointer< vtkStringArray > contentArray = vtkSmartPointer< vtkStringArray >::New();
-    contentArray->SetName( "content" );
-    graph->GetVertexData()->AddArray( contentArray );
+    vtkSmartPointer< vtkStringArray > authorContentArray = vtkSmartPointer< vtkStringArray >::New();
+    authorContentArray->SetName( "content" );
+    graph->GetVertexData()->AddArray( authorContentArray );
 
     // the birth and death arrays track author birth and death dates
     vtkSmartPointer< vtkIntArray > birthArray = vtkSmartPointer< vtkIntArray >::New();
@@ -147,6 +147,11 @@ int ovOrlandoReader::ProcessRequest(
     edgeColorArray->SetName( "color" );
     graph->GetEdgeData()->AddArray( edgeColorArray );
     
+    // the content array is used to keep a string of raw text associated with every edge
+    vtkSmartPointer< vtkStringArray > contentArray = vtkSmartPointer< vtkStringArray >::New();
+    contentArray->SetName( "content" );
+    graph->GetEdgeData()->AddArray( contentArray );
+
     // A string to store the current active tags and mark them all as '0' chars to begin with.
     // Every time we open a tag in the association types vector we will set the tag to '1',
     // and every time the tag closes we will set it back to '0'.  This string will then be
@@ -176,6 +181,11 @@ int ovOrlandoReader::ProcessRequest(
       
       // process each node, one at a time
       double numEntries = 0, progress;
+
+      bool inDiv0 = false, inDiv1 = false, inDiv2 = false, inP = false, inP2 = false;
+      ovString div0Content, div1Content, div2Content, pContent, p2Content;
+      ovIntVector div0Vertices, div1Vertices, div2Vertices, pVertices, p2Vertices;
+
       while( this->ParseNode() )
       {
         // ignore node type 14 (#text stuff that we don't need)
@@ -231,7 +241,7 @@ int ovOrlandoReader::ProcessRequest(
           { // no more child vertices for this vertex
 
             // add the matching content
-            contentArray->SetValue( currentVertexId, authorContent );
+            authorContentArray->SetValue( currentVertexId, authorContent );
             authorContent = "";
             currentVertexId = -1;
             numEntries++;
@@ -258,8 +268,106 @@ int ovOrlandoReader::ProcessRequest(
               
               if( 0 < content.length() )
               {
-                authorContent.append( " " );
-                authorContent.append( vtksys::SystemTools::LowerCase( content ) );
+                content += vtksys::SystemTools::LowerCase( content );
+                content += " ";
+
+                // add to author content
+                authorContent.append( content );
+                
+                // add to currently open div tags
+                if( inP2 ) p2Content.append( content );
+                if( inP ) pContent.append( content );
+                if( inDiv2 ) div2Content.append( content );
+                if( inDiv1 ) div1Content.append( content );
+                if( inDiv0 ) div0Content.append( content );
+              }
+            }
+            
+            // Concerning the state of DIV0, DIV1, DIV2 and P tags when a NAME tag is found:
+            // All NAME tags are inside of DIV1, DIV2 or P tags
+            // A DIV2 tag is always inside of a DIV1 tag, and P tags are always inside a DIV0,
+            // DIV1, DIV2 or another P tag.
+            // We use the variables inDiv1, inDiv2 and inP to track which tag and level we are
+            // currently in, so that when we close that tag then any names which were found
+            // inside can have the text added as their content.
+            if( !this->CurrentNode.IsEmptyElement )
+            {
+              if( this->CurrentNode.IsOpeningElement() )
+              {
+                if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "P" ) )
+                {
+                  if( inP ) inP2 = true;
+                  else inP = true;
+                }
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV2" ) ) inDiv2 = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV1" ) ) inDiv1 = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV0" ) ) inDiv0 = true;
+              }
+              else if( this->CurrentNode.IsClosingElement() )
+              {
+                if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "P" ) )
+                {
+                  if( inP2 )
+                  {
+                    // set the content array for any NAMES which were opened inside this tag
+                    while( !p2Vertices.empty() )
+                    {
+                      contentArray->SetValue( p2Vertices.back(), p2Content );
+                      p2Vertices.pop_back();
+                    }
+
+                    inP2 = false;
+                    p2Content = "";
+                  }
+                  else
+                  {
+                    // set the content array for any NAMES which were opened inside this tag
+                    while( !pVertices.empty() )
+                    {
+                      contentArray->SetValue( pVertices.back(), pContent );
+                      pVertices.pop_back();
+                    }
+
+                    inP = false;
+                    pContent = "";
+                  }
+                }
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV2" ) )
+                {
+                  // set the content array for any NAMES which were opened inside this tag
+                  while( !div2Vertices.empty() )
+                  {
+                    contentArray->SetValue( div2Vertices.back(), div2Content );
+                    div2Vertices.pop_back();
+                  }
+
+                  inDiv2 = false;
+                  div2Content = "";
+                }
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV1" ) )
+                {
+                  // set the content array for any NAMES which were opened inside this tag
+                  while( !div1Vertices.empty() )
+                  {
+                    contentArray->SetValue( div1Vertices.back(), div1Content );
+                    div1Vertices.pop_back();
+                  }
+
+                  inDiv1 = false;
+                  div1Content = "";
+                }
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV0" ) )
+                {
+                  // set the content array for any NAMES which were opened inside this tag
+                  while( !div0Vertices.empty() )
+                  {
+                    contentArray->SetValue( div0Vertices.back(), div0Content );
+                    div0Vertices.pop_back();
+                  }
+
+                  inDiv0 = false;
+                  div0Content = "";
+                }
               }
             }
 
@@ -282,7 +390,7 @@ int ovOrlandoReader::ProcessRequest(
                 array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
                 array->SetValue( 1, 0 ); // color
                 array->SetValue( 2, 1 ); // size
-                array->SetValue( 3, vtkVariant( "" ) ); // content
+                array->SetValue( 3, vtkVariant( "" ) ); // content (blank for now)
                 array->SetValue( 4, 0 ); // birth date
                 array->SetValue( 5, 0 ); // death date
                 array->SetValue( 6, ovOrlandoReader::GenderTypeUnknown ); // gender
@@ -292,12 +400,20 @@ int ovOrlandoReader::ProcessRequest(
               
               // Create an edge from the current vertex to the new vertex
               vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-              array->SetNumberOfComponents( 2 );
+              array->SetNumberOfComponents( 3 );
               array->SetNumberOfTuples( 1 );
               array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
               array->SetValue( 1, 0 ); // color (set by the restrict filter)
-              graph->AddEdge( currentVertexPedigree, pedigree, array );
-  
+              array->SetValue( 2, vtkVariant( "" ) ); // content (blank for now)
+              vtkEdgeType e = graph->AddEdge( currentVertexPedigree, pedigree, array );
+
+              // and track which content paragraph tag type we are currently in for content
+              if( inP2 ) p2Vertices.push_back( e.Id );
+              else if( inP ) pVertices.push_back( e.Id );
+              else if( inDiv2 ) div2Vertices.push_back( e.Id );
+              else if( inDiv1 ) div1Vertices.push_back( e.Id );
+              else if( inDiv0 ) div0Vertices.push_back( e.Id );
+
               // determine the connecting vertex' id if this isn't an empty element
               if( !( this->CurrentNode.IsEmptyElement ) )
               {
