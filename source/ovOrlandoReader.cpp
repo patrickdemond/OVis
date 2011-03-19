@@ -120,6 +120,12 @@ int ovOrlandoReader::ProcessRequest(
     authorContentArray->SetName( "content" );
     graph->GetVertexData()->AddArray( authorContentArray );
 
+    // the stemmed content array is used to track each entries full un-marked-up, stemmed content
+    vtkSmartPointer< vtkStringArray > authorStemmedContentArray =
+      vtkSmartPointer< vtkStringArray >::New();
+    authorStemmedContentArray->SetName( "stemmedContent" );
+    graph->GetVertexData()->AddArray( authorStemmedContentArray );
+
     // the birth and death arrays track author birth and death dates
     vtkSmartPointer< vtkIntArray > birthArray = vtkSmartPointer< vtkIntArray >::New();
     birthArray->SetName( "birth" );
@@ -151,6 +157,12 @@ int ovOrlandoReader::ProcessRequest(
     vtkSmartPointer< vtkStringArray > contentArray = vtkSmartPointer< vtkStringArray >::New();
     contentArray->SetName( "content" );
     graph->GetEdgeData()->AddArray( contentArray );
+
+    // the stemmed content array is used to keep a string of raw stemmed text associated with
+    // every edge
+    vtkSmartPointer< vtkStringArray > stemmedContentArray = vtkSmartPointer< vtkStringArray >::New();
+    stemmedContentArray->SetName( "stemmedContent" );
+    graph->GetEdgeData()->AddArray( stemmedContentArray );
 
     // A string to store the current active tags and mark them all as '0' chars to begin with.
     // Every time we open a tag in the association types vector we will set the tag to '1',
@@ -222,16 +234,17 @@ int ovOrlandoReader::ProcessRequest(
 
             // create a new vertex using the Id (author name) as the pedigree
             vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-            array->SetNumberOfComponents( 8 );
+            array->SetNumberOfComponents( 9 );
             array->SetNumberOfTuples( 1 );
             array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
             array->SetValue( 1, 1 ); // color
             array->SetValue( 2, 2 ); // size
             array->SetValue( 3, vtkVariant( "" ) ); // content
-            array->SetValue( 4, 0 ); // birth date
-            array->SetValue( 5, 0 ); // death date
-            array->SetValue( 6, ovOrlandoReader::GenderTypeUnknown ); // gender
-            array->SetValue( 7, ovOrlandoReader::WriterTypeNone ); // writer type
+            array->SetValue( 4, vtkVariant( "" ) ); // stemmed content
+            array->SetValue( 5, 0 ); // birth date
+            array->SetValue( 6, 0 ); // death date
+            array->SetValue( 7, ovOrlandoReader::GenderTypeUnknown ); // gender
+            array->SetValue( 8, ovOrlandoReader::WriterTypeNone ); // writer type
             currentVertexId = graph->AddVertex( array );
             currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
           }
@@ -242,6 +255,7 @@ int ovOrlandoReader::ProcessRequest(
 
             // add the matching content
             authorContentArray->SetValue( currentVertexId, authorContent );
+            authorStemmedContentArray->SetValue( currentVertexId, stemWords( authorContent ) );
             authorContent = "";
             currentVertexId = -1;
             numEntries++;
@@ -313,6 +327,7 @@ int ovOrlandoReader::ProcessRequest(
                     while( !p2Vertices.empty() )
                     {
                       contentArray->SetValue( p2Vertices.back(), p2Content );
+                      stemmedContentArray->SetValue( p2Vertices.back(), stemWords( p2Content ) );
                       p2Vertices.pop_back();
                     }
 
@@ -325,6 +340,7 @@ int ovOrlandoReader::ProcessRequest(
                     while( !pVertices.empty() )
                     {
                       contentArray->SetValue( pVertices.back(), pContent );
+                      stemmedContentArray->SetValue( pVertices.back(), stemWords( pContent ) );
                       pVertices.pop_back();
                     }
 
@@ -338,6 +354,7 @@ int ovOrlandoReader::ProcessRequest(
                   while( !div2Vertices.empty() )
                   {
                     contentArray->SetValue( div2Vertices.back(), div2Content );
+                    stemmedContentArray->SetValue( div2Vertices.back(), stemWords( div2Content ) );
                     div2Vertices.pop_back();
                   }
 
@@ -350,6 +367,7 @@ int ovOrlandoReader::ProcessRequest(
                   while( !div1Vertices.empty() )
                   {
                     contentArray->SetValue( div1Vertices.back(), div1Content );
+                    stemmedContentArray->SetValue( div1Vertices.back(), stemWords( div1Content ) );
                     div1Vertices.pop_back();
                   }
 
@@ -362,6 +380,7 @@ int ovOrlandoReader::ProcessRequest(
                   while( !div0Vertices.empty() )
                   {
                     contentArray->SetValue( div0Vertices.back(), div0Content );
+                    stemmedContentArray->SetValue( div0Vertices.back(), stemWords( div0Content ) );
                     div0Vertices.pop_back();
                   }
 
@@ -385,26 +404,28 @@ int ovOrlandoReader::ProcessRequest(
               if( -1 == graph->FindVertex( pedigree ) )
               {
                 vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-                array->SetNumberOfComponents( 8 );
+                array->SetNumberOfComponents( 9 );
                 array->SetNumberOfTuples( 1 );
                 array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
                 array->SetValue( 1, 0 ); // color
                 array->SetValue( 2, 1 ); // size
                 array->SetValue( 3, vtkVariant( "" ) ); // content (blank for now)
-                array->SetValue( 4, 0 ); // birth date
-                array->SetValue( 5, 0 ); // death date
-                array->SetValue( 6, ovOrlandoReader::GenderTypeUnknown ); // gender
-                array->SetValue( 7, ovOrlandoReader::WriterTypeNone ); // writer type
+                array->SetValue( 4, vtkVariant( "" ) ); // stemmed content (blank for now)
+                array->SetValue( 5, 0 ); // birth date
+                array->SetValue( 6, 0 ); // death date
+                array->SetValue( 7, ovOrlandoReader::GenderTypeUnknown ); // gender
+                array->SetValue( 8, ovOrlandoReader::WriterTypeNone ); // writer type
                 graph->AddVertex( array );
               }
               
               // Create an edge from the current vertex to the new vertex
               vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-              array->SetNumberOfComponents( 3 );
+              array->SetNumberOfComponents( 4 );
               array->SetNumberOfTuples( 1 );
               array->SetValue( 0, vtkVariant( currentTagArray ) ); // tags
               array->SetValue( 1, 0 ); // color (set by the restrict filter)
               array->SetValue( 2, vtkVariant( "" ) ); // content (blank for now)
+              array->SetValue( 3, vtkVariant( "" ) ); // stemmed content (blank for now)
               vtkEdgeType e = graph->AddEdge( currentVertexPedigree, pedigree, array );
 
               // and track which content paragraph tag type we are currently in for content

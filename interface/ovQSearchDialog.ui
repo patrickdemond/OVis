@@ -40,6 +40,14 @@
    </property>
    <column>
     <property name="text">
+     <string>Stem</string>
+    </property>
+    <property name="textAlignment">
+     <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+    </property>
+   </column>
+   <column>
+    <property name="text">
      <string>And/Or</string>
     </property>
     <property name="textAlignment">

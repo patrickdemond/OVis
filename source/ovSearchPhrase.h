@@ -49,7 +49,7 @@ public:
 
   // Description:
   // Add a search term.
-  virtual void Add( ovString search, bool notLogic, bool andLogic );
+  virtual void Add( const ovSearchTerm &term );
 
   // Description:
   // Returns a reference to the vector of search terms
@@ -61,7 +61,8 @@ public:
   
   // Description:
   // Returns whether the search term is a match for the string
-  virtual bool Find( ovString ) const;
+  // The first string is the raw content, the second is the stemmed content
+  virtual bool Find( ovString content, ovString stemmedContent ) const;
 
 protected:
   ovSearchPhrase();

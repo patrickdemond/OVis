@@ -30,6 +30,9 @@
 #include <vtkstd/string>
 #include <vtkstd/vector>
 
+// For the stemming algorithm
+#include "stemming/english_stem.h"
+
 typedef vtkstd::string ovString;
 typedef vtkstd::stack< ovString > ovStringStack;
 typedef vtkstd::vector< int > ovIntVector;
@@ -38,6 +41,7 @@ typedef vtkstd::vector< ovString > ovStringVector;
 struct ovSearchTerm
 {
   ovString term;
+  bool stemming;
   bool notLogic;
   bool andLogic;
   
@@ -45,11 +49,21 @@ struct ovSearchTerm
   {
     this->Clear();
   }
+
   void Clear()
   {
     this->term = "";
+    this->stemming = true;
     this->notLogic = false;
     this->andLogic = true;
+  }
+
+  void copy( const ovSearchTerm &rhs )
+  {
+    this->term = rhs.term;
+    this->stemming = rhs.stemming;
+    this->notLogic = rhs.notLogic;
+    this->andLogic = rhs.andLogic;
   }
 };
 
@@ -213,5 +227,79 @@ struct ovTag
 };
 
 typedef vtkstd::vector< ovTag* > ovTagVector;
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+inline void wstrToStr( const std::wstring &wstr, ovString &str )
+{
+  str.clear();
+  for( size_t i = 0; i < wstr.size(); i++ )
+  {
+    wchar_t w = wstr[i];
+    if( w <= 0x7f )
+    {
+      str.push_back( (char)w );
+    }
+    else if( w <= 0x7ff )
+    {
+      str.push_back( 0xc0 | ( ( w >> 6 ) & 0x1f ) );
+      str.push_back( 0x80 | (   w        & 0x3f ) );
+    }
+    else if( w <= 0xffff )
+    {
+      str.push_back( 0xe0 | ( ( w >> 12 ) & 0x0f ) );
+      str.push_back( 0x80 | ( ( w >> 6  ) & 0x3f ) );
+      str.push_back( 0x80 | (   w         & 0x3f ) );
+    }
+    else if( w <= 0x10ffff )
+    {
+      str.push_back( 0xf0 | ( ( w >> 18 ) & 0x07 ) );
+      str.push_back( 0x80 | ( ( w >> 12 ) & 0x3f ) );
+      str.push_back( 0x80 | ( ( w >> 6  ) & 0x3f ) );
+      str.push_back( 0x80 | (   w         & 0x3f ) );
+    }
+    else
+    {
+      str.push_back( '?' );
+    }
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+inline ovString stemWords( ovString words )
+{
+  ovString output, stem;
+  vtkstd::wstring wstr;
+  const char *deliminators = " `~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?";
+  stemming::english_stem<> StemEnglish;
+  
+  char *buffer = new char[ words.size() + 1 ];
+  std::copy( words.begin(), words.end(), buffer );
+  buffer[ words.size() ] = '\0';
+
+  const char *ptr = strtok( buffer, deliminators );
+  bool first = true;
+  while( NULL != ptr )
+  {
+    // convert token to a wstring
+    size_t len = strlen( ptr );
+    wchar_t* wbuffer = new wchar_t[ len + 1 ];
+    vtkstd::wmemset( wbuffer, 0, len + 1 );
+    std::mbstowcs( wbuffer, ptr, len );
+    wstr = wbuffer;
+
+    // find the stem and convert to UTF-8
+    StemEnglish( wstr );
+    wstrToStr( wstr, stem );
+    if( !first ) output += " ";
+    else first = false;
+    output += stem;
+
+    // clean up and move to the next word
+    delete [] wbuffer;
+    ptr = strtok( NULL, deliminators );
+  }
+
+  return output;
+}
 
 #endif // __vtkUtilities_h

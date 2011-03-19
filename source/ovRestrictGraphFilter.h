@@ -50,6 +50,11 @@ public:
   virtual void SetContentArrayName( const ovString &name );
   
   // Description:
+  // Set/get the Content array name
+  virtual ovString GetStemmedContentArrayName() { return this->StemmedContentArrayName; }
+  virtual void SetStemmedContentArrayName( const ovString &name );
+  
+  // Description:
   // Set/get the Gender array name
   virtual ovString GetGenderArrayName() { return this->GenderArrayName; }
   virtual void SetGenderArrayName( const ovString &name );
@@ -156,6 +161,7 @@ protected:
   // array names
   ovString TagsArrayName;
   ovString ContentArrayName;
+  ovString StemmedContentArrayName;
   ovString GenderArrayName;
   ovString BirthArrayName;
   ovString DeathArrayName;

@@ -53,6 +53,7 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   // default array names
   this->SetTagsArrayName( "tags" );
   this->SetContentArrayName( "content" );
+  this->SetStemmedContentArrayName( "stemmedContent" );
   this->SetGenderArrayName( "gender" );
   this->SetBirthArrayName( "birth" );
   this->SetDeathArrayName( "death" );
@@ -96,6 +97,19 @@ void ovRestrictGraphFilter::SetContentArrayName( const ovString &name )
   if( name != this->ContentArrayName )
   {
     this->ContentArrayName = name;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetStemmedContentArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "StemmedContentArrayName to " << name.c_str() );
+
+  if( name != this->StemmedContentArrayName )
+  {
+    this->StemmedContentArrayName = name;
     this->Modified();
   }
 }
@@ -250,7 +264,6 @@ int ovRestrictGraphFilter::RequestData(
 {
   vtkGraph* input = vtkGraph::GetData( inputVector[0] );
   vtkGraph* output = vtkGraph::GetData( outputVector );
-  ovString content;
 
   // If we have no include tags or search phrases then do nothing
   if( NULL == this->ActiveTags &&
@@ -284,6 +297,17 @@ int ovRestrictGraphFilter::RequestData(
     return 0;
   }
   
+  vtkStringArray *authorStemmedContentArray =
+    vtkStringArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->StemmedContentArrayName.c_str() ) );
+  if( NULL == authorStemmedContentArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->StemmedContentArrayName.c_str() << "' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
   vtkStringArray *contentArray =
     vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray(
       this->ContentArrayName.c_str() ) );
@@ -291,6 +315,17 @@ int ovRestrictGraphFilter::RequestData(
   {
     vtkErrorMacro( << "Input graph edge data does not have a '"
                    << this->ContentArrayName.c_str() << "' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
+  vtkStringArray *stemmedContentArray =
+    vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray(
+      this->StemmedContentArrayName.c_str() ) );
+  if( NULL == stemmedContentArray )
+  {
+    vtkErrorMacro( << "Input graph edge data does not have a '"
+                   << this->StemmedContentArrayName.c_str() << "' array." );
     output->ShallowCopy( input ); 
     return 0;
   }
@@ -408,8 +443,8 @@ int ovRestrictGraphFilter::RequestData(
 
       if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() )
       { // search this node for the search term
-        content = authorContentArray->GetValue( id );
-        findVertex.at( id ) = 0 < content.length() && this->TextSearchPhrase->Find( content );
+        findVertex.at( id ) = this->TextSearchPhrase->Find(
+          authorContentArray->GetValue( id ), authorStemmedContentArray->GetValue( id ) );
       }
       
       // TODO: implement author search
@@ -539,8 +574,8 @@ int ovRestrictGraphFilter::RequestData(
     {
       if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() )
       {
-        content = contentArray->GetValue( e.Id );
-        addEdge = 0 < content.length() && this->TextSearchPhrase->Find( content );
+        addEdge = this->TextSearchPhrase->Find(
+          contentArray->GetValue( e.Id ), stemmedContentArray->GetValue( e.Id ) );
       }
       else
       {

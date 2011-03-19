@@ -53,11 +53,15 @@ void ovSearchPhrase::Parse( ovString phrase )
     {
       term.andLogic = false;
     }
+    else if( "NOSTEM" == match )
+    {
+      term.stemming = false;
+    }
     else if( "\"" == match.substr( 0, 1 ) && "\"" == match.substr( match.length() - 1 ) )
     {
       // this is the search itself, so time to add it to the phrase
       term.term = match.substr( 1, match.length() - 2 );
-      this->Add( term.term, term.notLogic, term.andLogic );
+      this->Add( term );
       
       // reset the term
       term.Clear();
@@ -85,6 +89,9 @@ ovString ovSearchPhrase::ToString() const
     // add the NOT term, if needed
     if( term->notLogic ) phrase += " NOT";
 
+    // add the NOSTEM term, if needed
+    if( !term->stemming ) phrase += " NOSTEM";
+
     // add the search term, stripped of double-quotes
     ovString search = term->term;
     search.erase( vtkstd::remove( search.begin(), search.end(), '"' ), search.end() );
@@ -108,18 +115,16 @@ void ovSearchPhrase::Clear()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovSearchPhrase::Add( ovString search, bool notLogic, bool andLogic )
+void ovSearchPhrase::Add( const ovSearchTerm &term )
 {
-  ovSearchTerm *term = new ovSearchTerm();
-  term->term = vtksys::SystemTools::LowerCase( search );
-  term->notLogic = notLogic;
-  term->andLogic = andLogic;
-  this->SearchTermVector.push_back( term );
+  ovSearchTerm *newTerm = new ovSearchTerm();
+  newTerm->copy( term );
+  this->SearchTermVector.push_back( newTerm );
   this->Modified();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool ovSearchPhrase::Find( ovString content ) const
+bool ovSearchPhrase::Find( ovString content, ovString stemmedContent ) const
 {
   if( 0 == content.length() ) return false;
 
@@ -135,6 +140,8 @@ bool ovSearchPhrase::Find( ovString content ) const
     if( true == match && !term->andLogic ) break;
     
     found = vtkstd::string::npos != content.find( term->term );
+    if( term->stemming && !found ) found = vtkstd::string::npos != stemmedContent.find( term->term ); 
+
     bool thisMatch = ( found && !term->notLogic ) || ( !found && term->notLogic );
     match = first // if this is the first term
           ? thisMatch // just set match to whatever this match is
