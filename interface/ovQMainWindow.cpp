@@ -23,12 +23,14 @@
 #include <QSettings>
 #include <QTreeWidget>
 
+#include "vtkAnnotationLink.h"
 #include "vtkCamera.h"
 #include "vtkCommand.h"
 #include "vtkGlyphSource2D.h"
 #include "vtkGraph.h"
 #include "vtkGraphLayoutStrategy.h"
 #include "vtkGraphLayoutView.h"
+#include "vtkIdTypeArray.h"
 #include "vtkLookupTable.h"
 #include "vtkMath.h"
 #include "vtkPNGWriter.h"
@@ -36,6 +38,8 @@
 #include "vtkRenderer.h"
 #include "vtkRendererCollection.h"
 #include "vtkRenderWindow.h"
+#include "vtkSelection.h"
+#include "vtkSelectionNode.h"
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
 #include "vtkViewTheme.h"
@@ -109,6 +113,49 @@ void ovQMainWindowProgressCommand::Execute(
       // however, let's not do that since it substantially slows down processing
       //this->ui->statusbar->repaint();
     }
+  }
+}
+
+class ovQMainWindowSelectionCommand : public vtkCommand
+{
+public:
+  static ovQMainWindowSelectionCommand *New() { return new ovQMainWindowSelectionCommand; }
+  void Execute( vtkObject *caller, unsigned long eventId, void *callData );
+  Ui_ovQMainWindow *ui;
+
+protected:
+  ovQMainWindowSelectionCommand() { this->ui = NULL; }
+};
+
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindowSelectionCommand::Execute(
+  vtkObject *caller, unsigned long eventId, void *callData )
+{
+  if( this->ui )
+  {
+    vtkAnnotationLink *link = vtkAnnotationLink::SafeDownCast( caller );
+    if( NULL == link ) return;
+    
+    vtkSelectionNode *node;
+    vtkIdTypeArray *edgeIds, *vertexIds;
+
+    // there will be two nodes, one are vertices and the other are edges
+    node0 = link->GetCurrentSelection()->GetNode( 0 );
+    node1 = link->GetCurrentSelection()->GetNode( 1 );
+
+    if( vtkSelectionNode::EDGE == node0->GetFieldType() )
+    {
+      edgeIds = vtkIdTypeArray::SafeDownCast( node0->GetSelectionList() );
+      vertexIds = vtkIdTypeArray::SafeDownCast( node1->GetSelectionList() );
+    }
+    else
+    {
+      edgeIds = vtkIdTypeArray::SafeDownCast( node1->GetSelectionList() );
+      vertexIds = vtkIdTypeArray::SafeDownCast( node0->GetSelectionList() );
+    }
+
+    // process the selected edge and vertex ids
   }
 }
 
@@ -315,7 +362,6 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
 
   // set up the observer to update the progress bar
   this->ProgressObserver = vtkSmartPointer< ovQMainWindowProgressCommand >::New();
-  this->ProgressObserver = vtkSmartPointer< ovQMainWindowProgressCommand >::New();
   this->ProgressObserver->ui = this->ui;
 
   // set up the graph layout view
@@ -337,6 +383,14 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   rep->SetVertexHoverArrayName( "pedigree" );
   this->GraphLayoutView->SetInteractor( this->ui->graphLayoutWidget->GetInteractor() );
   this->ui->graphLayoutWidget->SetRenderWindow( this->GraphLayoutView->GetRenderWindow() );
+  
+  // set up the observer to update the graph selection
+  this->SelectionObserver = vtkSmartPointer< ovQMainWindowSelectionCommand >::New();
+  this->SelectionObserver->ui = this->ui;
+
+  // add an observer to watch for graph node/edge selection
+  rep->GetAnnotationLink()->AddObserver(
+    vtkCommand::AnnotationChangedEvent, this->SelectionObserver );
 
   this->GraphLayoutViewTheme = vtkSmartPointer< vtkViewTheme >::New();
   this->GraphLayoutViewTheme->SetBackgroundColor( 0.7, 0.7, 0.7 );

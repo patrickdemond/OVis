@@ -10,6 +10,7 @@
 class Ui_ovQMainWindow;
 
 class ovQMainWindowProgressCommand;
+class ovQMainWindowSelectionCommand;
 class ovOrlandoReader;
 class ovRestrictGraphFilter;
 class ovSearchPhrase;
@@ -131,6 +132,7 @@ protected:
   vtkSmartPointer< ovOrlandoReader > OrlandoReader;
   vtkSmartPointer< ovRestrictGraphFilter > RestrictGraphFilter;
   vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
+  vtkSmartPointer< ovQMainWindowSelectionCommand > SelectionObserver;
   vtkSmartPointer< ovSearchPhrase > TextSearchPhrase;
   vtkSmartPointer< ovSearchPhrase > AuthorSearchPhrase;
   
