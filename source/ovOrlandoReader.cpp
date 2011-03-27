@@ -276,15 +276,12 @@ int ovOrlandoReader::ProcessRequest(
             {
               // get and clean the content
               ovString content = ( char* )( this->CurrentNode.Content );
-              size_t start = content.find_first_not_of(" \t\n\r");
+              size_t start = content.find_first_not_of("\t\n\r");
               if( start != vtkstd::string::npos )
-                content = content.substr( start, content.find_last_not_of(" \t\n\r") - start + 1 );
+                content = content.substr( start, content.find_last_not_of("\t\n\r") - start + 1 );
               
               if( 0 < content.length() )
               {
-                content += vtksys::SystemTools::LowerCase( content );
-                content += " ";
-
                 // add to author content
                 authorContent.append( content );
                 

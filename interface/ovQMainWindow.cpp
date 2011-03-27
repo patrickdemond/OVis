@@ -21,6 +21,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
+#include <QTextEdit>
 #include <QTreeWidget>
 
 #include "vtkAnnotationLink.h"
@@ -61,6 +62,7 @@
 
 #include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
+#include <vtksys/ios/sstream>
 
 class ovQMainWindowProgressCommand : public vtkCommand
 {
@@ -122,9 +124,10 @@ public:
   static ovQMainWindowSelectionCommand *New() { return new ovQMainWindowSelectionCommand; }
   void Execute( vtkObject *caller, unsigned long eventId, void *callData );
   Ui_ovQMainWindow *ui;
+  vtkGraph *Graph;
 
 protected:
-  ovQMainWindowSelectionCommand() { this->ui = NULL; }
+  ovQMainWindowSelectionCommand() { this->ui = NULL; this->Graph = NULL; }
 };
 
 
@@ -132,12 +135,12 @@ protected:
 void ovQMainWindowSelectionCommand::Execute(
   vtkObject *caller, unsigned long eventId, void *callData )
 {
-  if( this->ui )
+  if( this->ui && this->Graph )
   {
     vtkAnnotationLink *link = vtkAnnotationLink::SafeDownCast( caller );
     if( NULL == link ) return;
     
-    vtkSelectionNode *node;
+    vtkSelectionNode *node0, *node1;
     vtkIdTypeArray *edgeIds, *vertexIds;
 
     // there will be two nodes, one are vertices and the other are edges
@@ -154,8 +157,54 @@ void ovQMainWindowSelectionCommand::Execute(
       edgeIds = vtkIdTypeArray::SafeDownCast( node1->GetSelectionList() );
       vertexIds = vtkIdTypeArray::SafeDownCast( node0->GetSelectionList() );
     }
+    
+    vtkStringArray *pedigreeArray = 
+      vtkStringArray::SafeDownCast(
+        this->Graph->GetVertexData()->GetAbstractArray( "pedigree" ) );
+
+    vtkStringArray *contentArray = 
+      vtkStringArray::SafeDownCast(
+        this->Graph->GetEdgeData()->GetAbstractArray( "content" ) );
 
     // process the selected edge and vertex ids
+    vtkstd::ostringstream stream;
+
+    int numValues = vertexIds->GetNumberOfTuples();
+    if( 0 < numValues )
+    {
+      stream << "<h3>Selected Vertices (" << numValues
+             << ( 100 < numValues ? ", showing first 100" : "" )
+             << ")</h3><ul>";
+      for( int index = 0; index < numValues && index < 100; index++ )
+      {
+        stream << "<li>" << pedigreeArray->GetValue( vertexIds->GetValue( index ) ) << "</li>";
+      }
+      stream << "</ul>";
+
+      if( 100 < numValues ) stream << "<p>List cropped at 100 vertices</p>";
+    }
+
+    numValues = edgeIds->GetNumberOfTuples();
+    if( 0 < numValues )
+    {
+      stream << "<h3>Selected Edges (" << numValues
+             << ( 100 < numValues ? ", showing first 100" : "" )
+             << ")</h3><ul>";
+      for( int index = 0; index < numValues && index < 100; index++ )
+      {
+        vtkIdType eId = edgeIds->GetValue( index );
+        vtkIdType sId = this->Graph->GetSourceVertex( eId );
+        vtkIdType tId = this->Graph->GetTargetVertex( eId );
+        stream << "<li><b>" << pedigreeArray->GetValue( sId ) << "</b> is connected to <b>"
+               << pedigreeArray->GetValue( tId ) << "</b>:<br />\"" 
+               << contentArray->GetValue( eId ) << "\"</li>";
+      }
+      stream << "</ul>";
+
+      if( 100 < numValues ) stream << "<p>List cropped at 100 edges</p>";
+    }
+
+    this->ui->graphSelectTextEdit->setHtml( QString( stream.str().c_str() ) );
   }
 }
 
@@ -437,6 +486,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->RestrictGraphFilter = vtkSmartPointer< ovRestrictGraphFilter >::New();
   this->RestrictGraphFilter->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
   this->RestrictGraphFilter->SetInput( this->OrlandoReader->GetOutput() );
+  this->SelectionObserver->Graph = this->RestrictGraphFilter->GetOutput();
   
   // set up the search phrases
   this->TextSearchPhrase = vtkSmartPointer< ovSearchPhrase >::New();
@@ -553,10 +603,16 @@ bool ovQMainWindow::MaybeSave()
 void ovQMainWindow::WriteSettings()
 {
   QSettings settings( "sharcnet", "ovis" );
+  
   settings.beginGroup( "MainWindow" );
   settings.setValue( "size", this->size() );
   settings.setValue( "pos", this->pos() );
   settings.setValue( "maximized", this->isMaximized() );
+  settings.endGroup();
+
+  settings.beginGroup( "Splitters" );
+  settings.setValue( "displayQuery", this->ui->displayQuerySplitter->saveState() );
+  settings.setValue( "graphText", this->ui->graphTextSplitter->saveState() );
   settings.endGroup();
 }
 
@@ -564,19 +620,19 @@ void ovQMainWindow::WriteSettings()
 void ovQMainWindow::ReadSettings()
 {
   QSettings settings( "sharcnet", "ovis" );
+  
   settings.beginGroup( "MainWindow" );
-  if( settings.contains( "size" ) )
-  {
-    this->resize( settings.value( "size" ).toSize() );
-  }
-  if( settings.contains( "pos" ) )
-  {
-    this->move( settings.value( "pos" ).toPoint() );
-  }
+  if( settings.contains( "size" ) ) this->resize( settings.value( "size" ).toSize() );
+  if( settings.contains( "pos" ) ) this->move( settings.value( "pos" ).toPoint() );
   if( settings.contains( "maximized" ) && settings.value( "maximized" ).toBool() )
-  {
     this->showMaximized();
-  }
+  settings.endGroup();
+
+  settings.beginGroup( "Splitters" );
+  if( settings.contains( "displayQuery" ) )
+    this->ui->displayQuerySplitter->restoreState( settings.value("displayQuery" ).toByteArray() );
+  if( settings.contains( "graphText" ) )
+    this->ui->graphTextSplitter->restoreState( settings.value("graphText" ).toByteArray() );
   settings.endGroup();
 }
 

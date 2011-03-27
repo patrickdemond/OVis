@@ -127,6 +127,9 @@ void ovSearchPhrase::Add( const ovSearchTerm &term )
 bool ovSearchPhrase::Find( ovString content, ovString stemmedContent ) const
 {
   if( 0 == content.length() ) return false;
+  
+  // make search case-insensitive
+  content = vtksys::SystemTools::LowerCase( content );
 
   // loop through every search term until we find a match
   bool first = true, found = false, match = false;

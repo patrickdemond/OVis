@@ -12,8 +12,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
-    <height>1024</height>
+    <width>1440</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -41,43 +41,74 @@
    <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="contextMenuPolicy">
     <enum>Qt::DefaultContextMenu</enum>
    </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QSplitter" name="splitter">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <property name="sizeConstraint">
+     <enum>QLayout::SetDefaultConstraint</enum>
+    </property>
+    <item>
+     <widget class="QSplitter" name="displayQuerySplitter">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QWidget" name="layoutWidget_1">
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="displayLayout">
         <property name="spacing">
          <number>0</number>
         </property>
         <item>
-         <widget class="QVTKWidget" name="graphLayoutWidget" native="true">
+         <widget class="QSplitter" name="graphTextSplitter">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
           </property>
-          <property name="cursor">
-           <cursorShape>CrossCursor</cursorShape>
-          </property>
+          <widget class="QVTKWidget" name="graphLayoutWidget" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>640</width>
+             <height>480</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>CrossCursor</cursorShape>
+           </property>
+          </widget>
+          <widget class="QTextEdit" name="graphSelectTextEdit">
+           <property name="undoRedoEnabled">
+            <bool>false</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
          </widget>
         </item>
         <item>
@@ -95,583 +126,751 @@
         </item>
        </layout>
       </widget>
-     </widget>
-    </item>
-    <item row="0" column="1" colspan="2">
-     <layout class="QVBoxLayout" name="queryLayout" stretch="0,0,0,0,0,0,0">
-      <property name="spacing">
-       <number>7</number>
-      </property>
-      <property name="sizeConstraint">
-       <enum>QLayout::SetFixedSize</enum>
-      </property>
-      <property name="margin">
-       <number>0</number>
-      </property>
-      <item>
-       <layout class="QVBoxLayout" name="displayPropertiesLayout">
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QVBoxLayout" name="queryLayout" stretch="0,0,0,0,0,0,0">
         <property name="spacing">
-         <number>0</number>
+         <number>7</number>
         </property>
-        <property name="topMargin">
-         <number>0</number>
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
         </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QLabel" name="displayPropertiesLabel">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Sans Serif</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="layoutDirection">
-           <enum>Qt::LeftToRight</enum>
-          </property>
-          <property name="text">
-           <string>Display Properties</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="authorCheckBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="layoutDirection">
-           <enum>Qt::LeftToRight</enum>
-          </property>
-          <property name="text">
-           <string>Display Authors Only</string>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QGridLayout" name="displayPropertiesGridLayout">
-          <property name="horizontalSpacing">
-           <number>5</number>
-          </property>
-          <property name="verticalSpacing">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item row="2" column="1">
-           <widget class="QSlider" name="vertexSizeSlider">
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>23</number>
-            </property>
-            <property name="pageStep">
-             <number>5</number>
-            </property>
-            <property name="value">
-             <number>5</number>
-            </property>
-            <property name="tracking">
-             <bool>false</bool>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="tickPosition">
-             <enum>QSlider::TicksAbove</enum>
-            </property>
-            <property name="tickInterval">
-             <number>2</number>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QSlider" name="edgeSizeSlider">
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>12</number>
-            </property>
-            <property name="pageStep">
-             <number>4</number>
-            </property>
-            <property name="value">
-             <number>2</number>
-            </property>
-            <property name="tracking">
-             <bool>false</bool>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="invertedAppearance">
-             <bool>false</bool>
-            </property>
-            <property name="tickPosition">
-             <enum>QSlider::TicksAbove</enum>
-            </property>
-            <property name="tickInterval">
-             <number>1</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="vertexSizeLabel">
-            <property name="text">
-             <string>Vertex Size</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="edgeSizeLabel">
-            <property name="text">
-             <string>Edge Size</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="genderLabel">
-            <property name="text">
-             <string>Gender</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="genderComboBox">
-            <item>
-             <property name="text">
-              <string>Both</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Female</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Male</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="writerLabel">
-            <property name="text">
-             <string>Writer Type</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="writerComboBox">
-            <item>
-             <property name="text">
-              <string>Any</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Writer</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>BRW</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>IBR</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Writer or BRW</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Writer or IBR</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>BRW or IBR</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="vertexColorLayout">
-          <property name="topMargin">
-           <number>4</number>
-          </property>
-          <item>
-           <widget class="QPushButton" name="authorVertexColorPushButton">
-            <property name="text">
-             <string>Author Color</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="associationVertexColorPushButton">
-            <property name="text">
-             <string>Association Color</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="Line" name="line_1">
-        <property name="lineWidth">
-         <number>2</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="searchRestrictionsLayout">
-        <property name="topMargin">
+        <property name="margin">
          <number>0</number>
         </property>
         <item>
-         <widget class="QLabel" name="label_2">
-          <property name="font">
-           <font>
-            <family>Sans Serif</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Search</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QGridLayout" name="searchRestrictionsGridLayout">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
+         <layout class="QVBoxLayout" name="displayPropertiesLayout">
           <property name="spacing">
            <number>0</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="textSearchLabel">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="displayPropertiesLabel">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Sans Serif</family>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
             <property name="text">
-             <string>Text</string>
+             <string>Display Properties</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="authorSearchLabel">
-            <property name="text">
-             <string>Author</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="textSearchLineEdit">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="authorSearchLineEdit">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="textSearchSetPushButton">
+          <item>
+           <widget class="QCheckBox" name="authorCheckBox">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
             <property name="text">
-             <string>Set</string>
+             <string>Display Authors Only</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
-           <widget class="QPushButton" name="authorSearchSetPushButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>50</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <item>
+           <layout class="QGridLayout" name="displayPropertiesGridLayout">
+            <property name="horizontalSpacing">
+             <number>5</number>
             </property>
-            <property name="text">
-             <string>Set</string>
+            <property name="verticalSpacing">
+             <number>0</number>
             </property>
-           </widget>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item row="2" column="1">
+             <widget class="QSlider" name="vertexSizeSlider">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>23</number>
+              </property>
+              <property name="pageStep">
+               <number>5</number>
+              </property>
+              <property name="value">
+               <number>5</number>
+              </property>
+              <property name="tracking">
+               <bool>false</bool>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="tickPosition">
+               <enum>QSlider::TicksAbove</enum>
+              </property>
+              <property name="tickInterval">
+               <number>2</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSlider" name="edgeSizeSlider">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>12</number>
+              </property>
+              <property name="pageStep">
+               <number>4</number>
+              </property>
+              <property name="value">
+               <number>2</number>
+              </property>
+              <property name="tracking">
+               <bool>false</bool>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="invertedAppearance">
+               <bool>false</bool>
+              </property>
+              <property name="tickPosition">
+               <enum>QSlider::TicksAbove</enum>
+              </property>
+              <property name="tickInterval">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="vertexSizeLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Vertex Size</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="edgeSizeLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Edge Size</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="genderLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Gender</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="genderComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>Both</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Female</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Male</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="writerLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Writer Type</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="writerComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>Any</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Writer</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>BRW</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>IBR</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Writer or BRW</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Writer or IBR</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>BRW or IBR</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="vertexColorLayout">
+            <property name="topMargin">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="authorVertexColorPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Author Color</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="associationVertexColorPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Association Color</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="Line" name="line_2">
-        <property name="lineWidth">
-         <number>2</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="dateRestrictionsLayout">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
         <item>
-         <widget class="QLabel" name="label">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
+         <widget class="Line" name="line_1">
+          <property name="lineWidth">
+           <number>2</number>
           </property>
-          <property name="font">
-           <font>
-            <family>Sans Serif</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Date Restrictions</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
          </widget>
         </item>
         <item>
-         <layout class="QGridLayout" name="dateRestrictionsGridLayout">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
+         <layout class="QVBoxLayout" name="searchRestrictionsLayout">
           <property name="topMargin">
            <number>0</number>
           </property>
-          <property name="rightMargin">
-           <number>0</number>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="font">
+             <font>
+              <family>Sans Serif</family>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Search</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="searchRestrictionsGridLayout">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="textSearchLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Text</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="authorSearchLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Author</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="textSearchLineEdit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="authorSearchLineEdit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="textSearchSetPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Set</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="authorSearchSetPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Set</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="Line" name="line_2">
+          <property name="lineWidth">
+           <number>2</number>
           </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="dateRestrictionsLayout">
           <property name="spacing">
            <number>0</number>
           </property>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="startLineEdit">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="endLineEdit">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="startLabel">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label">
             <property name="minimumSize">
              <size>
-              <width>38</width>
-              <height>0</height>
+              <width>0</width>
+              <height>25</height>
              </size>
             </property>
+            <property name="font">
+             <font>
+              <family>Sans Serif</family>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
             <property name="text">
-             <string>Start</string>
+             <string>Date Restrictions</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="endLabel">
-            <property name="minimumSize">
-             <size>
-              <width>38</width>
-              <height>0</height>
-             </size>
+          <item>
+           <layout class="QGridLayout" name="dateRestrictionsGridLayout">
+            <property name="leftMargin">
+             <number>0</number>
             </property>
-            <property name="text">
-             <string>End</string>
+            <property name="topMargin">
+             <number>0</number>
             </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="startSetPushButton">
-            <property name="text">
-             <string>Set</string>
+            <property name="rightMargin">
+             <number>0</number>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QPushButton" name="endSetPushButton">
-            <property name="text">
-             <string>Set</string>
+            <property name="spacing">
+             <number>0</number>
             </property>
-           </widget>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="startLineEdit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="endLineEdit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="startLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Start</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="endLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>50</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>End</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="startSetPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Set</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="endSetPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Set</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="Line" name="line_3">
-        <property name="lineWidth">
-         <number>2</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="activeTagsLayout">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
         <item>
-         <widget class="QLabel" name="activeTagsLabel">
-          <property name="enabled">
-           <bool>true</bool>
+         <widget class="Line" name="line_3">
+          <property name="lineWidth">
+           <number>2</number>
           </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <family>Sans Serif</family>
-            <pointsize>12</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Active Tags</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QTreeWidget" name="tagTreeWidget">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
-          <column>
-           <property name="text">
-            <string>Tags</string>
-           </property>
-          </column>
-         </widget>
-        </item>
-        <item>
-         <layout class="QGridLayout" name="activeTagsGridLayout">
-          <property name="leftMargin">
+         <layout class="QVBoxLayout" name="activeTagsLayout">
+          <property name="spacing">
            <number>0</number>
           </property>
           <property name="topMargin">
            <number>0</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="tagTreeCheckButton">
+          <item>
+           <widget class="QLabel" name="activeTagsLabel">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Sans Serif</family>
+              <pointsize>12</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
             <property name="text">
-             <string>Check</string>
+             <string>Active Tags</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="tagTreeUnCheckButton">
-            <property name="text">
-             <string>Uncheck</string>
+          <item>
+           <widget class="QTreeWidget" name="tagTreeWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <column>
+             <property name="text">
+              <string>Tags</string>
+             </property>
+            </column>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="tagTreeExpandButton">
-            <property name="text">
-             <string>Expand Tree</string>
+          <item>
+           <layout class="QGridLayout" name="activeTagsGridLayout">
+            <property name="leftMargin">
+             <number>0</number>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="tagTreeCollapseButton">
-            <property name="text">
-             <string>Collapse Tree</string>
+            <property name="topMargin">
+             <number>0</number>
             </property>
-           </widget>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="tagTreeCheckButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Check</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="tagTreeUnCheckButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Uncheck</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="tagTreeExpandButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Expand Tree</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QPushButton" name="tagTreeCollapseButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Collapse Tree</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
        </layout>
-      </item>
-     </layout>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -680,7 +879,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1280</width>
+     <width>1440</width>
      <height>27</height>
     </rect>
    </property>
@@ -1200,6 +1399,12 @@
   <tabstop>writerComboBox</tabstop>
   <tabstop>vertexSizeSlider</tabstop>
   <tabstop>edgeSizeSlider</tabstop>
+  <tabstop>authorVertexColorPushButton</tabstop>
+  <tabstop>associationVertexColorPushButton</tabstop>
+  <tabstop>textSearchLineEdit</tabstop>
+  <tabstop>textSearchSetPushButton</tabstop>
+  <tabstop>authorSearchLineEdit</tabstop>
+  <tabstop>authorSearchSetPushButton</tabstop>
   <tabstop>startLineEdit</tabstop>
   <tabstop>startSetPushButton</tabstop>
   <tabstop>endLineEdit</tabstop>
@@ -1207,6 +1412,8 @@
   <tabstop>tagTreeWidget</tabstop>
   <tabstop>tagTreeCheckButton</tabstop>
   <tabstop>tagTreeUnCheckButton</tabstop>
+  <tabstop>tagTreeExpandButton</tabstop>
+  <tabstop>tagTreeCollapseButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>
