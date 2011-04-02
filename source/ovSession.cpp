@@ -45,6 +45,8 @@ ovSession::ovSession()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovSession::~ovSession()
 {
+  this->SelectedVertexList.clear();
+  this->SelectedEdgeList.clear();
   vtkstd::for_each( this->TagList.begin(), this->TagList.end(), safe_delete() );
   this->TagList.clear();
   this->SetCamera( NULL );
@@ -148,7 +150,11 @@ bool ovSession::operator == ( const ovSession &rhs ) const
       this->Camera->GetClippingRange()[1] == rhs.Camera->GetClippingRange()[1] &&
       this->Camera->GetParallelScale() == rhs.Camera->GetParallelScale() )
   {
-    // now make sure the tag vector is the same
+    // now make sure the vertex, edge and tag vectors are the same
+    for( int i = 0; i < this->SelectedVertexList.size() && i < rhs.SelectedVertexList.size(); ++i )
+      if( this->SelectedVertexList[i] != rhs.SelectedVertexList[i] ) return false;
+    for( int i = 0; i < this->SelectedEdgeList.size() && i < rhs.SelectedEdgeList.size(); ++i )
+      if( this->SelectedEdgeList[i] != rhs.SelectedEdgeList[i] ) return false;
     for( int i = 0; i < this->TagList.size() && i < rhs.TagList.size(); ++i )
       if( *( this->TagList[i] ) != *( rhs.TagList[i] ) ) return false;
 
@@ -180,8 +186,13 @@ void ovSession::DeepCopy( ovSession *copy )
     this->AssociationVertexColor[i] = copy->AssociationVertexColor[i];
   }
   
+  this->SelectedVertexList = copy->SelectedVertexList;
+  this->SelectedEdgeList = copy->SelectedEdgeList;
+  
   this->TagList.clear();
-  for( ovTagVector::iterator it = copy->TagList.begin(); it != copy->TagList.end(); ++it )
+  for( ovTagVector::iterator it = copy->TagList.begin();
+       it != copy->TagList.end();
+       ++it )
   {
     ovTag *tag = new ovTag;
     tag->DeepCopy( *it );
@@ -225,6 +236,10 @@ void ovSession::PrintSelf( ostream &os, vtkIndent indent )
   os << indent << "StartDateRestriction = " << date << endl;
   this->EndDateRestriction.ToString( date );
   os << indent << "EndDateRestriction = " << date << endl;
+  os << indent << "SelectedVertexList: ovSelectedVertexVector";
+  os << indent.GetNextIndent() << "size: " << this->SelectedVertexList.size();
+  os << indent << "SelectedEdgeList: ovSelectedEdgeVector";
+  os << indent.GetNextIndent() << "size: " << this->SelectedEdgeList.size();
   os << indent << "TagList: ovTagVector";
   os << indent.GetNextIndent() << "size: " << this->TagList.size();
   os << indent << "Camera: ";

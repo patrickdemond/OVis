@@ -57,6 +57,7 @@ protected:
   virtual void ReadString( ovString& );
   virtual void ReadColor( double[4] );
   virtual void ReadDate( ovDate& );
+  virtual void ReadIntList( ovIntVector* );
   virtual void ReadTagList( ovTagVector* );
   virtual void ReadCoordinates( double[3] );
   virtual void ReadDistanceRange( double[2] );

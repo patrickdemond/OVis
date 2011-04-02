@@ -53,7 +53,7 @@ struct ovSearchTerm
   void Clear()
   {
     this->term = "";
-    this->stemming = true;
+    this->stemming = false;
     this->notLogic = false;
     this->andLogic = true;
   }

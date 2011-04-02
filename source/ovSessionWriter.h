@@ -61,6 +61,10 @@ protected:
   virtual void Write( ovString name, ovDate );
   
   // Description:
+  // Write an integer vector
+  virtual void Write( ovString name, ovIntVector* );
+  
+  // Description:
   // Write a tag list element
   virtual void Write( ovTagVector* );
   

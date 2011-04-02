@@ -65,6 +65,8 @@ void ovSessionWriter::WriteData()
     this->WriteColor( "AssociationVertexColor", rgba );
     this->Write( "StartDateRestriction", input->GetStartDateRestriction() );
     this->Write( "EndDateRestriction", input->GetEndDateRestriction() );
+    this->Write( "SelectedVertexList", input->GetSelectedVertexList() );
+    this->Write( "SelectedEdgeList", input->GetSelectedEdgeList() );
     this->Write( input->GetTagList() );
     this->Write( input->GetCamera() );
 
@@ -163,6 +165,25 @@ void ovSessionWriter::Write( ovString name, ovDate date )
     if( 0 > xmlTextWriterWriteFormatElement(
       this->Writer, BAD_CAST "Day", "%d", date.day ) ) throw( e );
   if( 0 > xmlTextWriterEndElement( this->Writer ) ) throw( e ); // close the Date element
+  if( 0 > xmlTextWriterEndElement( this->Writer ) ) throw( e ); // close the named element
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionWriter::Write( ovString name, ovIntVector *numbers )
+{
+  if( NULL == numbers ) return;
+  vtkstd::runtime_error e( "Error writing int array to ovis session file." );
+  
+  if( 0 > xmlTextWriterStartElement(
+    this->Writer, BAD_CAST name.c_str() ) ) throw( e );
+  if( 0 > xmlTextWriterStartElement(
+    this->Writer, BAD_CAST "Array" ) ) throw( e );
+  if( 0 > xmlTextWriterWriteAttribute(
+    this->Writer, BAD_CAST "type", BAD_CAST "int" ) ) throw( e );
+  for( ovIntVector::iterator it = numbers->begin(); it != numbers->end(); ++it )
+    if( 0 > xmlTextWriterWriteFormatElement(
+      this->Writer, BAD_CAST "Number", "%d", *it ) ) throw( e );
+  if( 0 > xmlTextWriterEndElement( this->Writer ) ) throw( e ); // close the Array element
   if( 0 > xmlTextWriterEndElement( this->Writer ) ) throw( e ); // close the named element
 }
 

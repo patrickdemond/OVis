@@ -197,11 +197,29 @@ int ovSessionReader::ProcessRequest(
           output->SetEndDateRestriction( date );
         }
         // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "SelectedVertexList", this->CurrentNode.Name ) )
+        {
+          output->GetSelectedVertexList()->empty();
+          if( !this->CurrentNode.IsEmptyElement )
+            this->ReadIntList( output->GetSelectedVertexList() );
+        }
+        // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "SelectedEdgeList", this->CurrentNode.Name ) )
+        {
+          output->GetSelectedEdgeList()->empty();
+          if( !this->CurrentNode.IsEmptyElement )
+            this->ReadIntList( output->GetSelectedEdgeList() );
+        }
+        // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "TagList", this->CurrentNode.Name ) )
         {
-          vtkstd::for_each( output->GetTagList()->begin(), output->GetTagList()->end(), safe_delete() );
+          vtkstd::for_each(
+            output->GetTagList()->begin(),
+            output->GetTagList()->end(),
+            safe_delete() );
           output->GetTagList()->empty();
-          if( !this->CurrentNode.IsEmptyElement ) this->ReadTagList( output->GetTagList() );
+          if( !this->CurrentNode.IsEmptyElement )
+            this->ReadTagList( output->GetTagList() );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "Camera", this->CurrentNode.Name ) )
@@ -355,6 +373,32 @@ void ovSessionReader::ReadDate( ovDate &date )
       date.day = atoi( ( char* )( node->children->content ) );
     }
     node = node->next;
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSessionReader::ReadIntList( ovIntVector *numbers )
+{
+  if( NULL == numbers ) throw( vtkstd::runtime_error( "Failed to read int list." ) );
+  
+  while( this->ParseNode() )
+  {
+    // ignore node type 14 (#text stuff that we don't need) and non-opening nodes
+    if( 14 == this->CurrentNode.NodeType ) continue;
+    
+    if( this->CurrentNode.IsClosingElement() &&
+        0 == xmlStrcmp( BAD_CAST "Array", this->CurrentNode.Name ) )
+    {
+      // we're done, break out of the loop
+      break;
+    }
+    else if( this->CurrentNode.IsOpeningElement() &&
+             0 == xmlStrcmp( BAD_CAST "Number", this->CurrentNode.Name ) )
+    {
+      int value;
+      this->ReadInt( value );
+      numbers->push_back( value );
+    }
   }
 }
 

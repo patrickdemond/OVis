@@ -110,6 +110,14 @@ public:
 
   // Description:
   // Set/get the active tags
+  virtual ovIntVector* GetSelectedVertexList() { return &( this->SelectedVertexList ); }
+
+  // Description:
+  // Set/get the active tags
+  virtual ovIntVector* GetSelectedEdgeList() { return &( this->SelectedEdgeList ); }
+
+  // Description:
+  // Set/get the active tags
   virtual ovTagVector* GetTagList() { return &( this->TagList ); }
 
   // Description:
@@ -136,6 +144,8 @@ protected:
   double AssociationVertexColor[4];
   ovDate StartDateRestriction;
   ovDate EndDateRestriction;
+  ovIntVector SelectedVertexList;
+  ovIntVector SelectedEdgeList;
   ovTagVector TagList;
   vtkCamera *Camera;
 

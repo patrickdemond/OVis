@@ -51,6 +51,7 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   this->AuthorSearchPhrase = NULL;
   
   // default array names
+  this->SetPedigreeArrayName( "pedigree" );
   this->SetTagsArrayName( "tags" );
   this->SetContentArrayName( "content" );
   this->SetStemmedContentArrayName( "stemmedContent" );
@@ -73,6 +74,19 @@ ovRestrictGraphFilter::~ovRestrictGraphFilter()
 void ovRestrictGraphFilter::PrintSelf( ostream& os, vtkIndent indent )
 {
   this->Superclass::PrintSelf( os, indent );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovRestrictGraphFilter::SetPedigreeArrayName( const ovString &name )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "PedigreeArrayName to " << name.c_str() );
+
+  if( name != this->PedigreeArrayName )
+  {
+    this->PedigreeArrayName = name;
+    this->Modified();
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -275,6 +289,17 @@ int ovRestrictGraphFilter::RequestData(
   }
   
   // test that we have the necessary graph arrays if the active tags list has values
+  vtkStringArray *pedigreeArray =
+    vtkStringArray::SafeDownCast( input->GetVertexData()->GetAbstractArray(
+      this->PedigreeArrayName.c_str() ) );
+  if( NULL == pedigreeArray )
+  {
+    vtkErrorMacro( << "Input graph vertex data does not have a '"
+                   << this->PedigreeArrayName.c_str() << "' array." );
+    output->ShallowCopy( input ); 
+    return 0;
+  }
+  
   vtkStringArray *tagBitArray =
     vtkStringArray::SafeDownCast( input->GetEdgeData()->GetAbstractArray(
       this->TagsArrayName.c_str() ) );
@@ -434,8 +459,7 @@ int ovRestrictGraphFilter::RequestData(
   
   vtkstd::vector<bool> findVertex( numVert, true );
 
-  if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() ||
-      this->AuthorSearchPhrase && this->AuthorSearchPhrase->GetNumberOfSearchTerms() )
+  if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() )
   {
     while( vertexIter->HasNext() )
     {
@@ -446,8 +470,6 @@ int ovRestrictGraphFilter::RequestData(
         findVertex.at( id ) = this->TextSearchPhrase->Find(
           authorContentArray->GetValue( id ), authorStemmedContentArray->GetValue( id ) );
       }
-      
-      // TODO: implement author search
     }
   }
 
@@ -465,10 +487,18 @@ int ovRestrictGraphFilter::RequestData(
 
     vtkEdgeType e = edgeIter->Next();
     
-    // skip if the author's vertex was not found
-    if( !findVertex.at( e.Source ) ) continue;
-
+    // skip if the author's or associate's vertex was not found
+    if( !findVertex.at( e.Source ) && !findVertex.at( e.Target ) ) continue;
+    
     // STEP #1
+    // if there is an author search, make sure at least one of the nodes connecting this edge match
+    if( this->AuthorSearchPhrase && this->AuthorSearchPhrase->GetNumberOfSearchTerms() )
+    {
+      if( !this->AuthorSearchPhrase->Find(
+        pedigreeArray->GetValue( e.Source ) + " " + pedigreeArray->GetValue( e.Target ) ) ) continue;
+    } 
+
+    // STEP #2
     // make sure that the edge's two vertices are both to be included
     bool sourceIsAuthor = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Source );
     bool targetIsAuthor = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Target );
@@ -527,7 +557,7 @@ int ovRestrictGraphFilter::RequestData(
           ovOrlandoReader::WriterTypeWriter == targetWriterType ) continue;
     }
     
-    // STEP #2
+    // STEP #3
     // make sure both vertices are within the specified dates, if necessary
     if( this->StartDate.IsSet() || this->EndDate.IsSet() )
     {
@@ -547,7 +577,7 @@ int ovRestrictGraphFilter::RequestData(
           ( 0 < endDate   && 0 < targetBirthDate && targetBirthDate > endDate   ) ) continue;
     }
 
-    // STEP #3
+    // STEP #4
     // Make sure that the edge itself is to be included
     vtkIdType matchIndex = -1;
     

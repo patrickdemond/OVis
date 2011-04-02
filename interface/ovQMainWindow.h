@@ -113,6 +113,10 @@ protected:
   virtual void ApplySessionToState();
 
   virtual void RenderGraph( bool resetCamera = false );
+  virtual void GetSelectedVertexList( ovIntVector* );
+  virtual void SetSelectedVertexList( ovIntVector* );
+  virtual void GetSelectedEdgeList( ovIntVector* );
+  virtual void SetSelectedEdgeList( ovIntVector* );
   virtual void GetTagList( ovTagVector* );
   virtual void SetTagList( ovTagVector* );
   virtual void GetActiveTags( vtkStringArray* );

@@ -14,22 +14,26 @@
 
 #include <vtkstd/algorithm>
 
-#define STEM_COLUMN_INDEX 0
-#define AND_COLUMN_INDEX  1
-#define NOT_COLUMN_INDEX  2
-#define TERM_COLUMN_INDEX 3
-
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovQSearchDialog::ovQSearchDialog( QWidget* parent )
+ovQSearchDialog::ovQSearchDialog( QWidget* parent, bool stem )
   : QDialog( parent )
 {
   this->ui = new Ui_ovQSearchDialog;
   this->ui->setupUi( this );
+  this->useStemColumn = stem;
   
-  this->ui->termTableWidget->setColumnWidth( STEM_COLUMN_INDEX, 68 );
-  this->ui->termTableWidget->setColumnWidth( AND_COLUMN_INDEX, 68 );
-  this->ui->termTableWidget->setColumnWidth( NOT_COLUMN_INDEX, 68 );
-  this->ui->termTableWidget->setColumnWidth( TERM_COLUMN_INDEX, 425 );
+  if( this->useStemColumn )
+    this->ui->termTableWidget->setColumnWidth(
+      this->getColumnIndex( ovQSearchDialog::StemColumn ), 68 );
+  // if columns move around the 0 needs to be changed
+  else this->ui->termTableWidget->removeColumn( 0 );
+
+  this->ui->termTableWidget->setColumnWidth(
+    this->getColumnIndex( ovQSearchDialog::AndColumn ), 68 );
+  this->ui->termTableWidget->setColumnWidth(
+    this->getColumnIndex( ovQSearchDialog::NotColumn ), 68 );
+  this->ui->termTableWidget->setColumnWidth(
+    this->getColumnIndex( ovQSearchDialog::TermColumn ), this->useStemColumn ? 425 : 493 );
   
   QObject::connect(
     this->ui->termTableWidget, SIGNAL( cellClicked ( int, int ) ),
@@ -54,21 +58,42 @@ ovQSearchDialog::~ovQSearchDialog()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+int ovQSearchDialog::getColumnIndex( int column )
+{
+  if( ovQSearchDialog::StemColumn == column ) return this->useStemColumn ? 0 : -1;
+  else if( ovQSearchDialog::AndColumn == column ) return this->useStemColumn ? 1 : 0;
+  else if( ovQSearchDialog::NotColumn == column ) return this->useStemColumn ? 2 : 1;
+  else if( ovQSearchDialog::TermColumn == column ) return this->useStemColumn ? 3 : 2;
+  else return -1;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQSearchDialog::getSearchPhrase( ovSearchPhrase *phrase )
 {
   if( NULL == phrase ) return;
   phrase->Clear();
 
   QTableWidgetItem *item;
-  int rows = this->ui->termTableWidget->rowCount();
+  int column, rows = this->ui->termTableWidget->rowCount();
   
   for( int row = 0; row < rows; row++ )
   {
     ovSearchTerm searchTerm;
-    searchTerm.stemming = "YES" == this->ui->termTableWidget->item( row, STEM_COLUMN_INDEX )->text();
-    searchTerm.andLogic = "AND" == this->ui->termTableWidget->item( row, AND_COLUMN_INDEX )->text();
-    searchTerm.notLogic = "NOT" == this->ui->termTableWidget->item( row, NOT_COLUMN_INDEX )->text();
-    searchTerm.term = this->ui->termTableWidget->item( row, TERM_COLUMN_INDEX )->text().toStdString();
+    if( this->useStemColumn )
+    {
+      column = this->getColumnIndex( ovQSearchDialog::StemColumn );
+      searchTerm.stemming = "YES" == this->ui->termTableWidget->item( row, column )->text();
+    }
+    else
+    {
+      searchTerm.stemming = false;
+    }
+    column = this->getColumnIndex( ovQSearchDialog::AndColumn );
+    searchTerm.andLogic = "AND" == this->ui->termTableWidget->item( row, column )->text();
+    column = this->getColumnIndex( ovQSearchDialog::NotColumn );
+    searchTerm.notLogic = "NOT" == this->ui->termTableWidget->item( row, column )->text();
+    column = this->getColumnIndex( ovQSearchDialog::TermColumn );
+    searchTerm.term = this->ui->termTableWidget->item( row, column )->text().toStdString();
     
     phrase->Add( searchTerm );
   }
@@ -95,24 +120,31 @@ void ovQSearchDialog::setSearchPhrase( ovSearchPhrase *search )
   {
     term = *it;
   
-    item = new QTableWidgetItem( term->stemming ? "YES" : "NO" );
-    item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-    item->setFlags( Qt::ItemIsEnabled );
-    this->ui->termTableWidget->setItem( row, STEM_COLUMN_INDEX, item );
+    if( this->useStemColumn )
+    {
+      item = new QTableWidgetItem( term->stemming ? "YES" : "NO" );
+      item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+      item->setFlags( Qt::ItemIsEnabled );
+      this->ui->termTableWidget->setItem(
+        row, this->getColumnIndex( ovQSearchDialog::StemColumn ), item );
+    }
 
     item = new QTableWidgetItem( 0 == row ? "" : term->andLogic ? "AND" : "OR" );
     item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     item->setFlags( Qt::ItemIsEnabled );
-    this->ui->termTableWidget->setItem( row, AND_COLUMN_INDEX, item );
+    this->ui->termTableWidget->setItem(
+      row, this->getColumnIndex( ovQSearchDialog::AndColumn ), item );
 
     item = new QTableWidgetItem( term->notLogic ? "NOT" : "" );
     item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     item->setFlags( Qt::ItemIsEnabled );
-    this->ui->termTableWidget->setItem( row, NOT_COLUMN_INDEX, item );
+    this->ui->termTableWidget->setItem(
+      row, this->getColumnIndex( ovQSearchDialog::NotColumn ), item );
     
     item = new QTableWidgetItem( term->term.c_str() );
     item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
-    this->ui->termTableWidget->setItem( row, TERM_COLUMN_INDEX, item );
+    this->ui->termTableWidget->setItem(
+      row, this->getColumnIndex( ovQSearchDialog::TermColumn ), item );
   
     row++;
   }
@@ -121,19 +153,19 @@ void ovQSearchDialog::setSearchPhrase( ovSearchPhrase *search )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQSearchDialog::slotTermTableWidgetCellClicked( int row, int column )
 {
-  if( TERM_COLUMN_INDEX == column ) return;
+  if( this->getColumnIndex( ovQSearchDialog::TermColumn ) == column ) return;
   
   QTableWidgetItem *item = this->ui->termTableWidget->item( row, column );
   
-  if( STEM_COLUMN_INDEX == column )
+  if( this->useStemColumn && this->getColumnIndex( ovQSearchDialog::StemColumn ) == column )
   {
     item->setText( "YES" == item->text() ? "NO" : "YES" );
   }
-  else if( AND_COLUMN_INDEX == column && 0 != row )
+  else if( this->getColumnIndex( ovQSearchDialog::AndColumn ) == column && 0 != row )
   {
     item->setText( "AND" == item->text() ? "OR" : "AND" );
   }
-  else if( NOT_COLUMN_INDEX == column )
+  else if( this->getColumnIndex( ovQSearchDialog::NotColumn ) == column )
   {
     item->setText( "NOT" == item->text() ? "" : "NOT" );
   }
@@ -147,24 +179,31 @@ void ovQSearchDialog::slotAddPushButton()
 
   QTableWidgetItem *item;
   
-  item = new QTableWidgetItem( "YES" );
-  item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-  item->setFlags( Qt::ItemIsEnabled );
-  this->ui->termTableWidget->setItem( row, STEM_COLUMN_INDEX, item );
+  if( this->useStemColumn )
+  {
+    item = new QTableWidgetItem( "YES" );
+    item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    item->setFlags( Qt::ItemIsEnabled );
+    this->ui->termTableWidget->setItem(
+      row, this->getColumnIndex( ovQSearchDialog::StemColumn ), item );
+  }
 
   item = new QTableWidgetItem( 0 == row ? "" : "AND" );
   item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
   item->setFlags( Qt::ItemIsEnabled );
-  this->ui->termTableWidget->setItem( row, AND_COLUMN_INDEX, item );
+  this->ui->termTableWidget->setItem(
+    row, this->getColumnIndex( ovQSearchDialog::AndColumn ), item );
 
   item = new QTableWidgetItem( "" );
   item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
   item->setFlags( Qt::ItemIsEnabled );
-  this->ui->termTableWidget->setItem( row, NOT_COLUMN_INDEX, item );
+  this->ui->termTableWidget->setItem(
+    row, this->getColumnIndex( ovQSearchDialog::NotColumn ), item );
   
   item = new QTableWidgetItem( "" );
   item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
-  this->ui->termTableWidget->setItem( row, TERM_COLUMN_INDEX, item );
+  this->ui->termTableWidget->setItem(
+    row, this->getColumnIndex( ovQSearchDialog::TermColumn ), item );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

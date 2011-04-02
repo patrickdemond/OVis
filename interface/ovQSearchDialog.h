@@ -16,7 +16,7 @@ class ovQSearchDialog : public QDialog
 
 public:
   //constructor
-  ovQSearchDialog( QWidget* parent = 0 );
+  ovQSearchDialog( QWidget* parent = 0, bool stem = false );
   //destructor
   ~ovQSearchDialog();
   
@@ -31,6 +31,16 @@ public slots:
   void slotRemovePushButton();
 
 protected:
+  bool useStemColumn;
+  int getColumnIndex( int column );
+
+  enum ColumnIndex
+  {
+    StemColumn,
+    AndColumn,
+    NotColumn,
+    TermColumn
+  };
 
 protected slots:
 

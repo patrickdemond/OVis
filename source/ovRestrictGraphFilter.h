@@ -40,6 +40,11 @@ public:
   vtkBooleanMacro( AuthorsOnly, int );
 
   // Description:
+  // Set/get the Pedigree array name
+  virtual ovString GetPedigreeArrayName() { return this->PedigreeArrayName; }
+  virtual void SetPedigreeArrayName( const ovString &name );
+  
+  // Description:
   // Set/get the Tags array name
   virtual ovString GetTagsArrayName() { return this->TagsArrayName; }
   virtual void SetTagsArrayName( const ovString &name );
@@ -159,6 +164,7 @@ protected:
     vtkInformationVector* );
   
   // array names
+  ovString PedigreeArrayName;
   ovString TagsArrayName;
   ovString ContentArrayName;
   ovString StemmedContentArrayName;

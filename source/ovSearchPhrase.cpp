@@ -53,9 +53,9 @@ void ovSearchPhrase::Parse( ovString phrase )
     {
       term.andLogic = false;
     }
-    else if( "NOSTEM" == match )
+    else if( "STEM" == match )
     {
-      term.stemming = false;
+      term.stemming = true;
     }
     else if( "\"" == match.substr( 0, 1 ) && "\"" == match.substr( match.length() - 1 ) )
     {
@@ -89,8 +89,8 @@ ovString ovSearchPhrase::ToString() const
     // add the NOT term, if needed
     if( term->notLogic ) phrase += " NOT";
 
-    // add the NOSTEM term, if needed
-    if( !term->stemming ) phrase += " NOSTEM";
+    // add the STEM term, if needed
+    if( term->stemming ) phrase += " STEM";
 
     // add the search term, stripped of double-quotes
     ovString search = term->term;

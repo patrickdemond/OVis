@@ -62,7 +62,7 @@ public:
   // Description:
   // Returns whether the search term is a match for the string
   // The first string is the raw content, the second is the stemmed content
-  virtual bool Find( ovString content, ovString stemmedContent ) const;
+  virtual bool Find( ovString content, ovString stemmedContent = "" ) const;
 
 protected:
   ovSearchPhrase();

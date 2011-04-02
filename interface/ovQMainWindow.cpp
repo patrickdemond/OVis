@@ -146,7 +146,7 @@ void ovQMainWindowSelectionCommand::Execute(
     // there will be two nodes, one are vertices and the other are edges
     node0 = link->GetCurrentSelection()->GetNode( 0 );
     node1 = link->GetCurrentSelection()->GetNode( 1 );
-
+    
     if( vtkSelectionNode::EDGE == node0->GetFieldType() )
     {
       edgeIds = vtkIdTypeArray::SafeDownCast( node0->GetSelectionList() );
@@ -941,10 +941,20 @@ void ovQMainWindow::ApplySessionToState()
   camera->SetViewUp( this->Session->GetCamera()->GetViewUp() );
   camera->SetClippingRange( this->Session->GetCamera()->GetClippingRange() );
   camera->SetParallelScale( this->Session->GetCamera()->GetParallelScale() );
+  
+  // TODO-NEXT: add an empty selection to the graph
+  // see: vtk/5.6.1/Views/vtkRenderView.cxx:385
+  //      this code is called whenever there is a SelectionChangedEvent fired
+  //      specifically: vtkRenderView::GetRepresentation(<all>)->Select( this, selection, extent )
+  // reproduce: break ovQMainWindow.cpp : 140
 
   this->IsLoadingSession = false;
   this->UpdateActiveTags();
+  this->SetSelectedVertexList( this->Session->GetSelectedVertexList() );
+  this->SetSelectedEdgeList( this->Session->GetSelectedEdgeList() );
   this->RenderGraph();
+  this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->InvokeEvent(
+    vtkCommand::AnnotationChangedEvent );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -974,6 +984,8 @@ void ovQMainWindow::ApplyStateToSession()
     this->RestrictGraphFilter->GetStartDate()->ToInt() );
   this->Session->SetEndDateRestriction(
     this->RestrictGraphFilter->GetEndDate()->ToInt() );
+  this->GetSelectedVertexList( this->Session->GetSelectedVertexList() );
+  this->GetSelectedEdgeList( this->Session->GetSelectedEdgeList() );
   this->GetTagList( this->Session->GetTagList() );
   vtkCamera *camera = this->GraphLayoutView->GetRenderer()->GetActiveCamera();
   this->Session->GetCamera()->SetPosition( camera->GetPosition() );
@@ -1039,7 +1051,7 @@ void ovQMainWindow::SetLayoutStrategy( const ovString &strategy )
 void ovQMainWindow::slotAuthorCheckBoxStateChanged( int state )
 {
   this->RestrictGraphFilter->SetAuthorsOnly( 0 != state );
-  this->RenderGraph();
+  this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1047,7 +1059,7 @@ void ovQMainWindow::slotGenderComboBoxCurrentIndexChanged( const QString& index 
 {
   this->RestrictGraphFilter->SetGenderTypeRestriction(
     ovRestrictGraphFilter::GenderTypeRestrictionFromString( index.toStdString().c_str() ) );
-  this->RenderGraph();
+  this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1055,7 +1067,7 @@ void ovQMainWindow::slotWriterComboBoxCurrentIndexChanged( const QString& index 
 {
   this->RestrictGraphFilter->SetWriterTypeRestriction(
     ovRestrictGraphFilter::WriterTypeRestrictionFromString( index.toStdString().c_str() ) );
-  this->RenderGraph();
+  this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1174,7 +1186,7 @@ void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotTextSearchSetPushButtonClicked()
 {
-  ovQSearchDialog dialog( this );
+  ovQSearchDialog dialog( this, true );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select text search" ) );
   dialog.setSearchPhrase( this->TextSearchPhrase );
@@ -1190,30 +1202,30 @@ void ovQMainWindow::slotTextSearchSetPushButtonClicked()
     // update the graph
     this->RestrictGraphFilter->SetTextSearchPhrase( this->TextSearchPhrase );
     this->RestrictGraphFilter->Modified();
-    this->RenderGraph();
+    this->RenderGraph( true );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotAuthorSearchSetPushButtonClicked()
 {
-  ovQSearchDialog dialog( this );
+  ovQSearchDialog dialog( this, false );
   dialog.setModal( true );
-  dialog.setWindowTitle( tr( "Select text search" ) );
+  dialog.setWindowTitle( tr( "Select author search" ) );
   dialog.setSearchPhrase( this->AuthorSearchPhrase );
   
   if( QDialog::Accepted == dialog.exec() )
   {
-    // update the text search from the dialog
+    // update the author search from the dialog
     dialog.getSearchPhrase( this->AuthorSearchPhrase );
   
     // update the GUI
-    this->ui->textSearchLineEdit->setText( this->AuthorSearchPhrase->ToString().c_str() );
+    this->ui->authorSearchLineEdit->setText( this->AuthorSearchPhrase->ToString().c_str() );
     
     // update the graph
     this->RestrictGraphFilter->SetAuthorSearchPhrase( this->AuthorSearchPhrase );
     this->RestrictGraphFilter->Modified();
-    this->RenderGraph();
+    this->RenderGraph( true );
   }
 }
 
@@ -1228,7 +1240,7 @@ void ovQMainWindow::SetStartDate( const ovDate &date )
   // update the graph
   this->RestrictGraphFilter->SetStartDate( date );
   this->RestrictGraphFilter->Modified();
-  this->RenderGraph();
+  this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1256,7 +1268,7 @@ void ovQMainWindow::SetEndDate( const ovDate &date )
   // update the graph
   this->RestrictGraphFilter->SetEndDate( date );
   this->RestrictGraphFilter->Modified();
-  this->RenderGraph();
+  this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1392,6 +1404,95 @@ void ovQMainWindow::slotTagTreeItemDoubleClicked( QTreeWidgetItem* item, int col
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::GetSelectedVertexList( ovIntVector *ids )
+{
+  if( NULL == ids ) return;
+  ids->clear();
+
+  vtkSelection *selection =
+    this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->GetCurrentSelection();
+  
+  if( 2 != selection->GetNumberOfNodes() ) return;
+
+  // there will be two nodes, one are vertices and the other are edges
+  vtkSelectionNode *node = selection->GetNode( 0 );
+  vtkIdTypeArray *array = vtkSelectionNode::VERTEX == node->GetFieldType()
+        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
+        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
+
+  int numValues = array->GetNumberOfTuples();
+  if( 0 < numValues )
+    for( int index = 0; index < numValues; index++ )
+      ids->push_back( array->GetValue( index ) );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetSelectedVertexList( ovIntVector *ids )
+{
+  if( NULL == ids ) return;
+  vtkAnnotationLink *annotation = this->GraphLayoutView->GetRepresentation()->GetAnnotationLink();
+  vtkSelection *selection = annotation->GetCurrentSelection();
+  
+  if( 2 != selection->GetNumberOfNodes() ) return;
+
+  // there will be two nodes, one are vertices and the other are edges
+  vtkSelectionNode *node = selection->GetNode( 0 );
+  vtkIdTypeArray *array = vtkSelectionNode::VERTEX == node->GetFieldType()
+        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
+        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
+
+  array->Initialize();
+  for( ovIntVector::iterator it = ids->begin(); it != ids->end(); ++it )
+    array->InsertNextValue( *it );
+}
+  
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::GetSelectedEdgeList( ovIntVector *ids )
+{
+  if( NULL == ids ) return;
+  ids->clear();
+
+  vtkSelection *selection =
+    this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->GetCurrentSelection();
+  
+  if( 2 != selection->GetNumberOfNodes() ) return;
+
+  // there will be two nodes, one are vertices and the other are edges
+  vtkSelectionNode *node = selection->GetNode( 0 );
+  vtkIdTypeArray *array = vtkSelectionNode::EDGE == node->GetFieldType()
+        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
+        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
+
+  int numValues = array->GetNumberOfTuples();
+  if( 0 < numValues )
+    for( int index = 0; index < numValues; index++ )
+      ids->push_back( array->GetValue( index ) );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetSelectedEdgeList( ovIntVector *ids )
+{
+  if( NULL == ids ) return;
+  
+  vtkAnnotationLink *annotation = this->GraphLayoutView->GetRepresentation()->GetAnnotationLink();
+  vtkSelection *selection = annotation->GetCurrentSelection();
+  
+  if( 2 != selection->GetNumberOfNodes() ) return;
+
+  // there will be two nodes, one are vertices and the other are edges
+  vtkSelectionNode *node = selection->GetNode( 0 );
+  vtkIdTypeArray *array = vtkSelectionNode::EDGE == node->GetFieldType()
+        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
+        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
+
+  array->Initialize();
+  for( ovIntVector::iterator it = ids->begin(); it != ids->end(); ++it )
+    array->InsertNextValue( *it );
+
+  annotation->Modified();
+}
+  
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::GetTagList( ovTagVector *tags )
 {
   if( NULL == tags ) return;
@@ -1520,7 +1621,14 @@ void ovQMainWindow::RenderGraph( bool resetCamera )
   this->ui->graphLayoutWidget->setCursor( Qt::WaitCursor );
 
   clock_t start = clock();
-  if( resetCamera ) this->GraphLayoutView->ResetCamera();
+  if( resetCamera )
+  {
+    vtkSelection *selection =
+      this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->GetCurrentSelection();
+    for( int i = 0; i < selection->GetNumberOfNodes(); i++ )
+      selection->GetNode( i )->Initialize();
+    this->GraphLayoutView->ResetCamera();
+  }
   this->GraphLayoutView->Render();
   clock_t end = clock();
 
