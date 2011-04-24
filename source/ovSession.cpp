@@ -39,6 +39,8 @@ ovSession::ovSession()
   this->WriterTypeRestriction = 0;
   this->VertexSize = 0;
   this->EdgeSize = 0;
+  this->TextSearchPhrase = "";
+  this->AuthorSearchPhrase = "";
   this->Camera = vtkCamera::New();
 }
 
@@ -74,6 +76,32 @@ void ovSession::SetLayoutStrategy( const ovString &strategy )
   if( strategy != this->LayoutStrategy )
   {
     this->LayoutStrategy = strategy;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSession::SetTextSearchPhrase( const ovString &phrase )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "TextSearchPhrase to " << phrase.c_str() );
+
+  if( phrase != this->TextSearchPhrase )
+  {
+    this->TextSearchPhrase = phrase;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSession::SetAuthorSearchPhrase( const ovString &phrase )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "AuthorSearchPhrase to " << phrase.c_str() );
+
+  if( phrase != this->AuthorSearchPhrase )
+  {
+    this->AuthorSearchPhrase = phrase;
     this->Modified();
   }
 }
@@ -135,6 +163,8 @@ bool ovSession::operator == ( const ovSession &rhs ) const
       this->AssociationVertexColor[1] == rhs.AssociationVertexColor[1] &&
       this->AssociationVertexColor[2] == rhs.AssociationVertexColor[2] &&
       this->AssociationVertexColor[3] == rhs.AssociationVertexColor[3] &&
+      this->TextSearchPhrase == rhs.TextSearchPhrase &&
+      this->AuthorSearchPhrase == rhs.AuthorSearchPhrase &&
       this->StartDateRestriction == rhs.StartDateRestriction &&
       this->EndDateRestriction == rhs.EndDateRestriction &&
       this->Camera->GetPosition()[0] == rhs.Camera->GetPosition()[0] &&
@@ -175,6 +205,8 @@ void ovSession::DeepCopy( ovSession *copy )
   this->WriterTypeRestriction = copy->WriterTypeRestriction;
   this->VertexSize = copy->VertexSize;
   this->EdgeSize = copy->EdgeSize;
+  this->TextSearchPhrase = copy->TextSearchPhrase;
+  this->AuthorSearchPhrase = copy->AuthorSearchPhrase;
   this->StartDateRestriction = copy->StartDateRestriction;
   this->EndDateRestriction = copy->EndDateRestriction;
 
@@ -232,16 +264,18 @@ void ovSession::PrintSelf( ostream &os, vtkIndent indent )
                << this->AssociationVertexColor[1] << ", "
                << this->AssociationVertexColor[2] << ", "
                << this->AssociationVertexColor[3] << endl;
+  os << indent << "TextSearchPhrase = \"" << this->TextSearchPhrase << "\"" << endl;
+  os << indent << "AuthorSearchPhrase = \"" << this->AuthorSearchPhrase << "\"" << endl;
   this->StartDateRestriction.ToString( date );
   os << indent << "StartDateRestriction = " << date << endl;
   this->EndDateRestriction.ToString( date );
   os << indent << "EndDateRestriction = " << date << endl;
-  os << indent << "SelectedVertexList: ovSelectedVertexVector";
-  os << indent.GetNextIndent() << "size: " << this->SelectedVertexList.size();
-  os << indent << "SelectedEdgeList: ovSelectedEdgeVector";
-  os << indent.GetNextIndent() << "size: " << this->SelectedEdgeList.size();
-  os << indent << "TagList: ovTagVector";
-  os << indent.GetNextIndent() << "size: " << this->TagList.size();
+  os << indent << "SelectedVertexList: ovSelectedVertexVector" << endl;
+  os << indent.GetNextIndent() << "  size: " << this->SelectedVertexList.size() << endl;
+  os << indent << "SelectedEdgeList: ovSelectedEdgeVector" << endl;
+  os << indent.GetNextIndent() << "  size: " << this->SelectedEdgeList.size() << endl;
+  os << indent << "TagList: ovTagVector" << endl;
+  os << indent.GetNextIndent() << "  size: " << this->TagList.size() << endl;
   os << indent << "Camera: ";
   if( NULL == this->Camera )
   {

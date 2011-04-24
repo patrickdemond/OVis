@@ -99,6 +99,16 @@ public:
   vtkSetVector4Macro( AssociationVertexColor, double );
 
   // Description:
+  // Set/get the text search phrase
+  virtual ovString GetTextSearchPhrase() { return this->TextSearchPhrase; }
+  virtual void SetTextSearchPhrase( const ovString& );
+
+  // Description:
+  // Set/get the text search phrase
+  virtual ovString GetAuthorSearchPhrase() { return this->AuthorSearchPhrase; }
+  virtual void SetAuthorSearchPhrase( const ovString& );
+
+  // Description:
   // Set/get the start date
   virtual ovDate GetStartDateRestriction() { return this->StartDateRestriction; }
   virtual void SetStartDateRestriction( const ovDate& );
@@ -142,6 +152,8 @@ protected:
   int EdgeSize;
   double AuthorVertexColor[4];
   double AssociationVertexColor[4];
+  ovString TextSearchPhrase;
+  ovString AuthorSearchPhrase;
   ovDate StartDateRestriction;
   ovDate EndDateRestriction;
   ovIntVector SelectedVertexList;

@@ -63,6 +63,8 @@ void ovSessionWriter::WriteData()
     this->WriteColor( "AuthorVertexColor", rgba );
     rgba = input->GetAssociationVertexColor();
     this->WriteColor( "AssociationVertexColor", rgba );
+    this->Write( "TextSearchPhrase", input->GetTextSearchPhrase() );
+    this->Write( "AuthorSearchPhrase", input->GetAuthorSearchPhrase() );
     this->Write( "StartDateRestriction", input->GetStartDateRestriction() );
     this->Write( "EndDateRestriction", input->GetEndDateRestriction() );
     this->Write( "SelectedVertexList", input->GetSelectedVertexList() );

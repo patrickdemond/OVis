@@ -127,6 +127,8 @@ protected:
   virtual void SetEdgeSize( int );
   virtual void SetAuthorVertexColor( double rgba[4] );
   virtual void SetAssociationVertexColor( double rgba[4] );
+  virtual void SetTextSearchPhrase( ovSearchPhrase* );
+  virtual void SetAuthorSearchPhrase( ovSearchPhrase* );
   virtual void SetStartDate( const ovDate& );
   virtual void SetEndDate( const ovDate& );
 
@@ -137,9 +139,7 @@ protected:
   vtkSmartPointer< ovRestrictGraphFilter > RestrictGraphFilter;
   vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
   vtkSmartPointer< ovQMainWindowSelectionCommand > SelectionObserver;
-  vtkSmartPointer< ovSearchPhrase > TextSearchPhrase;
-  vtkSmartPointer< ovSearchPhrase > AuthorSearchPhrase;
-  
+
   ovString CurrentDataFileName;
   ovString CurrentSessionFileName;
   ovString CurrentLayoutStrategy;

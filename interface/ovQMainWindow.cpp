@@ -32,6 +32,7 @@
 #include "vtkGraphLayoutStrategy.h"
 #include "vtkGraphLayoutView.h"
 #include "vtkIdTypeArray.h"
+#include "vtkInteractorStyleRubberBand2D.h"
 #include "vtkLookupTable.h"
 #include "vtkMath.h"
 #include "vtkPNGWriter.h"
@@ -488,10 +489,6 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->RestrictGraphFilter->SetInput( this->OrlandoReader->GetOutput() );
   this->SelectionObserver->Graph = this->RestrictGraphFilter->GetOutput();
   
-  // set up the search phrases
-  this->TextSearchPhrase = vtkSmartPointer< ovSearchPhrase >::New();
-  this->AuthorSearchPhrase = vtkSmartPointer< ovSearchPhrase >::New();
-  
   // set up the display property widgets
   QObject::connect(
     this->ui->authorCheckBox, SIGNAL( stateChanged( int ) ),
@@ -910,6 +907,13 @@ void ovQMainWindow::slotSaveSessionAs()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::ApplySessionToState()
 {
+  // emulate a left mouse click in the render window (hack to fix session loading problem)
+  unsigned int rect[] = { 1, 1, 1, 1, 0 };
+  vtkInteractorStyleRubberBand2D *iactStyle = 
+    vtkInteractorStyleRubberBand2D::SafeDownCast(
+    this->GraphLayoutView->GetRenderWindow()->GetInteractor()->GetInteractorStyle() );
+  iactStyle->InvokeEvent( vtkCommand::SelectionChangedEvent, reinterpret_cast<void*>(rect) );
+  iactStyle->InvokeEvent( vtkCommand::EndInteractionEvent );
   this->IsLoadingSession = true;
   
   if( this->Session->GetDataFile() != this->CurrentDataFileName )
@@ -932,6 +936,12 @@ void ovQMainWindow::ApplySessionToState()
   this->SetEdgeSize( this->Session->GetEdgeSize() ); 
   this->SetAuthorVertexColor( this->Session->GetAuthorVertexColor() );
   this->SetAssociationVertexColor( this->Session->GetAssociationVertexColor() );
+  vtkSmartPointer< ovSearchPhrase > textPhrase = vtkSmartPointer< ovSearchPhrase >::New();
+  textPhrase->Parse( this->Session->GetTextSearchPhrase() );
+  this->SetTextSearchPhrase( textPhrase );
+  vtkSmartPointer< ovSearchPhrase > authorPhrase = vtkSmartPointer< ovSearchPhrase >::New();
+  authorPhrase->Parse( this->Session->GetAuthorSearchPhrase() );
+  this->SetAuthorSearchPhrase( authorPhrase );
   this->SetStartDate( this->Session->GetStartDateRestriction() );
   this->SetEndDate( this->Session->GetEndDateRestriction() );
   this->SetTagList( this->Session->GetTagList() );
@@ -942,12 +952,6 @@ void ovQMainWindow::ApplySessionToState()
   camera->SetClippingRange( this->Session->GetCamera()->GetClippingRange() );
   camera->SetParallelScale( this->Session->GetCamera()->GetParallelScale() );
   
-  // TODO-NEXT: add an empty selection to the graph
-  // see: vtk/5.6.1/Views/vtkRenderView.cxx:385
-  //      this code is called whenever there is a SelectionChangedEvent fired
-  //      specifically: vtkRenderView::GetRepresentation(<all>)->Select( this, selection, extent )
-  // reproduce: break ovQMainWindow.cpp : 140
-
   this->IsLoadingSession = false;
   this->UpdateActiveTags();
   this->SetSelectedVertexList( this->Session->GetSelectedVertexList() );
@@ -980,6 +984,12 @@ void ovQMainWindow::ApplyStateToSession()
     this->GraphLayoutViewTheme->GetPointLookupTable() );
   this->Session->SetAuthorVertexColor( lut->GetTableValue( 1 ) );
   this->Session->SetAssociationVertexColor( lut->GetTableValue( 0 ) );
+  ovSearchPhrase *phrase = this->RestrictGraphFilter->GetTextSearchPhrase();
+  this->Session->SetTextSearchPhrase(
+    NULL == phrase ? "" : this->RestrictGraphFilter->GetTextSearchPhrase()->ToString() );
+  phrase = this->RestrictGraphFilter->GetAuthorSearchPhrase();
+  this->Session->SetAuthorSearchPhrase(
+    NULL == phrase ? "" : this->RestrictGraphFilter->GetAuthorSearchPhrase()->ToString() );
   this->Session->SetStartDateRestriction(
     this->RestrictGraphFilter->GetStartDate()->ToInt() );
   this->Session->SetEndDateRestriction(
@@ -1184,25 +1194,45 @@ void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetTextSearchPhrase( ovSearchPhrase *phrase )
+{
+  // update the GUI
+  this->ui->textSearchLineEdit->setText( phrase->ToString().c_str() );
+  
+  // update the graph
+  this->RestrictGraphFilter->SetTextSearchPhrase( phrase );
+  this->RestrictGraphFilter->Modified();
+  this->RenderGraph( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetAuthorSearchPhrase( ovSearchPhrase *phrase )
+{
+  // update the GUI
+  this->ui->authorSearchLineEdit->setText( phrase->ToString().c_str() );
+  
+  // update the graph
+  this->RestrictGraphFilter->SetAuthorSearchPhrase( phrase );
+  this->RestrictGraphFilter->Modified();
+  this->RenderGraph( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotTextSearchSetPushButtonClicked()
 {
   ovQSearchDialog dialog( this, true );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select text search" ) );
-  dialog.setSearchPhrase( this->TextSearchPhrase );
+
+  vtkSmartPointer< ovSearchPhrase > phrase = vtkSmartPointer< ovSearchPhrase >::New();
+  phrase->Parse( this->ui->textSearchLineEdit->text().toStdString().c_str() );
+  dialog.setSearchPhrase( phrase );
   
   if( QDialog::Accepted == dialog.exec() )
   {
     // update the text search from the dialog
-    dialog.getSearchPhrase( this->TextSearchPhrase );
-  
-    // update the GUI
-    this->ui->textSearchLineEdit->setText( this->TextSearchPhrase->ToString().c_str() );
-    
-    // update the graph
-    this->RestrictGraphFilter->SetTextSearchPhrase( this->TextSearchPhrase );
-    this->RestrictGraphFilter->Modified();
-    this->RenderGraph( true );
+    dialog.getSearchPhrase( phrase );
+    this->SetTextSearchPhrase( phrase );
   }
 }
 
@@ -1212,20 +1242,16 @@ void ovQMainWindow::slotAuthorSearchSetPushButtonClicked()
   ovQSearchDialog dialog( this, false );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select author search" ) );
-  dialog.setSearchPhrase( this->AuthorSearchPhrase );
+  
+  vtkSmartPointer< ovSearchPhrase > phrase = vtkSmartPointer< ovSearchPhrase >::New();
+  phrase->Parse( this->ui->authorSearchLineEdit->text().toStdString().c_str() );
+  dialog.setSearchPhrase( phrase );
   
   if( QDialog::Accepted == dialog.exec() )
   {
     // update the author search from the dialog
-    dialog.getSearchPhrase( this->AuthorSearchPhrase );
-  
-    // update the GUI
-    this->ui->authorSearchLineEdit->setText( this->AuthorSearchPhrase->ToString().c_str() );
-    
-    // update the graph
-    this->RestrictGraphFilter->SetAuthorSearchPhrase( this->AuthorSearchPhrase );
-    this->RestrictGraphFilter->Modified();
-    this->RenderGraph( true );
+    dialog.getSearchPhrase( phrase );
+    this->SetAuthorSearchPhrase( phrase );
   }
 }
 

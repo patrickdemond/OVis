@@ -183,6 +183,18 @@ int ovSessionReader::ProcessRequest(
           output->SetAssociationVertexColor( rgba );
         }
         // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "TextSearchPhrase", this->CurrentNode.Name ) )
+        {
+          this->ReadString( string );
+          output->SetTextSearchPhrase( string );
+        }
+        // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "AuthorSearchPhrase", this->CurrentNode.Name ) )
+        {
+          this->ReadString( string );
+          output->SetAuthorSearchPhrase( string );
+        }
+        // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "StartDateRestriction", this->CurrentNode.Name ) )
         {
           ovDate date;
@@ -386,7 +398,8 @@ void ovSessionReader::ReadIntList( ovIntVector *numbers )
     // ignore node type 14 (#text stuff that we don't need) and non-opening nodes
     if( 14 == this->CurrentNode.NodeType ) continue;
     
-    if( this->CurrentNode.IsClosingElement() &&
+    if( ( this->CurrentNode.IsClosingElement() ||
+          this->CurrentNode.IsEmptyElement ) &&
         0 == xmlStrcmp( BAD_CAST "Array", this->CurrentNode.Name ) )
     {
       // we're done, break out of the loop
