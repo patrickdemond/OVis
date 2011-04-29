@@ -115,6 +115,11 @@ int ovOrlandoReader::ProcessRequest(
     graph->GetVertexData()->AddArray( sizeArray );
     graph->GetVertexData()->SetActiveScalars( sizeArray->GetName() );
 
+    // the label array is used to track each entries full un-marked-up label
+    vtkSmartPointer< vtkStringArray > labelArray = vtkSmartPointer< vtkStringArray >::New();
+    labelArray->SetName( "label" );
+    graph->GetVertexData()->AddArray( labelArray );
+
     // the content array is used to track each entries full un-marked-up content
     vtkSmartPointer< vtkStringArray > authorContentArray = vtkSmartPointer< vtkStringArray >::New();
     authorContentArray->SetName( "content" );
@@ -234,17 +239,18 @@ int ovOrlandoReader::ProcessRequest(
 
             // create a new vertex using the Id (author name) as the pedigree
             vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-            array->SetNumberOfComponents( 9 );
+            array->SetNumberOfComponents( 10 );
             array->SetNumberOfTuples( 1 );
             array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
             array->SetValue( 1, 1 ); // color
             array->SetValue( 2, 2 ); // size
-            array->SetValue( 3, vtkVariant( "" ) ); // content
-            array->SetValue( 4, vtkVariant( "" ) ); // stemmed content
-            array->SetValue( 5, 0 ); // birth date
-            array->SetValue( 6, 0 ); // death date
-            array->SetValue( 7, ovOrlandoReader::GenderTypeUnknown ); // gender
-            array->SetValue( 8, ovOrlandoReader::WriterTypeNone ); // writer type
+            array->SetValue( 3, vtkVariant( "" ) ); // label
+            array->SetValue( 4, vtkVariant( "" ) ); // content
+            array->SetValue( 5, vtkVariant( "" ) ); // stemmed content
+            array->SetValue( 6, 0 ); // birth date
+            array->SetValue( 7, 0 ); // death date
+            array->SetValue( 8, ovOrlandoReader::GenderTypeUnknown ); // gender
+            array->SetValue( 9, ovOrlandoReader::WriterTypeNone ); // writer type
             currentVertexId = graph->AddVertex( array );
             currentVertexPedigree = pedigreeArray->GetValue( currentVertexId );
           }
@@ -401,17 +407,18 @@ int ovOrlandoReader::ProcessRequest(
               if( -1 == graph->FindVertex( pedigree ) )
               {
                 vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
-                array->SetNumberOfComponents( 9 );
+                array->SetNumberOfComponents( 10 );
                 array->SetNumberOfTuples( 1 );
                 array->SetValue( 0, vtkVariant( pedigree ) ); // pedigree
                 array->SetValue( 1, 0 ); // color
                 array->SetValue( 2, 1 ); // size
-                array->SetValue( 3, vtkVariant( "" ) ); // content (blank for now)
-                array->SetValue( 4, vtkVariant( "" ) ); // stemmed content (blank for now)
-                array->SetValue( 5, 0 ); // birth date
-                array->SetValue( 6, 0 ); // death date
-                array->SetValue( 7, ovOrlandoReader::GenderTypeUnknown ); // gender
-                array->SetValue( 8, ovOrlandoReader::WriterTypeNone ); // writer type
+                array->SetValue( 3, vtkVariant( "" ) ); // label
+                array->SetValue( 4, vtkVariant( "" ) ); // content (blank for now)
+                array->SetValue( 5, vtkVariant( "" ) ); // stemmed content (blank for now)
+                array->SetValue( 6, 0 ); // birth date
+                array->SetValue( 7, 0 ); // death date
+                array->SetValue( 8, ovOrlandoReader::GenderTypeUnknown ); // gender
+                array->SetValue( 9, ovOrlandoReader::WriterTypeNone ); // writer type
                 graph->AddVertex( array );
               }
               

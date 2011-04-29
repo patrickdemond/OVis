@@ -159,26 +159,49 @@ void ovQMainWindowSelectionCommand::Execute(
       vertexIds = vtkIdTypeArray::SafeDownCast( node0->GetSelectionList() );
     }
     
+    ovTagVector *tags = ovOrlandoTagInfo::GetInfo()->GetTags();
+
+    vtkStringArray *labelArray = 
+      vtkStringArray::SafeDownCast(
+        this->Graph->GetVertexData()->GetAbstractArray( "label" ) );
     vtkStringArray *pedigreeArray = 
       vtkStringArray::SafeDownCast(
         this->Graph->GetVertexData()->GetAbstractArray( "pedigree" ) );
-
     vtkStringArray *contentArray = 
       vtkStringArray::SafeDownCast(
         this->Graph->GetEdgeData()->GetAbstractArray( "content" ) );
+    vtkStringArray *tagsArray = 
+      vtkStringArray::SafeDownCast(
+        this->Graph->GetEdgeData()->GetAbstractArray( "tags" ) );
+
+    if( NULL == contentArray ||
+        NULL == pedigreeArray ||
+        NULL == contentArray ||
+        NULL == tagsArray )
+    {
+      this->ui->graphSelectTextEdit->setHtml( QString( "" ) );
+      return;
+    }
 
     // process the selected edge and vertex ids
     vtkstd::ostringstream stream;
+    
+    // reset the label array to all empty strings
+    int numValues = labelArray->GetNumberOfValues();
+    for( int index = 0; index < numValues; index++ ) labelArray->SetValue( index, "" );
 
-    int numValues = vertexIds->GetNumberOfTuples();
+    numValues = vertexIds->GetNumberOfTuples();
     if( 0 < numValues )
     {
       stream << "<h3>Selected Vertices (" << numValues
              << ( 100 < numValues ? ", showing first 100" : "" )
              << ")</h3><ul>";
-      for( int index = 0; index < numValues && index < 100; index++ )
+      for( int index = 0; index < numValues; index++ )
       {
-        stream << "<li>" << pedigreeArray->GetValue( vertexIds->GetValue( index ) ) << "</li>";
+        vtkIdType id = vertexIds->GetValue( index );
+        ovString name = pedigreeArray->GetValue( id );
+        labelArray->SetValue( id, name );
+        if( index < 100 ) stream << "<li>" << name << "</li>";
       }
       stream << "</ul>";
 
@@ -197,8 +220,22 @@ void ovQMainWindowSelectionCommand::Execute(
         vtkIdType sId = this->Graph->GetSourceVertex( eId );
         vtkIdType tId = this->Graph->GetTargetVertex( eId );
         stream << "<li><b>" << pedigreeArray->GetValue( sId ) << "</b> is connected to <b>"
-               << pedigreeArray->GetValue( tId ) << "</b>:<br />\"" 
-               << contentArray->GetValue( eId ) << "\"</li>";
+               << pedigreeArray->GetValue( tId ) << "</b>:<br />"
+               << "<b>Tags</b>: ";
+        
+        ovString edgeTags = tagsArray->GetValue( eId );
+        int tagIndex = 0;
+        bool first = true;
+        for( int tagIndex = 0; tagIndex < edgeTags.length(); tagIndex++ )
+        {
+          if( '1' == edgeTags.at( tagIndex ) )
+          {
+            stream << ( first ? "" : ", " ) << tags->at( tagIndex )->name;
+            first = false;
+          }
+        }
+        stream << "<br />"
+               << "<b>Text</b>:\"" << contentArray->GetValue( eId ) << "\"</li>";
       }
       stream << "</ul>";
 
@@ -421,6 +458,8 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     vtkCommand::ProgressEvent, this->ProgressObserver );
   this->GraphLayoutView->DisplayHoverTextOn();
   this->GraphLayoutView->IconVisibilityOff();
+  this->GraphLayoutView->SetVertexLabelArrayName( "label" );
+  this->GraphLayoutView->VertexLabelVisibilityOn();
   this->GraphLayoutView->SetGlyphType( VTK_VERTEX_GLYPH );
   this->GraphLayoutView->SetVertexColorArrayName( "color" );
   this->GraphLayoutView->ColorVerticesOn();
@@ -531,6 +570,12 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   // set up the tag tree
   this->ui->tagTreeWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
   this->ui->tagTreeWidget->setExpandsOnDoubleClick( false );
+  QObject::connect(
+    this->ui->tagTreeCheckAllButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagTreeCheckAllButtonClicked() ) );
+  QObject::connect(
+    this->ui->tagTreeUnCheckAllButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotTagTreeUnCheckAllButtonClicked() ) );
   QObject::connect(
     this->ui->tagTreeCheckButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotTagTreeCheckButtonClicked() ) );
@@ -1311,6 +1356,48 @@ void ovQMainWindow::slotEndSetPushButtonClicked()
   }
 }
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagTreeCheckAllButtonClicked()
+{
+  // don't update the graph view until we're done checking tags
+  this->IsCheckingMultipleTags = true;
+  
+  // check all tree items
+  QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+  while( *treeIt )
+  {
+    QTreeWidgetItem *item = *treeIt;
+    if( Qt::Unchecked == item->checkState( 0 ) ) item->setCheckState( 0, Qt::Checked );
+    treeIt++;
+  }
+
+  // manually update the graph view
+  this->IsCheckingMultipleTags = false;
+  this->UpdateActiveTags();
+  this->RenderGraph( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotTagTreeUnCheckAllButtonClicked()
+{
+  // don't update the graph view until we're done checking tags
+  this->IsCheckingMultipleTags = true;
+
+  // check all tree items
+  QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
+  while( *treeIt )
+  {
+    QTreeWidgetItem *item = *treeIt;
+    if( Qt::Checked == item->checkState( 0 ) ) item->setCheckState( 0, Qt::Unchecked );
+    treeIt++;
+  }
+
+  // manually update the graph view
+  this->IsCheckingMultipleTags = false;
+  this->UpdateActiveTags();
+  this->RenderGraph( true );
+}
+ 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotTagTreeCheckButtonClicked()
 {

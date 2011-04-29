@@ -95,6 +95,8 @@ public slots:
   virtual void slotAuthorSearchSetPushButtonClicked();
   virtual void slotStartSetPushButtonClicked();
   virtual void slotEndSetPushButtonClicked();
+  virtual void slotTagTreeCheckAllButtonClicked();
+  virtual void slotTagTreeUnCheckAllButtonClicked();
   virtual void slotTagTreeCheckButtonClicked();
   virtual void slotTagTreeUnCheckButtonClicked();
   virtual void slotTagTreeExpandButtonClicked();
