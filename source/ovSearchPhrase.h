@@ -41,7 +41,7 @@ public:
   
   // Description:
   // Gets the string representation of the search phrase
-  virtual ovString ToString() const;
+  virtual ovString ToString( const bool natural = false ) const;
 
   // Description:
   // Empties the phrase of all search terms

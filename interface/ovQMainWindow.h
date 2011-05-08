@@ -19,6 +19,7 @@ class ovSession;
 class QActionGroup;
 class QTreeWidgetItem;
 
+class vtkCornerAnnotation;
 class vtkGraphLayoutView;
 class vtkStringArray;
 class vtkViewTheme;
@@ -137,6 +138,8 @@ protected:
   vtkSmartPointer< ovSession > Session;
   vtkSmartPointer< vtkGraphLayoutView > GraphLayoutView;
   vtkSmartPointer< vtkViewTheme > GraphLayoutViewTheme;
+  vtkSmartPointer< vtkCornerAnnotation > TopAnnotation;
+  vtkSmartPointer< vtkCornerAnnotation > BottomAnnotation;
   vtkSmartPointer< ovOrlandoReader > OrlandoReader;
   vtkSmartPointer< ovRestrictGraphFilter > RestrictGraphFilter;
   vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;

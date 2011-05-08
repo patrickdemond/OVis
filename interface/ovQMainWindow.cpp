@@ -27,6 +27,7 @@
 #include "vtkAnnotationLink.h"
 #include "vtkCamera.h"
 #include "vtkCommand.h"
+#include "vtkCornerAnnotation.h"
 #include "vtkGlyphSource2D.h"
 #include "vtkGraph.h"
 #include "vtkGraphLayoutStrategy.h"
@@ -44,6 +45,7 @@
 #include "vtkSelectionNode.h"
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
+#include "vtkTextProperty.h"
 #include "vtkViewTheme.h"
 #include "vtkWindowToImageFilter.h"
 
@@ -61,6 +63,7 @@
 #include "source/ovSessionReader.h"
 #include "source/ovSessionWriter.h"
 
+#include "vtksys/SystemTools.hxx"
 #include <vtkstd/algorithm>
 #include <vtkstd/stdexcept>
 #include <vtksys/ios/sstream>
@@ -498,6 +501,20 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   lut->Build();
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   
+  // set up the corner annotations
+  vtkTextProperty *textProp;
+  this->TopAnnotation = vtkSmartPointer< vtkCornerAnnotation >::New();
+  textProp = this->TopAnnotation->GetTextProperty();
+  textProp->SetColor( 0, 0, 0 );
+  this->GraphLayoutView->GetRenderer()->AddViewProp( this->TopAnnotation );
+  this->TopAnnotation->SetVisibility( true );
+
+  this->BottomAnnotation = vtkSmartPointer< vtkCornerAnnotation >::New();
+  textProp = this->BottomAnnotation->GetTextProperty();
+  textProp->SetColor( 0, 0, 0 );
+  this->GraphLayoutView->GetRenderer()->AddViewProp( this->BottomAnnotation );
+  this->BottomAnnotation->SetVisibility( true );
+
   // set the colors of the vertex butons
   double *tableColor;
   char buffer[512];
@@ -831,6 +848,12 @@ void ovQMainWindow::slotSetBackgroundSolid()
   rgba[2] = c.blueF();
   rgba[3] = c.alphaF();
 
+  // set the annotation color
+  double average = ( rgba[0] + rgba[1] + rgba[2] ) / 3.0;
+  double annotation = average > 0.5 ? 0.0 : 1.0;
+  this->TopAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
+  this->BottomAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
+
   this->GraphLayoutViewTheme->SetBackgroundColor( rgba );
   this->GraphLayoutViewTheme->SetBackgroundColor2( rgba );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
@@ -849,6 +872,11 @@ void ovQMainWindow::slotSetBackgroundTop()
   rgba[2] = c.blueF();
   rgba[3] = c.alphaF();
 
+  // set the annotation color
+  double average = ( rgba[0] + rgba[1] + rgba[2] ) / 3.0;
+  double annotation = average > 0.5 ? 0.0 : 1.0;
+  this->TopAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
+
   this->GraphLayoutViewTheme->SetBackgroundColor2( rgba );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   this->GraphLayoutView->Render();
@@ -865,6 +893,11 @@ void ovQMainWindow::slotSetBackgroundBottom()
   rgba[1] = c.greenF();
   rgba[2] = c.blueF();
   rgba[3] = c.alphaF();
+
+  // set the annotation color
+  double average = ( rgba[0] + rgba[1] + rgba[2] ) / 3.0;
+  double annotation = average > 0.5 ? 0.0 : 1.0;
+  this->BottomAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
 
   this->GraphLayoutViewTheme->SetBackgroundColor( rgba );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
@@ -1742,6 +1775,87 @@ void ovQMainWindow::RenderGraph( bool resetCamera )
       selection->GetNode( i )->Initialize();
     this->GraphLayoutView->ResetCamera();
   }
+
+  // determine the corner annotation text
+  size_t pos;
+  ovString topLeft, startString, endString, textString, authorString;
+
+  int gender = this->RestrictGraphFilter->GetGenderTypeRestriction();
+  int type = this->RestrictGraphFilter->GetWriterTypeRestriction();
+  ovDate *startDate = this->RestrictGraphFilter->GetStartDate();
+  startDate->ToString( startString );
+  // remove -00's
+  while( vtkstd::string::npos != ( pos = startString.rfind( "-00" ) ) )
+    startString = startString.substr( 0, pos );
+  ovDate *endDate = this->RestrictGraphFilter->GetEndDate();
+  endDate->ToString( endString );
+  // remove -00's
+  while( vtkstd::string::npos != ( pos = endString.rfind( "-00" ) ) )
+    endString = endString.substr( 0, pos );
+  ovSearchPhrase *textPhrase = this->RestrictGraphFilter->GetTextSearchPhrase();
+  if( textPhrase ) textString = textPhrase->ToString( true );
+  ovSearchPhrase *authorPhrase = this->RestrictGraphFilter->GetAuthorSearchPhrase();
+  if( authorPhrase ) authorString = authorPhrase->ToString( true );
+  
+  if( ovRestrictGraphFilter::GenderTypeRestrictionMale == gender )
+    topLeft += "male";
+  else if( ovRestrictGraphFilter::GenderTypeRestrictionFemale == gender )
+    topLeft += "female";
+
+  if( ovRestrictGraphFilter::WriterTypeRestrictionAny == type )
+    topLeft += 0 < topLeft.length() ? " writers" : "all writers";
+  else
+  {
+    if( 0 < topLeft.length() ) topLeft += ", ";
+    
+    if( ovRestrictGraphFilter::WriterTypeRestrictionWriter == type )
+      topLeft += "non-British writers";
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRW == type )
+      topLeft += "British writers";
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionIBR == type )
+      topLeft += "international British writers";
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrBRW == type )
+      topLeft += "non-British and British writers";
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrIBR == type )
+      topLeft += "non-British and international British writers";
+    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRWOrIBR == type )
+      topLeft += "British and international British writers";
+  }
+  
+  if( startDate->IsSet() && endDate->IsSet() )
+    topLeft += " alive between " + startString + " and " + endString;
+  else if( startDate->IsSet() && !endDate->IsSet() )
+    topLeft += " died after " + startString;
+  else if( !startDate->IsSet() && endDate->IsSet() )
+    topLeft += " born before " + endString;
+  
+  if( 0 < textString.length() && 0 < authorString.length() )
+    topLeft += " whose entries contain the word " + textString
+             + " and whose name contain " + authorString;
+  if( 0 < textString.length() && 0 == authorString.length() )
+    topLeft += " whose entries contain the word " + textString;
+  if( 0 == textString.length() && 0 < authorString.length() )
+    topLeft += " whose name contain " + authorString;
+  
+  // capitolize the first letter
+  topLeft[0] = toupper( topLeft[0] );
+  
+  // insert new lines if the text is long
+  int length = topLeft.length();
+  int index = 50;
+  size_t pos;
+  while( index < length )
+  {
+    if( vtkstd::string::npos != ( pos = topLeft.find( ' ', index ) ) )
+      topLeft.replace( pos, 1, "\n" );
+    index += 50;
+  }
+
+  this->TopAnnotation->SetText( 2, topLeft.c_str() ); // top left
+  this->TopAnnotation->SetText( 3, "" ); // top right
+  this->BottomAnnotation->SetText( 0, "" ); // bottom left
+  this->BottomAnnotation->SetText( 1, "" ); // bottom right
+
   this->GraphLayoutView->Render();
   clock_t end = clock();
 

@@ -73,7 +73,7 @@ void ovSearchPhrase::Parse( ovString phrase )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovString ovSearchPhrase::ToString() const
+ovString ovSearchPhrase::ToString( const bool natural ) const
 {
   ovString phrase;
   ovSearchTerm *term;
@@ -83,14 +83,16 @@ ovString ovSearchPhrase::ToString() const
     term = *it;
     if( it != this->SearchTermVector.begin() )
     { // add the AND/OR connector to terms after the first
-      phrase += term->andLogic ? " AND" : " OR";
+      phrase += natural
+              ? term->andLogic ? " and" : " or"
+              : term->andLogic ? " AND" : " OR";
     }
 
     // add the NOT term, if needed
-    if( term->notLogic ) phrase += " NOT";
+    if( term->notLogic ) phrase += natural ? " not" : " NOT";
 
     // add the STEM term, if needed
-    if( term->stemming ) phrase += " STEM";
+    if( !natural && term->stemming ) phrase += " STEM";
 
     // add the search term, stripped of double-quotes
     ovString search = term->term;
@@ -98,6 +100,8 @@ ovString ovSearchPhrase::ToString() const
     phrase += " \"";
     phrase += search;
     phrase += '"';
+
+    if( natural && term->stemming ) phrase += " (stemmed)";
   }
 
   // get rid of the space at the beginning of the string
