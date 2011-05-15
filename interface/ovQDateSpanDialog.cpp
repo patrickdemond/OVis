@@ -30,16 +30,16 @@ ovQDateSpanDialog::ovQDateSpanDialog( QWidget* parent )
 
   QObject::connect(
     this->ui->startYearLineEdit, SIGNAL( textChanged( const QString& ) ),
-    this, SLOT( slotYearLineEditTextChanged( const QString& ) ) );
+    this, SLOT( slotStartYearLineEditTextChanged( const QString& ) ) );
   QObject::connect(
     this->ui->startMonthComboBox, SIGNAL( currentIndexChanged( int ) ),
-    this, SLOT( slotMonthComboBoxCurrentIndexChanged( int ) ) );
+    this, SLOT( slotStartMonthComboBoxCurrentIndexChanged( int ) ) );
   QObject::connect(
     this->ui->endYearLineEdit, SIGNAL( textChanged( const QString& ) ),
-    this, SLOT( slotYearLineEditTextChanged( const QString& ) ) );
+    this, SLOT( slotEndYearLineEditTextChanged( const QString& ) ) );
   QObject::connect(
     this->ui->endMonthComboBox, SIGNAL( currentIndexChanged( int ) ),
-    this, SLOT( slotMonthComboBoxCurrentIndexChanged( int ) ) );
+    this, SLOT( slotEndMonthComboBoxCurrentIndexChanged( int ) ) );
   QObject::connect(
     this->ui->historicDateComboBox, SIGNAL( currentIndexChanged( int ) ),
     this, SLOT( slotHistoricComboBoxCurrentIndexChanged( int ) ) );
