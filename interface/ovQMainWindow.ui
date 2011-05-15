@@ -972,6 +972,8 @@
     <addaction name="menuViewSetVertexStyle"/>
     <addaction name="menuSet_Layout_Strategy"/>
     <addaction name="menuSetSnapshotMagnification"/>
+    <addaction name="actionSetAnnotation"/>
+    <addaction name="actionShowAnnotation"/>
    </widget>
    <widget class="QMenu" name="menuSession">
     <property name="title">
@@ -1397,6 +1399,32 @@
    </property>
    <property name="text">
     <string>10</string>
+   </property>
+  </action>
+  <action name="actionShowAnnotation">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Annotation</string>
+   </property>
+  </action>
+  <action name="actionSet_Annotation">
+   <property name="text">
+    <string>Set Annotation</string>
+   </property>
+  </action>
+  <action name="actionShow_Annotation">
+   <property name="text">
+    <string>Show Annotation</string>
+   </property>
+  </action>
+  <action name="actionSetAnnotation">
+   <property name="text">
+    <string>Set Annotation</string>
    </property>
   </action>
  </widget>

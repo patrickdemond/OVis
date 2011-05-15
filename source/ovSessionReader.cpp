@@ -127,6 +127,18 @@ int ovSessionReader::ProcessRequest(
           output->SetBackgroundColor2( rgba );
         }
         // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "CustomAnnotationText", this->CurrentNode.Name ) )
+        {
+          this->ReadString( string );
+          output->SetCustomAnnotationText( string );
+        }
+        // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "ShowAnnotation", this->CurrentNode.Name ) )
+        {
+          this->ReadInt( intVal );
+          output->SetShowAnnotation( intVal );
+        }
+        // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "VertexStyle", this->CurrentNode.Name ) )
         {
           this->ReadInt( intVal );

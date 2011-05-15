@@ -42,6 +42,8 @@ public slots:
   virtual void slotSetBackgroundSolid();
   virtual void slotSetBackgroundTop();
   virtual void slotSetBackgroundBottom();
+  virtual void slotSetAnnotation();
+  virtual void slotShowAnnotation();
 
   virtual void slotSetVertexStyleToNone() { this->SetVertexStyle( VTK_NO_GLYPH ); }
   virtual void slotSetVertexStyleToVertex() { this->SetVertexStyle( VTK_VERTEX_GLYPH ); }
@@ -135,6 +137,8 @@ protected:
   virtual void SetStartDate( const ovDate& );
   virtual void SetEndDate( const ovDate& );
 
+  virtual ovString GetAnnotationText();
+
   vtkSmartPointer< ovSession > Session;
   vtkSmartPointer< vtkGraphLayoutView > GraphLayoutView;
   vtkSmartPointer< vtkViewTheme > GraphLayoutViewTheme;
@@ -148,6 +152,7 @@ protected:
   ovString CurrentDataFileName;
   ovString CurrentSessionFileName;
   ovString CurrentLayoutStrategy;
+  ovString CustomAnnotationText;
   int SnapshotMagnification;
   bool IsLoadingData;
   bool IsLoadingSession;

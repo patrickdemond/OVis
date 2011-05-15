@@ -19,6 +19,7 @@
 #include <QColorDialog>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QSettings>
 #include <QTextEdit>
@@ -262,6 +263,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->CurrentDataFileName = "";
   this->CurrentSessionFileName = "";
   this->CurrentLayoutStrategy = "Clustering2D";
+  this->CustomAnnotationText = "";
   this->Session = vtkSmartPointer< ovSession >::New();
   
   this->ui = new Ui_ovQMainWindow;
@@ -291,6 +293,12 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->actionSetBackgroundBottom, SIGNAL( triggered() ),
     this, SLOT( slotSetBackgroundBottom() ) );
+  QObject::connect(
+    this->ui->actionShowAnnotation, SIGNAL( triggered() ),
+    this, SLOT( slotShowAnnotation() ) );
+  QObject::connect(
+    this->ui->actionSetAnnotation, SIGNAL( triggered() ),
+    this, SLOT( slotSetAnnotation() ) );
 
   QObject::connect(
     this->ui->actionSetVertexStyleToNone, SIGNAL( triggered() ),
@@ -905,6 +913,31 @@ void ovQMainWindow::slotSetBackgroundBottom()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotSetAnnotation()
+{
+  bool ok;
+  QString text = QInputDialog::getText(
+    this, tr( "Set Custom Annotation" ), tr( "Annotation:" ), QLineEdit::Normal,
+    tr( this->CustomAnnotationText.c_str() ), &ok );
+
+  if( ok )
+  {
+    this->CustomAnnotationText = text.toStdString();
+    this->TopAnnotation->SetText( 2, this->GetAnnotationText().c_str() );
+    this->GraphLayoutView->Render();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotShowAnnotation()
+{
+  bool show = this->ui->actionShowAnnotation->isChecked();
+  this->TopAnnotation->SetVisibility( show );
+  this->BottomAnnotation->SetVisibility( show );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotOpenSession()
 {
   QString fileName = QFileDialog::getOpenFileName(
@@ -1003,6 +1036,10 @@ void ovQMainWindow::ApplySessionToState()
     this->Session->GetBackgroundColor1() );
   this->GraphLayoutViewTheme->SetBackgroundColor2(
     this->Session->GetBackgroundColor2() );
+  this->CustomAnnotationText = this->Session->GetCustomAnnotationText();
+  this->TopAnnotation->SetVisibility( this->Session->GetShowAnnotation() );
+  this->BottomAnnotation->SetVisibility( this->Session->GetShowAnnotation() );
+  this->ui->actionShowAnnotation->setChecked( this->Session->GetShowAnnotation() );
   this->SetVertexStyle( this->Session->GetVertexStyle() );
   this->SetLayoutStrategy( this->Session->GetLayoutStrategy() );
   this->RestrictGraphFilter->SetAuthorsOnly( this->Session->GetAuthorsOnly() );
@@ -1047,6 +1084,8 @@ void ovQMainWindow::ApplyStateToSession()
     this->GraphLayoutViewTheme->GetBackgroundColor() );
   this->Session->SetBackgroundColor2(
     this->GraphLayoutViewTheme->GetBackgroundColor2() );
+  this->Session->SetCustomAnnotationText( this->CustomAnnotationText );
+  this->Session->SetShowAnnotation( this->TopAnnotation->GetVisibility() );
   this->Session->SetVertexStyle( this->GraphLayoutView->GetGlyphType() );
   this->Session->SetLayoutStrategy( this->CurrentLayoutStrategy );
   this->Session->SetAuthorsOnly( this->RestrictGraphFilter->GetAuthorsOnly() );
@@ -1757,28 +1796,13 @@ void ovQMainWindow::GetActiveTags( vtkStringArray* array )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::RenderGraph( bool resetCamera )
+ovString ovQMainWindow::GetAnnotationText()
 {
-  if( this->IsLoadingSession || this->IsLoadingData || this->IsCheckingMultipleTags ) return;
-
-  // we're about to do an operation that might take a while, so update the GUI and cursor
-  this->repaint();
-  this->setCursor( Qt::WaitCursor );
-  this->ui->graphLayoutWidget->setCursor( Qt::WaitCursor );
-
-  clock_t start = clock();
-  if( resetCamera )
-  {
-    vtkSelection *selection =
-      this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->GetCurrentSelection();
-    for( int i = 0; i < selection->GetNumberOfNodes(); i++ )
-      selection->GetNode( i )->Initialize();
-    this->GraphLayoutView->ResetCamera();
-  }
+  if( 0 < this->CustomAnnotationText.length() ) return this->CustomAnnotationText;
 
   // determine the corner annotation text
   size_t pos;
-  ovString topLeft, startString, endString, textString, authorString;
+  ovString annotation, startString, endString, textString, authorString;
 
   int gender = this->RestrictGraphFilter->GetGenderTypeRestriction();
   int type = this->RestrictGraphFilter->GetWriterTypeRestriction();
@@ -1798,60 +1822,82 @@ void ovQMainWindow::RenderGraph( bool resetCamera )
   if( authorPhrase ) authorString = authorPhrase->ToString( true );
   
   if( ovRestrictGraphFilter::GenderTypeRestrictionMale == gender )
-    topLeft += "male";
+    annotation += "male";
   else if( ovRestrictGraphFilter::GenderTypeRestrictionFemale == gender )
-    topLeft += "female";
+    annotation += "female";
 
   if( ovRestrictGraphFilter::WriterTypeRestrictionAny == type )
-    topLeft += 0 < topLeft.length() ? " writers" : "all writers";
+    annotation += 0 < annotation.length() ? " writers" : "all writers";
   else
   {
-    if( 0 < topLeft.length() ) topLeft += ", ";
+    if( 0 < annotation.length() ) annotation += ", ";
     
     if( ovRestrictGraphFilter::WriterTypeRestrictionWriter == type )
-      topLeft += "non-British writers";
+      annotation += "non-British writers";
     else if( ovRestrictGraphFilter::WriterTypeRestrictionBRW == type )
-      topLeft += "British writers";
+      annotation += "British writers";
     else if( ovRestrictGraphFilter::WriterTypeRestrictionIBR == type )
-      topLeft += "international British writers";
+      annotation += "international British writers";
     else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrBRW == type )
-      topLeft += "non-British and British writers";
+      annotation += "non-British and British writers";
     else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrIBR == type )
-      topLeft += "non-British and international British writers";
+      annotation += "non-British and international British writers";
     else if( ovRestrictGraphFilter::WriterTypeRestrictionBRWOrIBR == type )
-      topLeft += "British and international British writers";
+      annotation += "British and international British writers";
   }
   
   if( startDate->IsSet() && endDate->IsSet() )
-    topLeft += " alive between " + startString + " and " + endString;
+    annotation += " alive between " + startString + " and " + endString;
   else if( startDate->IsSet() && !endDate->IsSet() )
-    topLeft += " died after " + startString;
+    annotation += " died after " + startString;
   else if( !startDate->IsSet() && endDate->IsSet() )
-    topLeft += " born before " + endString;
+    annotation += " born before " + endString;
   
   if( 0 < textString.length() && 0 < authorString.length() )
-    topLeft += " whose entries contain the word " + textString
+    annotation += " whose entries contain the word " + textString
              + " and whose name contain " + authorString;
   if( 0 < textString.length() && 0 == authorString.length() )
-    topLeft += " whose entries contain the word " + textString;
+    annotation += " whose entries contain the word " + textString;
   if( 0 == textString.length() && 0 < authorString.length() )
-    topLeft += " whose name contain " + authorString;
+    annotation += " whose name contain " + authorString;
   
   // capitolize the first letter
-  topLeft[0] = toupper( topLeft[0] );
+  annotation[0] = toupper( annotation[0] );
   
   // insert new lines if the text is long
-  int length = topLeft.length();
+  int length = annotation.length();
   int index = 50;
-  size_t pos;
   while( index < length )
   {
-    if( vtkstd::string::npos != ( pos = topLeft.find( ' ', index ) ) )
-      topLeft.replace( pos, 1, "\n" );
+    if( vtkstd::string::npos != ( pos = annotation.find( ' ', index ) ) )
+      annotation.replace( pos, 1, "\n" );
     index += 50;
   }
+  
+  return annotation;
+}
 
-  this->TopAnnotation->SetText( 2, topLeft.c_str() ); // top left
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::RenderGraph( bool resetCamera )
+{
+  if( this->IsLoadingSession || this->IsLoadingData || this->IsCheckingMultipleTags ) return;
+
+  // we're about to do an operation that might take a while, so update the GUI and cursor
+  this->repaint();
+  this->setCursor( Qt::WaitCursor );
+  this->ui->graphLayoutWidget->setCursor( Qt::WaitCursor );
+
+  clock_t start = clock();
+  if( resetCamera )
+  {
+    vtkSelection *selection =
+      this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->GetCurrentSelection();
+    for( int i = 0; i < selection->GetNumberOfNodes(); i++ )
+      selection->GetNode( i )->Initialize();
+    this->GraphLayoutView->ResetCamera();
+  }
+
+  this->TopAnnotation->SetText( 2, this->GetAnnotationText().c_str() ); // top left
   this->TopAnnotation->SetText( 3, "" ); // top right
   this->BottomAnnotation->SetText( 0, "" ); // bottom left
   this->BottomAnnotation->SetText( 1, "" ); // bottom right

@@ -32,6 +32,8 @@ ovSession::ovSession()
     this->AuthorVertexColor[i] = 0;
     this->AssociationVertexColor[i] = 0;
   }
+  this->CustomAnnotationText = "";
+  this->ShowAnnotation = true;
   this->VertexStyle = 0;
   this->LayoutStrategy = "";
   this->AuthorsOnly = false;
@@ -63,6 +65,19 @@ void ovSession::SetDataFile( const ovString &dataFile )
   if( dataFile != this->DataFile )
   {
     this->DataFile = dataFile;
+    this->Modified();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovSession::SetCustomAnnotationText( const ovString &text )
+{
+  vtkDebugMacro( << this->GetClassName() << " (" << this << "): setting "
+                 << "CustomAnnotationText to " << text.c_str() );
+
+  if( text != this->CustomAnnotationText )
+  {
+    this->CustomAnnotationText = text;
     this->Modified();
   }
 }
@@ -148,6 +163,8 @@ bool ovSession::operator == ( const ovSession &rhs ) const
       this->BackgroundColor2[1] == rhs.BackgroundColor2[1] &&
       this->BackgroundColor2[2] == rhs.BackgroundColor2[2] &&
       this->BackgroundColor2[3] == rhs.BackgroundColor2[3] &&
+      this->CustomAnnotationText == rhs.CustomAnnotationText &&
+      this->ShowAnnotation == rhs.ShowAnnotation &&
       this->VertexStyle == rhs.VertexStyle &&
       this->LayoutStrategy == rhs.LayoutStrategy &&
       this->AuthorsOnly == rhs.AuthorsOnly &&
@@ -198,6 +215,8 @@ bool ovSession::operator == ( const ovSession &rhs ) const
 void ovSession::DeepCopy( ovSession *copy )
 {
   this->DataFile = copy->DataFile;
+  this->CustomAnnotationText = copy->CustomAnnotationText;
+  this->ShowAnnotation = copy->ShowAnnotation;
   this->VertexStyle = copy->VertexStyle;
   this->LayoutStrategy = copy->LayoutStrategy;
   this->AuthorsOnly = copy->AuthorsOnly;
@@ -249,6 +268,8 @@ void ovSession::PrintSelf( ostream &os, vtkIndent indent )
                << this->BackgroundColor2[1] << ", "
                << this->BackgroundColor2[2] << ", "
                << this->BackgroundColor2[3] << endl;
+  os << indent << "CustomAnnotationText = \"" << this->CustomAnnotationText << "\"" << endl;
+  os << indent << "ShowAnnotation = " << ( this->ShowAnnotation ? "true" : "false" ) << endl;
   os << indent << "VertexStyle = " << this->VertexStyle << "" << endl;
   os << indent << "LayoutStrategy = \"" << this->LayoutStrategy << "\"" << endl;
   os << indent << "AuthorsOnly = " << ( this->AuthorsOnly ? "true" : "false" ) << endl;

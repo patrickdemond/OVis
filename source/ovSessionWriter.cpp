@@ -52,6 +52,8 @@ void ovSessionWriter::WriteData()
     this->WriteColor( "BackgroundColor1", rgba );
     rgba = input->GetBackgroundColor2();
     this->WriteColor( "BackgroundColor2", rgba );
+    this->Write( "CustomAnnotationText", input->GetCustomAnnotationText() );
+    this->Write( "ShowAnnotation", input->GetShowAnnotation() );
     this->Write( "VertexStyle", input->GetVertexStyle() );
     this->Write( "LayoutStrategy", input->GetLayoutStrategy() );
     this->Write( "AuthorsOnly", input->GetAuthorsOnly() );

@@ -53,6 +53,17 @@ public:
   vtkSetVector4Macro( BackgroundColor2, double );
   
   // Description:
+  // Set/get the text search phrase
+  virtual ovString GetCustomAnnotationText() { return this->CustomAnnotationText; }
+  virtual void SetCustomAnnotationText( const ovString& );
+
+  // Description:
+  // Set/get the vertex style
+  vtkGetMacro( ShowAnnotation, int );
+  vtkSetMacro( ShowAnnotation, int );
+  vtkBooleanMacro( ShowAnnotation, int );
+  
+  // Description:
   // Set/get the vertex style
   vtkGetMacro( VertexStyle, int );
   vtkSetMacro( VertexStyle, int );
@@ -143,6 +154,8 @@ protected:
   ovString DataFile;
   double BackgroundColor1[4];
   double BackgroundColor2[4];
+  ovString CustomAnnotationText;
+  bool ShowAnnotation;
   int VertexStyle;
   ovString LayoutStrategy;
   bool AuthorsOnly;
