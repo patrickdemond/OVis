@@ -54,7 +54,7 @@
 #include "vtkDataSetAttributes.h"
 #include "vtkVariantArray.h"
 
-#include "ovQDateDialog.h"
+#include "ovQDateSpanDialog.h"
 #include "ovQSearchDialog.h"
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
@@ -586,11 +586,8 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
 
   // set up the date restriction widgets
   QObject::connect(
-    this->ui->startSetPushButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotStartSetPushButtonClicked() ) );
-  QObject::connect(
-    this->ui->endSetPushButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotEndSetPushButtonClicked() ) );
+    this->ui->dateSpanSetPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotDateSpanSetPushButtonClicked() ) );
 
   // set up the tag tree
   this->ui->tagTreeWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
@@ -1387,16 +1384,19 @@ void ovQMainWindow::SetStartDate( const ovDate &date )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotStartSetPushButtonClicked()
+void ovQMainWindow::slotDateSpanSetPushButtonClicked()
 {
-  ovQDateDialog dialog( this );
+  ovQDateSpanDialog dialog( this );
   dialog.setModal( true );
-  dialog.setWindowTitle( tr( "Select start date" ) );
-  dialog.setDate( ovDate( this->ui->startLineEdit->text().toStdString().c_str() ) );
+  dialog.setWindowTitle( tr( "Select date span" ) );
+  dialog.setDateSpan(
+    ovDate( this->ui->startLineEdit->text().toStdString().c_str() ),
+    ovDate( this->ui->endLineEdit->text().toStdString().c_str() ) );
   
   if( QDialog::Accepted == dialog.exec() )
   {
-    this->SetStartDate( dialog.getDate() );
+    this->SetStartDate( dialog.getStartDate() );
+    this->SetEndDate( dialog.getEndDate() );
   }
 }
 
@@ -1412,20 +1412,6 @@ void ovQMainWindow::SetEndDate( const ovDate &date )
   this->RestrictGraphFilter->SetEndDate( date );
   this->RestrictGraphFilter->Modified();
   this->RenderGraph( true );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotEndSetPushButtonClicked()
-{
-  ovQDateDialog dialog( this );
-  dialog.setModal( true );
-  dialog.setWindowTitle( tr( "Select end date" ) );
-  dialog.setDate( ovDate( this->ui->endLineEdit->text().toStdString().c_str() ) );
-  
-  if( QDialog::Accepted == dialog.exec() )
-  {
-    this->SetEndDate( dialog.getDate() );
-  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
