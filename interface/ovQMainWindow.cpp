@@ -753,6 +753,7 @@ void ovQMainWindow::LoadData()
   ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
   ovTagVector *tags = tagInfo->GetTags();
   
+  int numberOfGeneralTags = 0; // we'll need this for colouring below
   bool tagParentError = false; // we only want to display the tag tree error once
   this->ui->tagTreeWidget->clear();
   for( ovTagVector::iterator it = tags->begin(); it != tags->end(); it++ )
@@ -760,6 +761,9 @@ void ovQMainWindow::LoadData()
     tag = *it;
     if( tag->parent.length() )
     {
+      // count the number of general tags
+      if( tag->parent == "General" ) numberOfGeneralTags++;
+
       // find the item with the parent's name
       parent = NULL;
       QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
@@ -800,6 +804,8 @@ void ovQMainWindow::LoadData()
     if( 0 == tag->parent.length() ) this->ui->tagTreeWidget->addTopLevelItem( item );
   }
   
+  // TODO-NEXT: need to put a gap in the colour spectrum between "WEALTH" and "WRITING"
+
   // define the range of the edge lookup table based on the number of available tags
   // we add 1 to the number of tags because of the artificial "unsorted" tag
   double rgba[4], range[] = { 0, tags->size() };
@@ -812,8 +818,19 @@ void ovQMainWindow::LoadData()
   lut->SetAlphaRange( 1, 1 );
   lut->SetNumberOfTableValues( tags->size() + 1 );
   lut->Build();
+
+  // make the general tags greyscale
+  double generalCount = 0;
+  lut->SetTableValue( tags->size() - numberOfGeneralTags - 1, 1.0, 1.0, 1.0 );
+  for( int index = tags->size() - numberOfGeneralTags; index <= tags->size(); index++ )
+  {
+    double shade = 0.3 + 0.4 * ( generalCount / ( numberOfGeneralTags - 1 ) );
+    lut->SetTableValue( index, shade, shade, shade );
+    generalCount++;
+  }
   
   // color tag names in the tree widget based on the LUT (expand the tab while we're at it
+  int generalTagCount = 0;
   QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
   while( *treeIt )
   {
