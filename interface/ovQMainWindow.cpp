@@ -831,6 +831,7 @@ void ovQMainWindow::LoadData()
   this->OrlandoReader->SetFileName( this->CurrentDataFileName );
   this->GraphLayoutView->SetRepresentationFromInput( this->RestrictGraphFilter->GetOutput() );
   this->UpdateActiveTags();
+  this->slotTagTreeCheckAllButtonClicked();
   this->RenderGraph( true );
 }
 
