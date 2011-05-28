@@ -39,20 +39,32 @@ public:
   // Description:
   // Add association types (tags) to track when loading the file.  The parent-child
   // hierarchy is used by the UI for easier management of tags
-  virtual void Add( ovString parent, ovString name, bool active = true );
+  virtual void Add( ovString parent, ovString name, ovString title, bool active = true );
+
+  // Description:
+  // Returns the a particular tag given its name, or NULL if the tag is not found.
+  virtual ovTag* FindTagFromName( ovString name )
+  { return this->FindTag( name, false ); }
+
+  // Description:
+  // Returns the index of a particular tag given its name, or -1 if the tag is not found.
+  virtual int FindTagIndexFromName( ovString name )
+  { return this->FindTagIndex( name, false ); }
+
+  // Description:
+  // Returns the a particular tag given its title, or NULL if the tag is not found.
+  virtual ovTag* FindTagFromTitle( ovString title )
+  { return this->FindTag( title, true ); }
+
+  // Description:
+  // Returns the index of a particular tag given its title, or -1 if the tag is not found.
+  virtual int FindTagIndexFromTitle( ovString title )
+  { return this->FindTagIndex( title, true ); }
 
   // Description:
   // Returns the total number of tags.
   virtual int GetNumberOfTags();
   
-  // Description:
-  // Returns the a particular tag, or NULL if the tag is not found.
-  virtual ovTag* FindTag( ovString );
-
-  // Description:
-  // Returns the index of a particular tag, or -1 if the tag is not found.
-  virtual int FindTagIndex( ovString );
-
   // Description:
   // Populates a string array with the tags.
   virtual ovTagVector* GetTags() { return &( this->TagVector ); }
@@ -64,6 +76,14 @@ protected:
   static ovOrlandoTagInfo *New();
   static vtkSmartPointer< ovOrlandoTagInfo > Instance;
   
+  // Description:
+  // Returns the a particular tag given its name or title, or NULL if the tag is not found.
+  virtual ovTag* FindTag( ovString, bool );
+
+  // Description:
+  // Returns the index of a particular tag given its name or title, or -1 if the tag is not found.
+  virtual int FindTagIndex( ovString, bool );
+
   ovTagVector TagVector;
 
 private:

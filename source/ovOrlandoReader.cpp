@@ -465,7 +465,7 @@ int ovOrlandoReader::ProcessRequest(
               int index = -1;
               if( !( this->CurrentNode.IsEmptyElement ) && this->CurrentNode.IsOpeningElement() )
               {
-                index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
+                index = tagInfo->FindTagIndexFromName( ( char* )( this->CurrentNode.Name ) );
                 if( 0 <= index ) // we found a match
                 {
                   // are we already in a connecting vertex (NAME) tag?
@@ -480,7 +480,7 @@ int ovOrlandoReader::ProcessRequest(
               }
               else if( this->CurrentNode.IsClosingElement() )
               {
-                index = tagInfo->FindTagIndex( ( char* )( this->CurrentNode.Name ) );
+                index = tagInfo->FindTagIndexFromName( ( char* )( this->CurrentNode.Name ) );
                 if( 0 <= index ) // we found a match
                 { // closing element, mark the tag as false
                   currentTagArray[index] = '0';

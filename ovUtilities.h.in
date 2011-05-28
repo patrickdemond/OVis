@@ -198,16 +198,23 @@ struct ovTag
 {
   ovString parent;
   ovString name;
+  ovString title;
   bool active;
   bool expanded;
   double color[4];
-  ovTag() : parent( "" ), name( "" ), active( false ) { this->expanded = false; }
-  ovTag( ovString n, int a = 1 ) : parent( "" ), name( n ), active( a ) { this->expanded = false; }
-  ovTag( ovString p, ovString n, int a = 1 ) : parent( p ), name( n ), active( a ) { this->expanded = false; }
+
+  ovTag() : parent( "" ), name( "" ), title( "" ), active( false )
+  { this->expanded = false; }
+  
+  ovTag( ovString p, ovString n, ovString t, int a = 1 ) :
+    parent( p ), name( n ), title( t ), active( a )
+  { this->expanded = false; }
+  
   void DeepCopy( const ovTag* tag )
   {
     this->parent = tag->parent;
     this->name = tag->name;
+    this->title = tag->title;
     this->active = tag->active;
     this->expanded = tag->expanded;
     for( int i = 0; i < 4; i++ ) this->color[i] = tag->color[i];
@@ -215,7 +222,8 @@ struct ovTag
   bool operator == ( const ovTag &rhs ) const
   {
     return this->parent == rhs.parent &&
-           this->name == rhs.parent &&
+           this->name == rhs.name &&
+           this->title == rhs.title &&
            this->active == rhs.active &&
            this->expanded == rhs.expanded &&
            this->color[0] == rhs.color[0] &&

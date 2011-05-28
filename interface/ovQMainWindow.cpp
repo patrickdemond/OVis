@@ -234,7 +234,7 @@ void ovQMainWindowSelectionCommand::Execute(
         {
           if( '1' == edgeTags.at( tagIndex ) )
           {
-            stream << ( first ? "" : ", " ) << tags->at( tagIndex )->name;
+            stream << ( first ? "" : ", " ) << tags->at( tagIndex )->title;
             first = false;
           }
         }
@@ -590,7 +590,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     this, SLOT( slotDateSpanSetPushButtonClicked() ) );
 
   // set up the tag tree
-  this->ui->tagTreeWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
+  //this->ui->tagTreeWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
   this->ui->tagTreeWidget->setExpandsOnDoubleClick( false );
   QObject::connect(
     this->ui->tagTreeCheckAllButton, SIGNAL( clicked( bool ) ),
@@ -748,7 +748,7 @@ void ovQMainWindow::LoadData()
   // don't update the graph view until we're done checking tags
   this->IsLoadingData = true;
   
-  ovTag *tag;
+  ovTag *tag, *parentTag;
   QTreeWidgetItem *item, *parent;
   ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
   ovTagVector *tags = tagInfo->GetTags();
@@ -765,7 +765,8 @@ void ovQMainWindow::LoadData()
       QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
       while( *treeIt )
       {
-        if( tag->parent == (*treeIt)->text( 0 ).toStdString() ) parent = *treeIt;
+        parentTag = tagInfo->FindTagFromName( tag->parent );
+        if( parentTag->title == (*treeIt)->text( 0 ).toStdString() ) parent = *treeIt;
         treeIt++;
       }
       
@@ -790,7 +791,7 @@ void ovQMainWindow::LoadData()
     {
       item = new QTreeWidgetItem( this->ui->tagTreeWidget );
     }
-    item->setText(0, tag->name.c_str() );
+    item->setText(0, tag->title.c_str() );
     item->setCheckState( 0, tag->active ? Qt::Checked : Qt::Unchecked );
     item->setExpanded( tag->expanded );
     item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable );
@@ -816,7 +817,7 @@ void ovQMainWindow::LoadData()
   QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
   while( *treeIt )
   {
-    int index = tagInfo->FindTagIndex( (*treeIt)->text( 0 ).toStdString().c_str() );
+    int index = tagInfo->FindTagIndexFromTitle( (*treeIt)->text( 0 ).toStdString().c_str() );
     lut->GetTableValue( index, rgba );
     (*treeIt)->setBackground( 0, QColor( rgba[0]*255, rgba[1]*255, rgba[2]*255, rgba[3]*255 ) );
     (*treeIt)->setForeground( 0, ovIsOppositeColorWhite( rgba )
@@ -1542,7 +1543,7 @@ void ovQMainWindow::slotTagTreeCollapseButtonClicked()
 void ovQMainWindow::slotTagTreeItemChanged( QTreeWidgetItem* item, int column )
 {
   // the checked state of the item may have changed, update the tag info singleton
-  ovTag *tag = ovOrlandoTagInfo::GetInfo()->FindTag( item->text( column ).toStdString() );
+  ovTag *tag = ovOrlandoTagInfo::GetInfo()->FindTagFromTitle( item->text( column ).toStdString() );
   if( tag ) tag->active = Qt::Checked == item->checkState( column ) ? true : false;
   this->UpdateActiveTags();
   this->RenderGraph( true );
@@ -1574,7 +1575,8 @@ void ovQMainWindow::slotTagTreeItemDoubleClicked( QTreeWidgetItem* item, int col
     vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
       this->GraphLayoutViewTheme->GetCellLookupTable() );
     lut->SetTableValue(
-      ovOrlandoTagInfo::GetInfo()->FindTagIndex( item->text( column ).toStdString().c_str() ),
+      ovOrlandoTagInfo::GetInfo()->FindTagIndexFromTitle(
+        item->text( column ).toStdString().c_str() ),
       color.redF(), color.greenF(), color.blueF() );
 
     // Calling Render() should be enough to update the graph view, but for some reason
@@ -1690,8 +1692,8 @@ void ovQMainWindow::GetTagList( ovTagVector *tags )
     QTreeWidgetItem *item = *treeIt;
     parent = item->parent();
     ovTag *tag = new ovTag;
-    tag->parent = parent ? parent->text( 0 ).toStdString().c_str() : "";
-    tag->name = item->text( 0 ).toStdString().c_str();
+    tag->DeepCopy( ovOrlandoTagInfo::GetInfo()->FindTagFromTitle(
+      item->text( 0 ).toStdString().c_str() ) );
     tag->active = Qt::Checked == item->checkState( 0 );
     tag->expanded = item->isExpanded();
 
@@ -1699,7 +1701,7 @@ void ovQMainWindow::GetTagList( ovTagVector *tags )
     vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
       this->GraphLayoutViewTheme->GetCellLookupTable() );
     rgba = lut->GetTableValue(
-      ovOrlandoTagInfo::GetInfo()->FindTagIndex( tag->name.c_str() ) );
+      ovOrlandoTagInfo::GetInfo()->FindTagIndexFromTitle( tag->title.c_str() ) );
     for( int i = 0; i < 4; i++ ) tag->color[i] = rgba[i];
 
     // store the tag and go to the next tree widget item
@@ -1734,7 +1736,7 @@ void ovQMainWindow::SetTagList( ovTagVector *tags )
       while( *treeIt )
       {
         QTreeWidgetItem *item = *treeIt;
-        if( 0 == strcmp( item->text( 0 ).toStdString().c_str(), tag->name.c_str() ) )
+        if( 0 == strcmp( item->text( 0 ).toStdString().c_str(), tag->title.c_str() ) )
         {
           item->setCheckState( 0, tag->active ? Qt::Checked : Qt::Unchecked );
           item->setExpanded( tag->expanded );
@@ -1753,7 +1755,8 @@ void ovQMainWindow::SetTagList( ovTagVector *tags )
           vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
             this->GraphLayoutViewTheme->GetCellLookupTable() );
           lut->SetTableValue(
-            ovOrlandoTagInfo::GetInfo()->FindTagIndex( item->text( 0 ).toStdString().c_str() ),
+            ovOrlandoTagInfo::GetInfo()->FindTagIndexFromTitle(
+              item->text( 0 ).toStdString().c_str() ),
             tag->color );
           break;
         }
@@ -1781,13 +1784,17 @@ void ovQMainWindow::GetActiveTags( vtkStringArray* array )
 {
   if( NULL == array ) return;
   
+  ovOrlandoTagInfo *tagInfo = ovOrlandoTagInfo::GetInfo();
+  ovTag *tag;
+
   QTreeWidgetItemIterator treeIt( this->ui->tagTreeWidget );
   while( *treeIt )
   {
     QTreeWidgetItem *item = *treeIt;
     if( Qt::Checked == item->checkState( 0 ) )
     {
-      array->InsertNextValue( item->text( 0 ).toStdString() );
+      tag = tagInfo->FindTagFromTitle( item->text( 0 ).toStdString() );
+      array->InsertNextValue( tag->name );
     }
     treeIt++;
   }

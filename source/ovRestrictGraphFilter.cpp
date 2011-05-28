@@ -405,7 +405,7 @@ int ovRestrictGraphFilter::RequestData(
   vtkstd::vector< vtkIdType > includeIndices;
   for( vtkIdType i = 0; i < this->ActiveTags->GetNumberOfValues(); ++i )
   {
-    int tagIndex = tagInfo->FindTagIndex( this->ActiveTags->GetValue( i ) );
+    int tagIndex = tagInfo->FindTagIndexFromName( this->ActiveTags->GetValue( i ) );
     if( 0 <= tagIndex && tagIndex < numTags ) includeIndices.push_back( tagIndex );
   }
   
