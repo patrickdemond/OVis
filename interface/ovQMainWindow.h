@@ -99,10 +99,12 @@ public slots:
   virtual void slotDateSpanSetPushButtonClicked();
   virtual void slotTagTreeCheckAllButtonClicked();
   virtual void slotTagTreeUnCheckAllButtonClicked();
+  /* NOTE: Functionality removed by request
   virtual void slotTagTreeCheckButtonClicked();
   virtual void slotTagTreeUnCheckButtonClicked();
   virtual void slotTagTreeExpandButtonClicked();
   virtual void slotTagTreeCollapseButtonClicked();
+  */
   virtual void slotTagTreeItemChanged( QTreeWidgetItem*, int );
   virtual void slotTagTreeItemDoubleClicked( QTreeWidgetItem*, int );
 

@@ -598,6 +598,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->tagTreeUnCheckAllButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotTagTreeUnCheckAllButtonClicked() ) );
+  /* NOTE: Functionality removed by request
   QObject::connect(
     this->ui->tagTreeCheckButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotTagTreeCheckButtonClicked() ) );
@@ -610,6 +611,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->tagTreeCollapseButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotTagTreeCollapseButtonClicked() ) );
+  */
   QObject::connect(
     this->ui->tagTreeWidget, SIGNAL( itemChanged( QTreeWidgetItem*, int ) ),
     this, SLOT( slotTagTreeItemChanged( QTreeWidgetItem*, int ) ) );
@@ -1416,6 +1418,7 @@ void ovQMainWindow::SetEndDate( const ovDate &date )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// NOTE: 
 void ovQMainWindow::slotTagTreeCheckAllButtonClicked()
 {
   // don't update the graph view until we're done checking tags
@@ -1458,6 +1461,7 @@ void ovQMainWindow::slotTagTreeUnCheckAllButtonClicked()
 }
  
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+/* NOTE: Functionality removed by request
 void ovQMainWindow::slotTagTreeCheckButtonClicked()
 {
   // don't update the graph view until we're done checking tags
@@ -1477,9 +1481,11 @@ void ovQMainWindow::slotTagTreeCheckButtonClicked()
   this->IsCheckingMultipleTags = false;
   this->UpdateActiveTags();
   this->RenderGraph( true );
-}
-
+} 
+*/
+ 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+/* NOTE: Functionality removed by request
 void ovQMainWindow::slotTagTreeUnCheckButtonClicked()
 {
   // don't update the graph view until we're done checking tags
@@ -1500,8 +1506,10 @@ void ovQMainWindow::slotTagTreeUnCheckButtonClicked()
   this->UpdateActiveTags();
   this->RenderGraph( true );
 }
- 
+*/
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+/* NOTE: Functionality removed by request
 void ovQMainWindow::slotTagTreeExpandButtonClicked()
 {
   // expand all tree items
@@ -1513,8 +1521,10 @@ void ovQMainWindow::slotTagTreeExpandButtonClicked()
     treeIt++;
   }
 }
- 
+*/
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+/* NOTE: Functionality removed by request
 void ovQMainWindow::slotTagTreeCollapseButtonClicked()
 {
   // expand all tree items
@@ -1526,6 +1536,7 @@ void ovQMainWindow::slotTagTreeCollapseButtonClicked()
     treeIt++;
   }
 }
+*/
  
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotTagTreeItemChanged( QTreeWidgetItem* item, int column )
