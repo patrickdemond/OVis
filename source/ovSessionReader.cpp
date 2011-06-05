@@ -151,22 +151,46 @@ int ovSessionReader::ProcessRequest(
           output->SetLayoutStrategy( string );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "AuthorsOnly", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "IncludeWriters", this->CurrentNode.Name ) )
         {
           this->ReadInt( intVal );
-          output->SetAuthorsOnly( intVal );
+          output->SetIncludeWriters( intVal );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "GenderTypeRestriction", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "IncludeOthers", this->CurrentNode.Name ) )
         {
           this->ReadInt( intVal );
-          output->SetGenderTypeRestriction( intVal );
+          output->SetIncludeOthers( intVal );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "WriterTypeRestriction", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "IncludeFemale", this->CurrentNode.Name ) )
         {
           this->ReadInt( intVal );
-          output->SetWriterTypeRestriction( intVal );
+          output->SetIncludeFemale( intVal );
+        }
+        // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "IncludeMale", this->CurrentNode.Name ) )
+        {
+          this->ReadInt( intVal );
+          output->SetIncludeMale( intVal );
+        }
+        // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "IncludeBRWType", this->CurrentNode.Name ) )
+        {
+          this->ReadInt( intVal );
+          output->SetIncludeBRWType( intVal );
+        }
+        // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "IncludeWriterType", this->CurrentNode.Name ) )
+        {
+          this->ReadInt( intVal );
+          output->SetIncludeWriterType( intVal );
+        }
+        // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "IncludeIBRType", this->CurrentNode.Name ) )
+        {
+          this->ReadInt( intVal );
+          output->SetIncludeIBRType( intVal );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "VertexSize", this->CurrentNode.Name ) )

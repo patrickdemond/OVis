@@ -555,14 +555,26 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   
   // set up the display property widgets
   QObject::connect(
-    this->ui->authorCheckBox, SIGNAL( stateChanged( int ) ),
-    this, SLOT( slotAuthorCheckBoxStateChanged( int ) ) );
+    this->ui->writersCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotWritersCheckBoxStateChanged( int ) ) );
   QObject::connect(
-    this->ui->genderComboBox, SIGNAL( currentIndexChanged( const QString& ) ),
-    this, SLOT( slotGenderComboBoxCurrentIndexChanged( const QString& ) ) );
+    this->ui->othersCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotOthersCheckBoxStateChanged( int ) ) );
   QObject::connect(
-    this->ui->writerComboBox, SIGNAL( currentIndexChanged( const QString& ) ),
-    this, SLOT( slotWriterComboBoxCurrentIndexChanged( const QString& ) ) );
+    this->ui->femaleCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotFemaleCheckBoxStateChanged( int ) ) );
+  QObject::connect(
+    this->ui->maleCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotMaleCheckBoxStateChanged( int ) ) );
+  QObject::connect(
+    this->ui->BRWTypeCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotBRWTypeCheckBoxStateChanged( int ) ) );
+  QObject::connect(
+    this->ui->writerTypeCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotWriterTypeCheckBoxStateChanged( int ) ) );
+  QObject::connect(
+    this->ui->IBRTypeCheckBox, SIGNAL( stateChanged( int ) ),
+    this, SLOT( slotIBRTypeCheckBoxStateChanged( int ) ) );
   QObject::connect(
     this->ui->vertexSizeSlider, SIGNAL( valueChanged( int ) ),
     this, SLOT( slotVertexSizeSliderValueChanged( int ) ) );
@@ -586,8 +598,11 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
 
   // set up the date restriction widgets
   QObject::connect(
-    this->ui->dateSpanSetPushButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotDateSpanSetPushButtonClicked() ) );
+    this->ui->setDateSpanPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotSetDateSpanPushButtonClicked() ) );
+  QObject::connect(
+    this->ui->clearDateSpanPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotClearDateSpanPushButtonClicked() ) );
 
   // set up the tag tree
   //this->ui->tagTreeWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
@@ -1060,11 +1075,13 @@ void ovQMainWindow::ApplySessionToState()
   this->ui->actionShowAnnotation->setChecked( this->Session->GetShowAnnotation() );
   this->SetVertexStyle( this->Session->GetVertexStyle() );
   this->SetLayoutStrategy( this->Session->GetLayoutStrategy() );
-  this->RestrictGraphFilter->SetAuthorsOnly( this->Session->GetAuthorsOnly() );
-  this->RestrictGraphFilter->SetGenderTypeRestriction(
-    this->Session->GetGenderTypeRestriction() );
-  this->RestrictGraphFilter->SetWriterTypeRestriction(
-    this->Session->GetWriterTypeRestriction() );
+  this->RestrictGraphFilter->SetIncludeWriters( this->Session->GetIncludeWriters() );
+  this->RestrictGraphFilter->SetIncludeOthers( this->Session->GetIncludeOthers() );
+  this->RestrictGraphFilter->SetIncludeFemale( this->Session->GetIncludeFemale() );
+  this->RestrictGraphFilter->SetIncludeMale( this->Session->GetIncludeMale() );
+  this->RestrictGraphFilter->SetIncludeBRWType( this->Session->GetIncludeBRWType() );
+  this->RestrictGraphFilter->SetIncludeWriterType( this->Session->GetIncludeWriterType() );
+  this->RestrictGraphFilter->SetIncludeIBRType( this->Session->GetIncludeIBRType() );
   this->SetVertexSize( this->Session->GetVertexSize() ); 
   this->SetEdgeSize( this->Session->GetEdgeSize() ); 
   this->SetAuthorVertexColor( this->Session->GetAuthorVertexColor() );
@@ -1106,11 +1123,13 @@ void ovQMainWindow::ApplyStateToSession()
   this->Session->SetShowAnnotation( this->TopAnnotation->GetVisibility() );
   this->Session->SetVertexStyle( this->GraphLayoutView->GetGlyphType() );
   this->Session->SetLayoutStrategy( this->CurrentLayoutStrategy );
-  this->Session->SetAuthorsOnly( this->RestrictGraphFilter->GetAuthorsOnly() );
-  this->Session->SetGenderTypeRestriction(
-    this->RestrictGraphFilter->GetGenderTypeRestriction() );
-  this->Session->SetWriterTypeRestriction(
-    this->RestrictGraphFilter->GetWriterTypeRestriction() );
+  this->Session->SetIncludeWriters( this->RestrictGraphFilter->GetIncludeWriters() );
+  this->Session->SetIncludeOthers( this->RestrictGraphFilter->GetIncludeOthers() );
+  this->Session->SetIncludeFemale( this->RestrictGraphFilter->GetIncludeFemale() );
+  this->Session->SetIncludeMale( this->RestrictGraphFilter->GetIncludeMale() );
+  this->Session->SetIncludeBRWType( this->RestrictGraphFilter->GetIncludeBRWType() );
+  this->Session->SetIncludeWriterType( this->RestrictGraphFilter->GetIncludeWriterType() );
+  this->Session->SetIncludeIBRType( this->RestrictGraphFilter->GetIncludeIBRType() );
   this->Session->SetVertexSize(
     this->GraphLayoutViewTheme->GetPointSize() );
   this->Session->SetEdgeSize(
@@ -1193,25 +1212,51 @@ void ovQMainWindow::SetLayoutStrategy( const ovString &strategy )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotAuthorCheckBoxStateChanged( int state )
+void ovQMainWindow::slotWritersCheckBoxStateChanged( int state )
 {
-  this->RestrictGraphFilter->SetAuthorsOnly( 0 != state );
+  this->RestrictGraphFilter->SetIncludeWriters( 0 != state );
   this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotGenderComboBoxCurrentIndexChanged( const QString& index )
+void ovQMainWindow::slotOthersCheckBoxStateChanged( int state )
 {
-  this->RestrictGraphFilter->SetGenderTypeRestriction(
-    ovRestrictGraphFilter::GenderTypeRestrictionFromString( index.toStdString().c_str() ) );
+  this->RestrictGraphFilter->SetIncludeOthers( 0 != state );
   this->RenderGraph( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotWriterComboBoxCurrentIndexChanged( const QString& index )
+void ovQMainWindow::slotFemaleCheckBoxStateChanged( int state )
 {
-  this->RestrictGraphFilter->SetWriterTypeRestriction(
-    ovRestrictGraphFilter::WriterTypeRestrictionFromString( index.toStdString().c_str() ) );
+  this->RestrictGraphFilter->SetIncludeFemale( 0 != state );
+  this->RenderGraph( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotMaleCheckBoxStateChanged( int state )
+{
+  this->RestrictGraphFilter->SetIncludeMale( 0 != state );
+  this->RenderGraph( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotBRWTypeCheckBoxStateChanged( int state )
+{
+  this->RestrictGraphFilter->SetIncludeBRWType( 0 != state );
+  this->RenderGraph( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotWriterTypeCheckBoxStateChanged( int state )
+{
+  this->RestrictGraphFilter->SetIncludeWriterType( 0 != state );
+  this->RenderGraph( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotIBRTypeCheckBoxStateChanged( int state )
+{
+  this->RestrictGraphFilter->SetIncludeIBRType( 0 != state );
   this->RenderGraph( true );
 }
 
@@ -1396,7 +1441,8 @@ void ovQMainWindow::SetStartDate( const ovDate &date )
   // update the GUI
   ovString dateString;
   date.ToString( dateString );
-  this->ui->startLineEdit->setText( dateString.c_str() );
+  if( 0 == dateString.length() ) dateString = "612 BCE (default)";
+  this->ui->startDateLabel->setText( dateString.c_str() );
   
   // update the graph
   this->RestrictGraphFilter->SetStartDate( date );
@@ -1405,14 +1451,15 @@ void ovQMainWindow::SetStartDate( const ovDate &date )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotDateSpanSetPushButtonClicked()
+void ovQMainWindow::slotSetDateSpanPushButtonClicked()
 {
   ovQDateSpanDialog dialog( this );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select date span" ) );
+
   dialog.setDateSpan(
-    ovDate( this->ui->startLineEdit->text().toStdString().c_str() ),
-    ovDate( this->ui->endLineEdit->text().toStdString().c_str() ) );
+    *( this->RestrictGraphFilter->GetStartDate() ),
+    *( this->RestrictGraphFilter->GetEndDate() ) );
   
   if( QDialog::Accepted == dialog.exec() )
   {
@@ -1422,12 +1469,33 @@ void ovQMainWindow::slotDateSpanSetPushButtonClicked()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotClearDateSpanPushButtonClicked()
+{
+  this->SetStartDate( ovDate() );
+  this->SetEndDate( ovDate() );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::SetEndDate( const ovDate &date )
 {
+  // determine the year
+  time_t rawtime;
+  struct tm * timeinfo;
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  timeinfo->tm_year;
+  char year[10];
+  sprintf( year, "%d", 1900 + timeinfo->tm_year );
+
   // update the GUI
   ovString dateString;
   date.ToString( dateString );
-  this->ui->endLineEdit->setText( dateString.c_str() );
+  if( 0 == dateString.length() )
+  {
+    dateString = year;
+    dateString += " CE (default)";
+  }
+  this->ui->endDateLabel->setText( dateString.c_str() );
   
   // update the graph
   this->RestrictGraphFilter->SetEndDate( date );
@@ -1826,48 +1894,38 @@ ovString ovQMainWindow::GetAnnotationText()
   size_t pos;
   ovString annotation, startString, endString, textString, authorString;
 
-  int gender = this->RestrictGraphFilter->GetGenderTypeRestriction();
-  int type = this->RestrictGraphFilter->GetWriterTypeRestriction();
+  bool writers = this->RestrictGraphFilter->GetIncludeWriters();
+  bool others = this->RestrictGraphFilter->GetIncludeOthers();
+  bool female = this->RestrictGraphFilter->GetIncludeFemale();
+  bool male = this->RestrictGraphFilter->GetIncludeMale();
+  bool BRWType = this->RestrictGraphFilter->GetIncludeBRWType();
+  bool writerType = this->RestrictGraphFilter->GetIncludeWriterType();
+  bool IBRType = this->RestrictGraphFilter->GetIncludeIBRType();
   ovDate *startDate = this->RestrictGraphFilter->GetStartDate();
   startDate->ToString( startString );
-  // remove -00's
-  while( vtkstd::string::npos != ( pos = startString.rfind( "-00" ) ) )
-    startString = startString.substr( 0, pos );
   ovDate *endDate = this->RestrictGraphFilter->GetEndDate();
   endDate->ToString( endString );
-  // remove -00's
-  while( vtkstd::string::npos != ( pos = endString.rfind( "-00" ) ) )
-    endString = endString.substr( 0, pos );
   ovSearchPhrase *textPhrase = this->RestrictGraphFilter->GetTextSearchPhrase();
   if( textPhrase ) textString = textPhrase->ToString( true );
   ovSearchPhrase *authorPhrase = this->RestrictGraphFilter->GetAuthorSearchPhrase();
   if( authorPhrase ) authorString = authorPhrase->ToString( true );
   
-  if( ovRestrictGraphFilter::GenderTypeRestrictionMale == gender )
-    annotation += "male";
-  else if( ovRestrictGraphFilter::GenderTypeRestrictionFemale == gender )
-    annotation += "female";
-
-  if( ovRestrictGraphFilter::WriterTypeRestrictionAny == type )
-    annotation += 0 < annotation.length() ? " writers" : "all writers";
-  else
-  {
-    if( 0 < annotation.length() ) annotation += ", ";
-    
-    if( ovRestrictGraphFilter::WriterTypeRestrictionWriter == type )
-      annotation += "non-British writers";
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRW == type )
-      annotation += "British writers";
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionIBR == type )
-      annotation += "international British writers";
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrBRW == type )
-      annotation += "non-British and British writers";
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrIBR == type )
-      annotation += "non-British and international British writers";
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRWOrIBR == type )
-      annotation += "British and international British writers";
-  }
+  if( female && male ) annotation += "all";
+  else if( female ) annotation += "female";
+  else if( male ) annotation += "male";
   
+  if( BRWType && writerType && IBRType ) ; // no text
+  else if( BRWType && writerType ) annotation += " British and international";
+  else if( BRWType && IBRType ) annotation += " British and international-British";
+  else if( writerType && IBRType ) annotation += " international and international-British";
+  else if( BRWType ) annotation += " British";
+  else if( writerType ) annotation += " international";
+  else if( IBRType ) annotation += " international-British";
+
+  if( writers && others ) annotation += " writers and non-writers";
+  else if( writers ) annotation += " writers";
+  else if( others ) annotation += " non-writers";
+
   if( startDate->IsSet() && endDate->IsSet() )
     annotation += " alive between " + startString + " and " + endString;
   else if( startDate->IsSet() && !endDate->IsSet() )

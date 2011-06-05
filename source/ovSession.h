@@ -73,21 +73,33 @@ public:
   virtual ovString GetLayoutStrategy() { return this->LayoutStrategy; }
   virtual void SetLayoutStrategy( const ovString& );
 
-  // Description:
-  // Set/get the vertex style
-  vtkGetMacro( AuthorsOnly, int );
-  vtkSetMacro( AuthorsOnly, int );
-  vtkBooleanMacro( AuthorsOnly, int );
+  vtkGetMacro( IncludeWriters, int );
+  vtkSetMacro( IncludeWriters, int );
+  vtkBooleanMacro( IncludeWriters, int );
   
-  // Description:
-  // Set/get the gender type restriction
-  vtkGetMacro( GenderTypeRestriction, int );
-  vtkSetMacro( GenderTypeRestriction, int );
-
-  // Description:
-  // Set/get the writer type restriction
-  vtkGetMacro( WriterTypeRestriction, int );
-  vtkSetMacro( WriterTypeRestriction, int );
+  vtkGetMacro( IncludeOthers, int );
+  vtkSetMacro( IncludeOthers, int );
+  vtkBooleanMacro( IncludeOthers, int );
+  
+  vtkGetMacro( IncludeFemale, int );
+  vtkSetMacro( IncludeFemale, int );
+  vtkBooleanMacro( IncludeFemale, int );
+  
+  vtkGetMacro( IncludeMale, int );
+  vtkSetMacro( IncludeMale, int );
+  vtkBooleanMacro( IncludeMale, int );
+  
+  vtkGetMacro( IncludeBRWType, int );
+  vtkSetMacro( IncludeBRWType, int );
+  vtkBooleanMacro( IncludeBRWType, int );
+  
+  vtkGetMacro( IncludeWriterType, int );
+  vtkSetMacro( IncludeWriterType, int );
+  vtkBooleanMacro( IncludeWriterType, int );
+  
+  vtkGetMacro( IncludeIBRType, int );
+  vtkSetMacro( IncludeIBRType, int );
+  vtkBooleanMacro( IncludeIBRType, int );
   
   // Description:
   // Set/get the vertex size
@@ -158,9 +170,13 @@ protected:
   bool ShowAnnotation;
   int VertexStyle;
   ovString LayoutStrategy;
-  bool AuthorsOnly;
-  int GenderTypeRestriction;
-  int WriterTypeRestriction;
+  bool IncludeWriters;
+  bool IncludeOthers;
+  bool IncludeFemale;
+  bool IncludeMale;
+  bool IncludeBRWType;
+  bool IncludeWriterType;
+  bool IncludeIBRType;
   int VertexSize;
   int EdgeSize;
   double AuthorVertexColor[4];

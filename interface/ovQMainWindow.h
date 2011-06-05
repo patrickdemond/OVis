@@ -87,16 +87,21 @@ public slots:
   virtual void slotSaveSession();
   virtual void slotSaveSessionAs();
 
-  virtual void slotAuthorCheckBoxStateChanged( int );
-  virtual void slotGenderComboBoxCurrentIndexChanged( const QString& );
-  virtual void slotWriterComboBoxCurrentIndexChanged( const QString& );
+  virtual void slotWritersCheckBoxStateChanged( int );
+  virtual void slotOthersCheckBoxStateChanged( int );
+  virtual void slotFemaleCheckBoxStateChanged( int );
+  virtual void slotMaleCheckBoxStateChanged( int );
+  virtual void slotBRWTypeCheckBoxStateChanged( int );
+  virtual void slotWriterTypeCheckBoxStateChanged( int );
+  virtual void slotIBRTypeCheckBoxStateChanged( int );
   virtual void slotVertexSizeSliderValueChanged( int );
   virtual void slotEdgeSizeSliderValueChanged( int );
   virtual void slotAuthorVertexColorPushButtonClicked();
   virtual void slotAssociationVertexColorPushButtonClicked();
   virtual void slotTextSearchSetPushButtonClicked();
   virtual void slotAuthorSearchSetPushButtonClicked();
-  virtual void slotDateSpanSetPushButtonClicked();
+  virtual void slotSetDateSpanPushButtonClicked();
+  virtual void slotClearDateSpanPushButtonClicked();
   virtual void slotTagTreeCheckAllButtonClicked();
   virtual void slotTagTreeUnCheckAllButtonClicked();
   /* NOTE: Functionality removed by request

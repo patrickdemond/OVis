@@ -35,9 +35,33 @@ public:
   vtkTypeRevisionMacro( ovRestrictGraphFilter, vtkGraphAlgorithm );
   void PrintSelf( ostream& os, vtkIndent indent );
   
-  vtkSetMacro( AuthorsOnly, int );
-  vtkGetMacro( AuthorsOnly, int );
-  vtkBooleanMacro( AuthorsOnly, int );
+  vtkSetMacro( IncludeWriters, int );
+  vtkGetMacro( IncludeWriters, int );
+  vtkBooleanMacro( IncludeWriters, int );
+
+  vtkSetMacro( IncludeOthers, int );
+  vtkGetMacro( IncludeOthers, int );
+  vtkBooleanMacro( IncludeOthers, int );
+
+  vtkSetMacro( IncludeFemale, int );
+  vtkGetMacro( IncludeFemale, int );
+  vtkBooleanMacro( IncludeFemale, int );
+
+  vtkSetMacro( IncludeMale, int );
+  vtkGetMacro( IncludeMale, int );
+  vtkBooleanMacro( IncludeMale, int );
+
+  vtkSetMacro( IncludeBRWType, int );
+  vtkGetMacro( IncludeBRWType, int );
+  vtkBooleanMacro( IncludeBRWType, int );
+
+  vtkSetMacro( IncludeWriterType, int );
+  vtkGetMacro( IncludeWriterType, int );
+  vtkBooleanMacro( IncludeWriterType, int );
+
+  vtkSetMacro( IncludeIBRType, int );
+  vtkGetMacro( IncludeIBRType, int );
+  vtkBooleanMacro( IncludeIBRType, int );
 
   // Description:
   // Set/get the Pedigree array name
@@ -84,61 +108,6 @@ public:
   virtual ovString GetEdgeColorArrayName() { return this->EdgeColorArrayName; }
   virtual void SetEdgeColorArrayName( const ovString &name );
   
-  enum GenderTypeRestriction
-  {
-    GenderTypeRestrictionMale,
-    GenderTypeRestrictionFemale,
-    GenderTypeRestrictionAny
-  };
-
-  vtkSetClampMacro( GenderTypeRestriction, int, GenderTypeRestrictionMale, GenderTypeRestrictionAny );
-  vtkGetMacro( GenderTypeRestriction, int );
-
-  static int GenderTypeRestrictionFromString( const char *type )
-  {
-    return 0 == vtksys::SystemTools::Strucmp( "male", type )
-         ? GenderTypeRestrictionMale
-         : 0 == vtksys::SystemTools::Strucmp( "female", type )
-         ? GenderTypeRestrictionFemale
-         : GenderTypeRestrictionAny;
-  }
-
-  enum WriterTypeRestriction
-  {
-    WriterTypeRestrictionWriter,
-    WriterTypeRestrictionBRW,
-    WriterTypeRestrictionIBR,
-    WriterTypeRestrictionWriterOrBRW,
-    WriterTypeRestrictionWriterOrIBR,
-    WriterTypeRestrictionBRWOrIBR,
-    WriterTypeRestrictionAny
-  };
-
-  vtkSetClampMacro( WriterTypeRestriction, int, WriterTypeRestrictionWriter, WriterTypeRestrictionAny );
-  vtkGetMacro( WriterTypeRestriction, int );
-
-  static int WriterTypeRestrictionFromString( const char *type )
-  {
-    return 0 == vtksys::SystemTools::Strucmp( "writer", type )
-         ? WriterTypeRestrictionWriter
-         : 0 == vtksys::SystemTools::Strucmp( "brw", type ) ||
-           0 == vtksys::SystemTools::Strucmp( "brw writer", type )
-         ? WriterTypeRestrictionBRW
-         : 0 == vtksys::SystemTools::Strucmp( "ibr", type ) || 
-           0 == vtksys::SystemTools::Strucmp( "ibr writer", type )
-         ? WriterTypeRestrictionIBR
-         : 0 == vtksys::SystemTools::Strucmp( "writer or brw", type ) ||
-           0 == vtksys::SystemTools::Strucmp( "writerorbrw", type )
-         ? WriterTypeRestrictionWriterOrBRW
-         : 0 == vtksys::SystemTools::Strucmp( "writer or ibr", type ) ||
-           0 == vtksys::SystemTools::Strucmp( "writeroribr", type )
-         ? WriterTypeRestrictionWriterOrIBR
-         : 0 == vtksys::SystemTools::Strucmp( "brw or ibr", type ) ||
-           0 == vtksys::SystemTools::Strucmp( "brworibr", type )
-         ? WriterTypeRestrictionBRWOrIBR
-         : WriterTypeRestrictionAny;
-  }
-
   vtkGetObjectMacro( ActiveTags, vtkStringArray );
   virtual void SetActiveTags( vtkStringArray* );
   
@@ -174,9 +143,13 @@ protected:
   ovString WriterTypeArrayName;
   ovString EdgeColorArrayName;
 
-  int AuthorsOnly;
-  int GenderTypeRestriction;
-  int WriterTypeRestriction;
+  bool IncludeWriters;
+  bool IncludeOthers;
+  bool IncludeFemale;
+  bool IncludeMale;
+  bool IncludeBRWType;
+  bool IncludeWriterType;
+  bool IncludeIBRType;
   vtkStringArray *ActiveTags;
   ovSearchPhrase *TextSearchPhrase;
   ovSearchPhrase *AuthorSearchPhrase;

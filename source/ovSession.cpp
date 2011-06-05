@@ -36,9 +36,13 @@ ovSession::ovSession()
   this->ShowAnnotation = true;
   this->VertexStyle = 0;
   this->LayoutStrategy = "";
-  this->AuthorsOnly = false;
-  this->GenderTypeRestriction = 0;
-  this->WriterTypeRestriction = 0;
+  this->IncludeWriters = true;
+  this->IncludeOthers = true;
+  this->IncludeFemale = true;
+  this->IncludeMale = true;
+  this->IncludeBRWType = true;
+  this->IncludeWriterType = true;
+  this->IncludeIBRType = true;
   this->VertexSize = 0;
   this->EdgeSize = 0;
   this->TextSearchPhrase = "";
@@ -167,9 +171,13 @@ bool ovSession::operator == ( const ovSession &rhs ) const
       this->ShowAnnotation == rhs.ShowAnnotation &&
       this->VertexStyle == rhs.VertexStyle &&
       this->LayoutStrategy == rhs.LayoutStrategy &&
-      this->AuthorsOnly == rhs.AuthorsOnly &&
-      this->GenderTypeRestriction == rhs.GenderTypeRestriction &&
-      this->WriterTypeRestriction == rhs.WriterTypeRestriction &&
+      this->IncludeWriters == rhs.IncludeWriters &&
+      this->IncludeOthers == rhs.IncludeOthers &&
+      this->IncludeFemale == rhs.IncludeFemale &&
+      this->IncludeMale == rhs.IncludeMale &&
+      this->IncludeBRWType == rhs.IncludeBRWType &&
+      this->IncludeWriterType == rhs.IncludeWriterType &&
+      this->IncludeIBRType == rhs.IncludeIBRType &&
       this->VertexSize == rhs.VertexSize &&
       this->EdgeSize == rhs.EdgeSize &&
       this->AuthorVertexColor[0] == rhs.AuthorVertexColor[0] &&
@@ -219,9 +227,13 @@ void ovSession::DeepCopy( ovSession *copy )
   this->ShowAnnotation = copy->ShowAnnotation;
   this->VertexStyle = copy->VertexStyle;
   this->LayoutStrategy = copy->LayoutStrategy;
-  this->AuthorsOnly = copy->AuthorsOnly;
-  this->GenderTypeRestriction = copy->GenderTypeRestriction;
-  this->WriterTypeRestriction = copy->WriterTypeRestriction;
+  this->IncludeWriters = copy->IncludeWriters;
+  this->IncludeOthers = copy->IncludeOthers;
+  this->IncludeFemale = copy->IncludeFemale;
+  this->IncludeMale = copy->IncludeMale;
+  this->IncludeBRWType = copy->IncludeBRWType;
+  this->IncludeWriterType = copy->IncludeWriterType;
+  this->IncludeIBRType = copy->IncludeIBRType;
   this->VertexSize = copy->VertexSize;
   this->EdgeSize = copy->EdgeSize;
   this->TextSearchPhrase = copy->TextSearchPhrase;
@@ -272,9 +284,13 @@ void ovSession::PrintSelf( ostream &os, vtkIndent indent )
   os << indent << "ShowAnnotation = " << ( this->ShowAnnotation ? "true" : "false" ) << endl;
   os << indent << "VertexStyle = " << this->VertexStyle << "" << endl;
   os << indent << "LayoutStrategy = \"" << this->LayoutStrategy << "\"" << endl;
-  os << indent << "AuthorsOnly = " << ( this->AuthorsOnly ? "true" : "false" ) << endl;
-  os << indent << "GenderTypeRestriction = " << this->GenderTypeRestriction << "" << endl;
-  os << indent << "WriterTypeRestriction = " << this->WriterTypeRestriction << "" << endl;
+  os << indent << "IncludeWriters = " << ( this->IncludeWriters ? "true" : "false" ) << endl;
+  os << indent << "IncludeOthers = " << ( this->IncludeOthers ? "true" : "false" ) << endl;
+  os << indent << "IncludeFemale = " << ( this->IncludeFemale ? "true" : "false" ) << endl;
+  os << indent << "IncludeMale = " << ( this->IncludeMale ? "true" : "false" ) << endl;
+  os << indent << "IncludeBRWType = " << ( this->IncludeBRWType ? "true" : "false" ) << endl;
+  os << indent << "IncludeWriterType = " << ( this->IncludeWriterType ? "true" : "false" ) << endl;
+  os << indent << "IncludeIBRType = " << ( this->IncludeIBRType ? "true" : "false" ) << endl;
   os << indent << "VertexSize = " << this->VertexSize << "" << endl;
   os << indent << "EdgeSize = " << this->EdgeSize << "" << endl;
   os << indent << "AuthorVertexColor[4] = " << this->AuthorVertexColor[0] << ", "

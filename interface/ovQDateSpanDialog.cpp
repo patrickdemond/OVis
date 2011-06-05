@@ -234,7 +234,7 @@ ovQDateSpanDialog::ovQDateSpanDialog( QWidget* parent )
     new ovDatePeriod(
       "Postmodern Period (1963 to present)",
       ovDate( "1963-11-22" ),
-      ovDate( "9999-01-01" ) ) );
+      ovDate( "0--" ) ) );
   this->HistoricPeriodVector.push_back(
     new ovDatePeriod(
       "Second-Wave Feminism (1963-1990)",
@@ -371,7 +371,7 @@ ovQDateSpanDialog::ovQDateSpanDialog( QWidget* parent )
     new ovDatePeriod(
       "Elizabeth II 1952 - ",
       ovDate( "1952-02-06" ),
-      ovDate( "9999-01-01" ) ) );
+      ovDate( "0--" ) ) );
 
   // now add the periods to the combo boxes
   for( ovDatePeriodVector::iterator it = this->HistoricPeriodVector.begin();

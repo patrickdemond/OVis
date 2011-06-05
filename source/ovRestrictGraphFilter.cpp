@@ -43,9 +43,13 @@ vtkCxxSetObjectMacro( ovRestrictGraphFilter, AuthorSearchPhrase, ovSearchPhrase 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 ovRestrictGraphFilter::ovRestrictGraphFilter()
 {
-  this->AuthorsOnly = false;
-  this->GenderTypeRestriction = ovRestrictGraphFilter::GenderTypeRestrictionAny;
-  this->WriterTypeRestriction = ovRestrictGraphFilter::WriterTypeRestrictionAny;
+  this->IncludeWriters = true;
+  this->IncludeOthers = true;
+  this->IncludeFemale = true;
+  this->IncludeMale = true;
+  this->IncludeBRWType = true;
+  this->IncludeWriterType = true;
+  this->IncludeIBRType = true;
   this->ActiveTags = NULL;
   this->TextSearchPhrase = NULL;
   this->AuthorSearchPhrase = NULL;
@@ -500,63 +504,31 @@ int ovRestrictGraphFilter::RequestData(
 
     // STEP #2
     // make sure that the edge's two vertices are both to be included
-    bool sourceIsAuthor = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Source );
-    bool targetIsAuthor = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Target );
-    if( this->AuthorsOnly && ( !sourceIsAuthor || !targetIsAuthor ) ) continue;
+    bool sourceIsWriter = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Source );
+    bool targetIsWriter = ovOrlandoReader::WriterTypeNone != writerTypeArray->GetValue( e.Target );
+    if( !this->IncludeWriters && ( sourceIsWriter || targetIsWriter ) ) continue;
+    if( !this->IncludeOthers && ( !sourceIsWriter || !targetIsWriter ) ) continue;
 
-    int sourceGender = genderArray->GetValue( e.Source );
-    int targetGender = genderArray->GetValue( e.Target );
+    bool sourceFemale = ovOrlandoReader::GenderTypeFemale == genderArray->GetValue( e.Source );
+    bool targetFemale = ovOrlandoReader::GenderTypeFemale == genderArray->GetValue( e.Target );
+    if( !this->IncludeFemale && ( sourceFemale || targetFemale ) ) continue;
+
+    bool sourceMale = ovOrlandoReader::GenderTypeMale == genderArray->GetValue( e.Source );
+    bool targetMale = ovOrlandoReader::GenderTypeMale == genderArray->GetValue( e.Target );
+    if( !this->IncludeMale && ( sourceMale || targetMale ) ) continue;
+
+    bool sourceBRWType = ovOrlandoReader::WriterTypeBRW == writerTypeArray->GetValue( e.Source );
+    bool targetBRWType = ovOrlandoReader::WriterTypeBRW == writerTypeArray->GetValue( e.Target );
+    if( !this->IncludeBRWType && ( sourceBRWType || targetBRWType ) ) continue;
+
+    bool sourceWriterType = ovOrlandoReader::WriterTypeWriter == writerTypeArray->GetValue( e.Source );
+    bool targetWriterType = ovOrlandoReader::WriterTypeWriter == writerTypeArray->GetValue( e.Target );
+    if( !this->IncludeWriterType && ( sourceWriterType || targetWriterType ) ) continue;
     
-    if( ovRestrictGraphFilter::GenderTypeRestrictionMale == this->GenderTypeRestriction )
-    {
-      if( ovOrlandoReader::GenderTypeFemale == sourceGender ||
-          ovOrlandoReader::GenderTypeFemale == targetGender ) continue;
-    }
-    else if( ovRestrictGraphFilter::GenderTypeRestrictionFemale == this->GenderTypeRestriction )
-    {
-      if( ovOrlandoReader::GenderTypeMale == sourceGender ||
-          ovOrlandoReader::GenderTypeMale == targetGender ) continue;
-    }
-    
-    int sourceWriterType = writerTypeArray->GetValue( e.Source );
-    int targetWriterType = writerTypeArray->GetValue( e.Target );
-    if( ovRestrictGraphFilter::WriterTypeRestrictionWriter == this->WriterTypeRestriction )
-    {
-      if( ovOrlandoReader::WriterTypeBRW == sourceWriterType ||
-          ovOrlandoReader::WriterTypeIBR == sourceWriterType ||
-          ovOrlandoReader::WriterTypeBRW == targetWriterType ||
-          ovOrlandoReader::WriterTypeIBR == targetWriterType ) continue;
-    }
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRW == this->WriterTypeRestriction )
-    {
-      if( ovOrlandoReader::WriterTypeWriter == sourceWriterType ||
-          ovOrlandoReader::WriterTypeIBR == sourceWriterType ||
-          ovOrlandoReader::WriterTypeWriter == targetWriterType ||
-          ovOrlandoReader::WriterTypeIBR == targetWriterType ) continue;
-    }
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionIBR == this->WriterTypeRestriction )
-    {
-      if( ovOrlandoReader::WriterTypeWriter == sourceWriterType ||
-          ovOrlandoReader::WriterTypeBRW == sourceWriterType ||
-          ovOrlandoReader::WriterTypeWriter == targetWriterType ||
-          ovOrlandoReader::WriterTypeBRW == targetWriterType ) continue;
-    }
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionWriterOrBRW == this->WriterTypeRestriction )
-    {
-      if( ovOrlandoReader::WriterTypeIBR == sourceWriterType ||
-          ovOrlandoReader::WriterTypeIBR == targetWriterType ) continue;
-    }
-    else if( ovRestrictGraphFilter:: WriterTypeRestrictionWriterOrIBR == this->WriterTypeRestriction )
-    {
-      if( ovOrlandoReader::WriterTypeBRW == sourceWriterType ||
-          ovOrlandoReader::WriterTypeBRW == targetWriterType ) continue;
-    }
-    else if( ovRestrictGraphFilter::WriterTypeRestrictionBRWOrIBR == this->WriterTypeRestriction )
-    {
-      if( ovOrlandoReader::WriterTypeWriter == sourceWriterType ||
-          ovOrlandoReader::WriterTypeWriter == targetWriterType ) continue;
-    }
-    
+    bool sourceIBRType = ovOrlandoReader::WriterTypeIBR == writerTypeArray->GetValue( e.Source );
+    bool targetIBRType = ovOrlandoReader::WriterTypeIBR == writerTypeArray->GetValue( e.Target );
+    if( !this->IncludeIBRType && ( sourceIBRType || targetIBRType ) ) continue;
+
     // STEP #3
     // make sure both vertices are within the specified dates, if necessary
     if( this->StartDate.IsSet() || this->EndDate.IsSet() )

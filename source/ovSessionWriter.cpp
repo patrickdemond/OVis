@@ -56,9 +56,13 @@ void ovSessionWriter::WriteData()
     this->Write( "ShowAnnotation", input->GetShowAnnotation() );
     this->Write( "VertexStyle", input->GetVertexStyle() );
     this->Write( "LayoutStrategy", input->GetLayoutStrategy() );
-    this->Write( "AuthorsOnly", input->GetAuthorsOnly() );
-    this->Write( "GenderTypeRestriction", input->GetGenderTypeRestriction() );
-    this->Write( "WriterTypeRestriction", input->GetWriterTypeRestriction() );
+    this->Write( "IncludeWriters", input->GetIncludeWriters() );
+    this->Write( "IncludeOthers", input->GetIncludeOthers() );
+    this->Write( "IncludeFemale", input->GetIncludeFemale() );
+    this->Write( "IncludeMale", input->GetIncludeMale() );
+    this->Write( "IncludeBRWType", input->GetIncludeBRWType() );
+    this->Write( "IncludeWriterType", input->GetIncludeWriterType() );
+    this->Write( "IncludeIBRType", input->GetIncludeIBRType() );
     this->Write( "VertexSize", input->GetVertexSize() );
     this->Write( "EdgeSize", input->GetEdgeSize() );
     rgba = input->GetAuthorVertexColor();

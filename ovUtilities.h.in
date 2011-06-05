@@ -146,7 +146,11 @@ struct ovDate
   void ToString( ovString &dateString ) const
   {
     char buffer[64];
-    sprintf( buffer, this->year ? "%d-%02d-%02d" : "", this->year, this->month, this->day );
+    sprintf( buffer, 
+      this->year && this->month && this->day ? "%d-%02d-%02d CE" :
+      this->year && this->month ? "%d-%02d CE" :
+      this->year ? "%d CE" : "",
+      this->year, this->month, this->day );
     dateString = buffer;
   }
 
