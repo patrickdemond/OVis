@@ -98,8 +98,10 @@ public slots:
   virtual void slotEdgeSizeSliderValueChanged( int );
   virtual void slotAuthorVertexColorPushButtonClicked();
   virtual void slotAssociationVertexColorPushButtonClicked();
-  virtual void slotTextSearchSetPushButtonClicked();
-  virtual void slotAuthorSearchSetPushButtonClicked();
+  virtual void slotSetTextSearchPushButtonClicked();
+  virtual void slotClearTextSearchPushButtonClicked();
+  virtual void slotSetAuthorSearchPushButtonClicked();
+  virtual void slotClearAuthorSearchPushButtonClicked();
   virtual void slotSetDateSpanPushButtonClicked();
   virtual void slotClearDateSpanPushButtonClicked();
   virtual void slotTagTreeCheckAllButtonClicked();

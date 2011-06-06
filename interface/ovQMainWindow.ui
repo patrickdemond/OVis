@@ -249,7 +249,7 @@
              <widget class="QLabel" name="vertexSizeLabel">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
+                <horstretch>100</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
@@ -271,7 +271,7 @@
              <widget class="QLabel" name="edgeSizeLabel">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
+                <horstretch>100</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
@@ -293,7 +293,7 @@
              <widget class="QLabel" name="genderLabel">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
+                <horstretch>100</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
@@ -312,7 +312,7 @@
              <widget class="QLabel" name="writerLabel">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                <horstretch>0</horstretch>
+                <horstretch>100</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
@@ -329,6 +329,18 @@
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label_3">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>100</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="text">
                <string>Visible nodes:</string>
               </property>
@@ -357,6 +369,12 @@
               </item>
               <item>
                <widget class="QCheckBox" name="othersCheckBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
                  <string>other people</string>
                 </property>
@@ -387,6 +405,12 @@
               </item>
               <item>
                <widget class="QCheckBox" name="maleCheckBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
                  <string>male</string>
                 </property>
@@ -401,6 +425,12 @@
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
                <widget class="QCheckBox" name="BRWTypeCheckBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
                  <string>British</string>
                 </property>
@@ -411,6 +441,12 @@
               </item>
               <item>
                <widget class="QCheckBox" name="writerTypeCheckBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
                  <string>International</string>
                 </property>
@@ -421,8 +457,14 @@
               </item>
               <item>
                <widget class="QCheckBox" name="IBRTypeCheckBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
-                 <string>British-Intern.</string>
+                 <string>British/Int.</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -433,6 +475,18 @@
             </item>
             <item row="5" column="0">
              <widget class="QLabel" name="label_4">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>100</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="text">
                <string>Node Color:</string>
               </property>
@@ -440,6 +494,9 @@
             </item>
             <item row="5" column="1">
              <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <property name="spacing">
+               <number>0</number>
+              </property>
               <item>
                <widget class="QPushButton" name="associationVertexColorPushButton">
                 <property name="sizePolicy">
@@ -470,6 +527,18 @@
             </item>
             <item row="6" column="0">
              <widget class="QLabel" name="label_5">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>100</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="text">
                <string>Date Range:</string>
               </property>
@@ -608,6 +677,9 @@
         </item>
         <item>
          <layout class="QVBoxLayout" name="searchRestrictionsLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -627,67 +699,167 @@
            </widget>
           </item>
           <item>
-           <layout class="QGridLayout" name="searchRestrictionsGridLayout">
+           <layout class="QVBoxLayout" name="verticalLayout">
             <property name="topMargin">
              <number>0</number>
             </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_18">
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>60</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Text:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="textSearchLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>(none set)</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_20">
             <property name="spacing">
              <number>0</number>
             </property>
-            <item row="0" column="0">
-             <widget class="QLabel" name="textSearchLabel">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="setTextSearchPushButton">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
               <property name="minimumSize">
                <size>
-                <width>50</width>
+                <width>60</width>
                 <height>0</height>
                </size>
               </property>
               <property name="text">
-               <string>Text</string>
+               <string>set</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
+            <item>
+             <widget class="QPushButton" name="clearTextSearchPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>clear</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_21">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_9">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Author:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QLabel" name="authorSearchLabel">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
               <property name="minimumSize">
                <size>
-                <width>50</width>
-                <height>0</height>
+                <width>0</width>
+                <height>30</height>
                </size>
               </property>
               <property name="text">
-               <string>Author</string>
+               <string>(none set)</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="textSearchLineEdit">
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLineEdit" name="authorSearchLineEdit">
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QPushButton" name="textSearchSetPushButton">
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_22">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="setAuthorSearchPushButton">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -696,31 +868,38 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>100</width>
+                <width>70</width>
                 <height>0</height>
                </size>
               </property>
               <property name="text">
-               <string>Set</string>
+               <string>set</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="QPushButton" name="authorSearchSetPushButton">
+            <item>
+             <widget class="QPushButton" name="clearAuthorSearchPushButton">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
               <property name="minimumSize">
                <size>
-                <width>100</width>
+                <width>60</width>
                 <height>0</height>
                </size>
               </property>
               <property name="text">
-               <string>Set</string>
+               <string>clear</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>
@@ -788,7 +967,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="tagLinkLabel">
               <property name="minimumSize">
                <size>
                 <width>0</width>
@@ -1423,10 +1602,6 @@
   <tabstop>authorVertexColorPushButton</tabstop>
   <tabstop>setDateSpanPushButton</tabstop>
   <tabstop>clearDateSpanPushButton</tabstop>
-  <tabstop>textSearchLineEdit</tabstop>
-  <tabstop>textSearchSetPushButton</tabstop>
-  <tabstop>authorSearchLineEdit</tabstop>
-  <tabstop>authorSearchSetPushButton</tabstop>
   <tabstop>tagTreeWidget</tabstop>
   <tabstop>tagTreeCheckAllButton</tabstop>
   <tabstop>tagTreeUnCheckAllButton</tabstop>

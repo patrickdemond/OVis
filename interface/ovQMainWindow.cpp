@@ -262,12 +262,16 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->SnapshotMagnification = 1;
   this->CurrentDataFileName = "";
   this->CurrentSessionFileName = "";
-  this->CurrentLayoutStrategy = "Clustering2D";
+  this->CurrentLayoutStrategy = "SpanTree";
   this->CustomAnnotationText = "";
   this->Session = vtkSmartPointer< ovSession >::New();
   
   this->ui = new Ui_ovQMainWindow;
   this->ui->setupUi( this );
+  
+  // make the tag link
+  this->ui->tagLinkLabel->setOpenExternalLinks( true );
+  this->ui->tagLinkLabel->setText( "<a href=\"http://medusa.arts.ualberta.ca/testing/protected/svDocumentation?formname=t&d_id=ABOUTTHETAGS\">link type (tag) documentation</a>" );
 
   // connect the file menu items
   QObject::connect(
@@ -590,11 +594,17 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   
   // set up the search restriction widgets
   QObject::connect(
-    this->ui->textSearchSetPushButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotTextSearchSetPushButtonClicked() ) );
+    this->ui->setTextSearchPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotSetTextSearchPushButtonClicked() ) );
   QObject::connect(
-    this->ui->authorSearchSetPushButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotAuthorSearchSetPushButtonClicked() ) );
+    this->ui->clearTextSearchPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotClearTextSearchPushButtonClicked() ) );
+  QObject::connect(
+    this->ui->setAuthorSearchPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotSetAuthorSearchPushButtonClicked() ) );
+  QObject::connect(
+    this->ui->clearAuthorSearchPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( slotClearAuthorSearchPushButtonClicked() ) );
 
   // set up the date restriction widgets
   QObject::connect(
@@ -1377,7 +1387,7 @@ void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
 void ovQMainWindow::SetTextSearchPhrase( ovSearchPhrase *phrase )
 {
   // update the GUI
-  this->ui->textSearchLineEdit->setText( phrase->ToString().c_str() );
+  this->ui->textSearchLabel->setText( phrase ? phrase->ToString().c_str() : "(none set)" );
   
   // update the graph
   this->RestrictGraphFilter->SetTextSearchPhrase( phrase );
@@ -1389,7 +1399,7 @@ void ovQMainWindow::SetTextSearchPhrase( ovSearchPhrase *phrase )
 void ovQMainWindow::SetAuthorSearchPhrase( ovSearchPhrase *phrase )
 {
   // update the GUI
-  this->ui->authorSearchLineEdit->setText( phrase->ToString().c_str() );
+  this->ui->authorSearchLabel->setText( phrase ? phrase->ToString().c_str() : "(none set)" );
   
   // update the graph
   this->RestrictGraphFilter->SetAuthorSearchPhrase( phrase );
@@ -1398,41 +1408,53 @@ void ovQMainWindow::SetAuthorSearchPhrase( ovSearchPhrase *phrase )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotTextSearchSetPushButtonClicked()
+void ovQMainWindow::slotSetTextSearchPushButtonClicked()
 {
   ovQSearchDialog dialog( this, true );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select text search" ) );
-
-  vtkSmartPointer< ovSearchPhrase > phrase = vtkSmartPointer< ovSearchPhrase >::New();
-  phrase->Parse( this->ui->textSearchLineEdit->text().toStdString().c_str() );
+  
+  ovSearchPhrase *phrase = this->RestrictGraphFilter->GetTextSearchPhrase();
   dialog.setSearchPhrase( phrase );
   
   if( QDialog::Accepted == dialog.exec() )
   {
     // update the text search from the dialog
+    vtkSmartPointer< ovSearchPhrase > phrase = vtkSmartPointer< ovSearchPhrase >::New();
     dialog.getSearchPhrase( phrase );
     this->SetTextSearchPhrase( phrase );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotAuthorSearchSetPushButtonClicked()
+void ovQMainWindow::slotClearTextSearchPushButtonClicked()
+{
+  this->SetTextSearchPhrase( NULL );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotSetAuthorSearchPushButtonClicked()
 {
   ovQSearchDialog dialog( this, false );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select author search" ) );
   
-  vtkSmartPointer< ovSearchPhrase > phrase = vtkSmartPointer< ovSearchPhrase >::New();
-  phrase->Parse( this->ui->authorSearchLineEdit->text().toStdString().c_str() );
+  ovSearchPhrase *phrase = this->RestrictGraphFilter->GetTextSearchPhrase();
   dialog.setSearchPhrase( phrase );
   
   if( QDialog::Accepted == dialog.exec() )
   {
     // update the author search from the dialog
+    vtkSmartPointer< ovSearchPhrase > phrase = vtkSmartPointer< ovSearchPhrase >::New();
     dialog.getSearchPhrase( phrase );
     this->SetAuthorSearchPhrase( phrase );
   }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotClearAuthorSearchPushButtonClicked()
+{
+  this->SetAuthorSearchPhrase( NULL );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
