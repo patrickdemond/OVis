@@ -58,7 +58,7 @@ public:
   virtual void SetCustomAnnotationText( const ovString& );
 
   // Description:
-  // Set/get the vertex style
+  // Set/get the annotation visibility
   vtkGetMacro( ShowAnnotation, int );
   vtkSetMacro( ShowAnnotation, int );
   vtkBooleanMacro( ShowAnnotation, int );
@@ -127,6 +127,12 @@ public:
   virtual void SetTextSearchPhrase( const ovString& );
 
   // Description:
+  // Set/get whether the text search is narrow
+  vtkGetMacro( TextSearchNarrow, int );
+  vtkSetMacro( TextSearchNarrow, int );
+  vtkBooleanMacro( TextSearchNarrow, int );
+  
+  // Description:
   // Set/get the text search phrase
   virtual ovString GetAuthorSearchPhrase() { return this->AuthorSearchPhrase; }
   virtual void SetAuthorSearchPhrase( const ovString& );
@@ -182,6 +188,7 @@ protected:
   double AuthorVertexColor[4];
   double AssociationVertexColor[4];
   ovString TextSearchPhrase;
+  bool TextSearchNarrow;
   ovString AuthorSearchPhrase;
   ovDate StartDateRestriction;
   ovDate EndDateRestriction;

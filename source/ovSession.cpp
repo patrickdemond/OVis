@@ -46,6 +46,7 @@ ovSession::ovSession()
   this->VertexSize = 0;
   this->EdgeSize = 0;
   this->TextSearchPhrase = "";
+  this->TextSearchNarrow = false;
   this->AuthorSearchPhrase = "";
   this->Camera = vtkCamera::New();
 }
@@ -189,6 +190,7 @@ bool ovSession::operator == ( const ovSession &rhs ) const
       this->AssociationVertexColor[2] == rhs.AssociationVertexColor[2] &&
       this->AssociationVertexColor[3] == rhs.AssociationVertexColor[3] &&
       this->TextSearchPhrase == rhs.TextSearchPhrase &&
+      this->TextSearchNarrow == rhs.TextSearchNarrow &&
       this->AuthorSearchPhrase == rhs.AuthorSearchPhrase &&
       this->StartDateRestriction == rhs.StartDateRestriction &&
       this->EndDateRestriction == rhs.EndDateRestriction &&
@@ -237,6 +239,7 @@ void ovSession::DeepCopy( ovSession *copy )
   this->VertexSize = copy->VertexSize;
   this->EdgeSize = copy->EdgeSize;
   this->TextSearchPhrase = copy->TextSearchPhrase;
+  this->TextSearchNarrow = copy->TextSearchNarrow;
   this->AuthorSearchPhrase = copy->AuthorSearchPhrase;
   this->StartDateRestriction = copy->StartDateRestriction;
   this->EndDateRestriction = copy->EndDateRestriction;
@@ -302,6 +305,7 @@ void ovSession::PrintSelf( ostream &os, vtkIndent indent )
                << this->AssociationVertexColor[2] << ", "
                << this->AssociationVertexColor[3] << endl;
   os << indent << "TextSearchPhrase = \"" << this->TextSearchPhrase << "\"" << endl;
+  os << indent << "TextSearchNarrow = " << ( this->TextSearchNarrow ? "true" : "false" ) << endl;
   os << indent << "AuthorSearchPhrase = \"" << this->AuthorSearchPhrase << "\"" << endl;
   this->StartDateRestriction.ToString( date );
   os << indent << "StartDateRestriction = " << date << endl;

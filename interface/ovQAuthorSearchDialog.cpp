@@ -1,39 +1,39 @@
 /*=========================================================================
 
   Program:  ovis (OrlandoVision)
-  Module:   ovQSearchDialog.cpp
+  Module:   ovQAuthorSearchDialog.cpp
   Language: C++
 
   Author: Patrick Emond <emondpd@mcmaster.ca>
 
 =========================================================================*/
-#include "ovQSearchDialog.h"
+#include "ovQAuthorSearchDialog.h"
 
-#include "ui_ovQSearchDialog.h"
+#include "ui_ovQAuthorSearchDialog.h"
 #include "source/ovSearchPhrase.h"
 
 #include <vtkstd/algorithm>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovQSearchDialog::ovQSearchDialog( QWidget* parent, bool stem )
+ovQAuthorSearchDialog::ovQAuthorSearchDialog( QWidget* parent, bool stem )
   : QDialog( parent )
 {
-  this->ui = new Ui_ovQSearchDialog;
+  this->ui = new Ui_ovQAuthorSearchDialog;
   this->ui->setupUi( this );
   this->useStemColumn = stem;
   
   if( this->useStemColumn )
     this->ui->termTableWidget->setColumnWidth(
-      this->getColumnIndex( ovQSearchDialog::StemColumn ), 68 );
+      this->getColumnIndex( ovQAuthorSearchDialog::StemColumn ), 68 );
   // if columns move around the 0 needs to be changed
   else this->ui->termTableWidget->removeColumn( 0 );
 
   this->ui->termTableWidget->setColumnWidth(
-    this->getColumnIndex( ovQSearchDialog::AndColumn ), 68 );
+    this->getColumnIndex( ovQAuthorSearchDialog::AndColumn ), 68 );
   this->ui->termTableWidget->setColumnWidth(
-    this->getColumnIndex( ovQSearchDialog::NotColumn ), 68 );
+    this->getColumnIndex( ovQAuthorSearchDialog::NotColumn ), 68 );
   this->ui->termTableWidget->setColumnWidth(
-    this->getColumnIndex( ovQSearchDialog::TermColumn ), this->useStemColumn ? 425 : 493 );
+    this->getColumnIndex( ovQAuthorSearchDialog::TermColumn ), this->useStemColumn ? 425 : 493 );
   
   QObject::connect(
     this->ui->termTableWidget, SIGNAL( cellClicked ( int, int ) ),
@@ -53,22 +53,22 @@ ovQSearchDialog::ovQSearchDialog( QWidget* parent, bool stem )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-ovQSearchDialog::~ovQSearchDialog()
+ovQAuthorSearchDialog::~ovQAuthorSearchDialog()
 {
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int ovQSearchDialog::getColumnIndex( int column )
+int ovQAuthorSearchDialog::getColumnIndex( int column )
 {
-  if( ovQSearchDialog::StemColumn == column ) return this->useStemColumn ? 0 : -1;
-  else if( ovQSearchDialog::AndColumn == column ) return this->useStemColumn ? 1 : 0;
-  else if( ovQSearchDialog::NotColumn == column ) return this->useStemColumn ? 2 : 1;
-  else if( ovQSearchDialog::TermColumn == column ) return this->useStemColumn ? 3 : 2;
+  if( ovQAuthorSearchDialog::StemColumn == column ) return this->useStemColumn ? 0 : -1;
+  else if( ovQAuthorSearchDialog::AndColumn == column ) return this->useStemColumn ? 1 : 0;
+  else if( ovQAuthorSearchDialog::NotColumn == column ) return this->useStemColumn ? 2 : 1;
+  else if( ovQAuthorSearchDialog::TermColumn == column ) return this->useStemColumn ? 3 : 2;
   else return -1;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQSearchDialog::getSearchPhrase( ovSearchPhrase *phrase )
+void ovQAuthorSearchDialog::getSearchPhrase( ovSearchPhrase *phrase )
 {
   if( NULL == phrase ) return;
   phrase->Clear();
@@ -81,18 +81,18 @@ void ovQSearchDialog::getSearchPhrase( ovSearchPhrase *phrase )
     ovSearchTerm searchTerm;
     if( this->useStemColumn )
     {
-      column = this->getColumnIndex( ovQSearchDialog::StemColumn );
+      column = this->getColumnIndex( ovQAuthorSearchDialog::StemColumn );
       searchTerm.stemming = "YES" == this->ui->termTableWidget->item( row, column )->text();
     }
     else
     {
       searchTerm.stemming = false;
     }
-    column = this->getColumnIndex( ovQSearchDialog::AndColumn );
+    column = this->getColumnIndex( ovQAuthorSearchDialog::AndColumn );
     searchTerm.andLogic = "AND" == this->ui->termTableWidget->item( row, column )->text();
-    column = this->getColumnIndex( ovQSearchDialog::NotColumn );
+    column = this->getColumnIndex( ovQAuthorSearchDialog::NotColumn );
     searchTerm.notLogic = "NOT" == this->ui->termTableWidget->item( row, column )->text();
-    column = this->getColumnIndex( ovQSearchDialog::TermColumn );
+    column = this->getColumnIndex( ovQAuthorSearchDialog::TermColumn );
     searchTerm.term = this->ui->termTableWidget->item( row, column )->text().toStdString();
     
     phrase->Add( searchTerm );
@@ -102,7 +102,7 @@ void ovQSearchDialog::getSearchPhrase( ovSearchPhrase *phrase )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQSearchDialog::setSearchPhrase( ovSearchPhrase *search )
+void ovQAuthorSearchDialog::setSearchPhrase( ovSearchPhrase *search )
 {
   // clean out the table widget
   this->ui->termTableWidget->clearContents();
@@ -126,53 +126,53 @@ void ovQSearchDialog::setSearchPhrase( ovSearchPhrase *search )
       item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
       item->setFlags( Qt::ItemIsEnabled );
       this->ui->termTableWidget->setItem(
-        row, this->getColumnIndex( ovQSearchDialog::StemColumn ), item );
+        row, this->getColumnIndex( ovQAuthorSearchDialog::StemColumn ), item );
     }
 
     item = new QTableWidgetItem( 0 == row ? "" : term->andLogic ? "AND" : "OR" );
     item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     item->setFlags( Qt::ItemIsEnabled );
     this->ui->termTableWidget->setItem(
-      row, this->getColumnIndex( ovQSearchDialog::AndColumn ), item );
+      row, this->getColumnIndex( ovQAuthorSearchDialog::AndColumn ), item );
 
     item = new QTableWidgetItem( term->notLogic ? "NOT" : "" );
     item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     item->setFlags( Qt::ItemIsEnabled );
     this->ui->termTableWidget->setItem(
-      row, this->getColumnIndex( ovQSearchDialog::NotColumn ), item );
+      row, this->getColumnIndex( ovQAuthorSearchDialog::NotColumn ), item );
     
     item = new QTableWidgetItem( term->term.c_str() );
     item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
     this->ui->termTableWidget->setItem(
-      row, this->getColumnIndex( ovQSearchDialog::TermColumn ), item );
+      row, this->getColumnIndex( ovQAuthorSearchDialog::TermColumn ), item );
   
     row++;
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQSearchDialog::slotTermTableWidgetCellClicked( int row, int column )
+void ovQAuthorSearchDialog::slotTermTableWidgetCellClicked( int row, int column )
 {
-  if( this->getColumnIndex( ovQSearchDialog::TermColumn ) == column ) return;
+  if( this->getColumnIndex( ovQAuthorSearchDialog::TermColumn ) == column ) return;
   
   QTableWidgetItem *item = this->ui->termTableWidget->item( row, column );
   
-  if( this->useStemColumn && this->getColumnIndex( ovQSearchDialog::StemColumn ) == column )
+  if( this->useStemColumn && this->getColumnIndex( ovQAuthorSearchDialog::StemColumn ) == column )
   {
     item->setText( "YES" == item->text() ? "NO" : "YES" );
   }
-  else if( this->getColumnIndex( ovQSearchDialog::AndColumn ) == column && 0 != row )
+  else if( this->getColumnIndex( ovQAuthorSearchDialog::AndColumn ) == column && 0 != row )
   {
     item->setText( "AND" == item->text() ? "OR" : "AND" );
   }
-  else if( this->getColumnIndex( ovQSearchDialog::NotColumn ) == column )
+  else if( this->getColumnIndex( ovQAuthorSearchDialog::NotColumn ) == column )
   {
     item->setText( "NOT" == item->text() ? "" : "NOT" );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQSearchDialog::slotAddPushButton()
+void ovQAuthorSearchDialog::slotAddPushButton()
 {
   int row = this->ui->termTableWidget->rowCount();
   this->ui->termTableWidget->insertRow( row );
@@ -185,29 +185,29 @@ void ovQSearchDialog::slotAddPushButton()
     item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     item->setFlags( Qt::ItemIsEnabled );
     this->ui->termTableWidget->setItem(
-      row, this->getColumnIndex( ovQSearchDialog::StemColumn ), item );
+      row, this->getColumnIndex( ovQAuthorSearchDialog::StemColumn ), item );
   }
 
   item = new QTableWidgetItem( 0 == row ? "" : "AND" );
   item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
   item->setFlags( Qt::ItemIsEnabled );
   this->ui->termTableWidget->setItem(
-    row, this->getColumnIndex( ovQSearchDialog::AndColumn ), item );
+    row, this->getColumnIndex( ovQAuthorSearchDialog::AndColumn ), item );
 
   item = new QTableWidgetItem( "" );
   item->setTextAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
   item->setFlags( Qt::ItemIsEnabled );
   this->ui->termTableWidget->setItem(
-    row, this->getColumnIndex( ovQSearchDialog::NotColumn ), item );
+    row, this->getColumnIndex( ovQAuthorSearchDialog::NotColumn ), item );
   
   item = new QTableWidgetItem( "" );
   item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsEditable );
   this->ui->termTableWidget->setItem(
-    row, this->getColumnIndex( ovQSearchDialog::TermColumn ), item );
+    row, this->getColumnIndex( ovQAuthorSearchDialog::TermColumn ), item );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQSearchDialog::slotRemovePushButton()
+void ovQAuthorSearchDialog::slotRemovePushButton()
 {
   this->ui->termTableWidget->removeRow( this->ui->termTableWidget->currentRow() );
 }

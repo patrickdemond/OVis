@@ -1,5 +1,5 @@
-#ifndef __ovQSearchDialog_h
-#define __ovQSearchDialog_h
+#ifndef __ovQTextSearchDialog_h
+#define __ovQTextSearchDialog_h
 
 #include <QDialog>
 
@@ -7,22 +7,25 @@
 
 #include <QtCore/qstring.h>
 
-class Ui_ovQSearchDialog;
+class Ui_ovQTextSearchDialog;
 class ovSearchPhrase;
 
-class ovQSearchDialog : public QDialog
+class ovQTextSearchDialog : public QDialog
 {
   Q_OBJECT
 
 public:
   //constructor
-  ovQSearchDialog( QWidget* parent = 0, bool stem = false );
+  ovQTextSearchDialog( QWidget* parent = 0, bool stem = false );
   //destructor
-  ~ovQSearchDialog();
+  ~ovQTextSearchDialog();
   
   // get/set search phrase
   void getSearchPhrase( ovSearchPhrase *search );
   void setSearchPhrase( ovSearchPhrase *search );
+
+  bool isNarrow();
+  void setNarrow( bool );
 
 public slots:
   //event functions
@@ -46,7 +49,7 @@ protected slots:
 
 private:
   // Designer form
-  Ui_ovQSearchDialog *ui;
+  Ui_ovQTextSearchDialog *ui;
 };
 
 #endif

@@ -52,6 +52,7 @@ ovRestrictGraphFilter::ovRestrictGraphFilter()
   this->IncludeIBRType = true;
   this->ActiveTags = NULL;
   this->TextSearchPhrase = NULL;
+  this->TextSearchNarrow = false;
   this->AuthorSearchPhrase = NULL;
   
   // default array names
@@ -570,20 +571,17 @@ int ovRestrictGraphFilter::RequestData(
       }
     }
     
-    // if we are doing a text search, make sure this edge has content that matches the search
     bool addEdge = false;
     if( 0 <= matchIndex )
     {
-      if( this->TextSearchPhrase && this->TextSearchPhrase->GetNumberOfSearchTerms() )
-      {
-        addEdge = this->TextSearchPhrase->Find(
-          contentArray->GetValue( e.Id ), stemmedContentArray->GetValue( e.Id ) );
-      }
-      else
-      {
-        addEdge = true;
-      }
-      
+      // if we are doing a narrow text search, make sure this edge has content that matches the search
+      bool addEdge = this->TextSearchPhrase &&
+                     this->TextSearchNarrow &&
+                     this->TextSearchPhrase->GetNumberOfSearchTerms()
+                   ? this->TextSearchPhrase->Find(
+                       contentArray->GetValue( e.Id ), stemmedContentArray->GetValue( e.Id ) )
+                   : true;
+
       if( addEdge )
       {
         // now add the edge

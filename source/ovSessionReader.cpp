@@ -225,6 +225,12 @@ int ovSessionReader::ProcessRequest(
           output->SetTextSearchPhrase( string );
         }
         // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "TextSearchNarrow", this->CurrentNode.Name ) )
+        {
+          this->ReadInt( intVal );
+          output->SetTextSearchNarrow( intVal );
+        }
+        // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "AuthorSearchPhrase", this->CurrentNode.Name ) )
         {
           this->ReadString( string );

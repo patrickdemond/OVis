@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ovQSearchDialog</class>
- <widget class="QDialog" name="ovQSearchDialog">
+ <class>ovQTextSearchDialog</class>
+ <widget class="QDialog" name="ovQTextSearchDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -33,9 +33,9 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>30</y>
+     <y>60</y>
      <width>651</width>
-     <height>261</height>
+     <height>231</height>
     </rect>
    </property>
    <column>
@@ -94,13 +94,42 @@
     <string>Remove</string>
    </property>
   </widget>
+  <widget class="QRadioButton" name="broadRadioButton">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>181</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>broad (show all links)</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="narrowRadioButton">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>30</y>
+     <width>301</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>narrow (show matching links only)</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ovQSearchDialog</receiver>
+   <receiver>ovQTextSearchDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -116,7 +145,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ovQSearchDialog</receiver>
+   <receiver>ovQTextSearchDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

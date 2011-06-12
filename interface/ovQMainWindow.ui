@@ -1063,10 +1063,10 @@
     </property>
     <widget class="QMenu" name="menuViewSetVertexStyle">
      <property name="statusTip">
-      <string>Select the vertex style</string>
+      <string>Select the node style</string>
      </property>
      <property name="title">
-      <string>Set Vertex Style</string>
+      <string>Set Node Style</string>
      </property>
      <addaction name="actionSetVertexStyleToNone"/>
      <addaction name="actionSetVertexStyleToVertex"/>
@@ -1160,7 +1160,7 @@
     <string>None</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to none</string>
+    <string>Set the node style to none</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToVertex">
@@ -1171,10 +1171,10 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Vertex</string>
+    <string>Node</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to vertex</string>
+    <string>Set the node style to vertex</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToDash">
@@ -1185,7 +1185,7 @@
     <string>Dash</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to dash</string>
+    <string>Set the node style to dash</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToCross">
@@ -1196,7 +1196,7 @@
     <string>Cross</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to cross</string>
+    <string>Set the node style to cross</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToThickCross">
@@ -1207,7 +1207,7 @@
     <string>Thick Cross</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to thick cross</string>
+    <string>Set the node style to thick cross</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToTriangle">
@@ -1218,7 +1218,7 @@
     <string>Triangle</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to triangle</string>
+    <string>Set the node style to triangle</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToSquare">
@@ -1229,7 +1229,7 @@
     <string>Square</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to square</string>
+    <string>Set the node style to square</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToCircle">
@@ -1240,7 +1240,7 @@
     <string>Circle</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to circle</string>
+    <string>Set the node style to circle</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToDiamond">
@@ -1251,7 +1251,7 @@
     <string>Diamond</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to diamond</string>
+    <string>Set the node style to diamond</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToArrow">
@@ -1262,7 +1262,7 @@
     <string>Arrow</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to arrow</string>
+    <string>Set the node style to arrow</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToThickArrow">
@@ -1273,7 +1273,7 @@
     <string>Thick Arrow</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to thick arrow</string>
+    <string>Set the node style to thick arrow</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToHookedArrow">
@@ -1284,7 +1284,7 @@
     <string>Hooked Arrow</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to hooked arrow</string>
+    <string>Set the node style to hooked arrow</string>
    </property>
   </action>
   <action name="actionSetVertexStyleToEdgeArrow">
@@ -1295,7 +1295,7 @@
     <string>Edge Arrow</string>
    </property>
    <property name="statusTip">
-    <string>Set the vertex style to edge arrow</string>
+    <string>Set the node style to edge arrow</string>
    </property>
   </action>
   <action name="actionExit">

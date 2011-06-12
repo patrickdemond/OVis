@@ -140,7 +140,7 @@ protected:
   virtual void SetEdgeSize( int );
   virtual void SetAuthorVertexColor( double rgba[4] );
   virtual void SetAssociationVertexColor( double rgba[4] );
-  virtual void SetTextSearchPhrase( ovSearchPhrase* );
+  virtual void SetTextSearchPhrase( ovSearchPhrase*, bool narrow = false );
   virtual void SetAuthorSearchPhrase( ovSearchPhrase* );
   virtual void SetStartDate( const ovDate& );
   virtual void SetEndDate( const ovDate& );

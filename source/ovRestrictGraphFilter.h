@@ -114,6 +114,10 @@ public:
   vtkGetObjectMacro( TextSearchPhrase, ovSearchPhrase );
   virtual void SetTextSearchPhrase( ovSearchPhrase* );
 
+  vtkSetMacro( TextSearchNarrow, int );
+  vtkGetMacro( TextSearchNarrow, int );
+  vtkBooleanMacro( TextSearchNarrow, int );
+
   vtkGetObjectMacro( AuthorSearchPhrase, ovSearchPhrase );
   virtual void SetAuthorSearchPhrase( ovSearchPhrase* );
 
@@ -152,6 +156,7 @@ protected:
   bool IncludeIBRType;
   vtkStringArray *ActiveTags;
   ovSearchPhrase *TextSearchPhrase;
+  bool TextSearchNarrow;
   ovSearchPhrase *AuthorSearchPhrase;
   ovDate StartDate;
   ovDate EndDate;

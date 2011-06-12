@@ -717,6 +717,9 @@
   <tabstop>startYearLineEdit</tabstop>
   <tabstop>startMonthComboBox</tabstop>
   <tabstop>startDayComboBox</tabstop>
+  <tabstop>endYearLineEdit</tabstop>
+  <tabstop>endMonthComboBox</tabstop>
+  <tabstop>endDayComboBox</tabstop>
   <tabstop>historicDateComboBox</tabstop>
   <tabstop>monarchDateComboBox</tabstop>
   <tabstop>buttonBox</tabstop>

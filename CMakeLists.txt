@@ -37,7 +37,8 @@ SET( OVIS_SOURCE
   interface/ovQDateDialog.cpp
   interface/ovQDateSpanDialog.cpp
   interface/ovQMainWindow.cpp
-  interface/ovQSearchDialog.cpp
+  interface/ovQTextSearchDialog.cpp
+  interface/ovQAuthorSearchDialog.cpp
 )
 
 SET_SOURCE_FILES_PROPERTIES(
@@ -50,14 +51,16 @@ SET( OVIS_UIS
   interface/ovQDateDialog.ui
   interface/ovQDateSpanDialog.ui
   interface/ovQMainWindow.ui
-  interface/ovQSearchDialog.ui
+  interface/ovQTextSearchDialog.ui
+  interface/ovQAuthorSearchDialog.ui
 )
 
 SET( OVIS_HEADERS
   interface/ovQDateDialog.h
   interface/ovQDateSpanDialog.h
   interface/ovQMainWindow.h
-  interface/ovQSearchDialog.h
+  interface/ovQTextSearchDialog.h
+  interface/ovQAuthorSearchDialog.h
 )
 
 # Wrap QT files

@@ -55,7 +55,8 @@
 #include "vtkVariantArray.h"
 
 #include "ovQDateSpanDialog.h"
-#include "ovQSearchDialog.h"
+#include "ovQTextSearchDialog.h"
+#include "ovQAuthorSearchDialog.h"
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
 #include "source/ovRestrictGraphFilter.h"
@@ -107,7 +108,7 @@ void ovQMainWindowProgressCommand::Execute(
       }
       else if( ovRestrictGraphFilter::SafeDownCast( caller ) )
       {
-        message = QString( "Resolving visible vertices and edges..." );
+        message = QString( "Resolving visible nodes and links..." );
       }
       else if( vtkGraphLayoutStrategy::SafeDownCast( caller ) )
       {
@@ -197,7 +198,7 @@ void ovQMainWindowSelectionCommand::Execute(
     numValues = vertexIds->GetNumberOfTuples();
     if( 0 < numValues )
     {
-      stream << "<h3>Selected Vertices (" << numValues
+      stream << "<h3>Selected Nodes (" << numValues
              << ( 100 < numValues ? ", showing first 100" : "" )
              << ")</h3><ul>";
       for( int index = 0; index < numValues; index++ )
@@ -209,13 +210,13 @@ void ovQMainWindowSelectionCommand::Execute(
       }
       stream << "</ul>";
 
-      if( 100 < numValues ) stream << "<p>List cropped at 100 vertices</p>";
+      if( 100 < numValues ) stream << "<p>List cropped at 100 nodes</p>";
     }
 
     numValues = edgeIds->GetNumberOfTuples();
     if( 0 < numValues )
     {
-      stream << "<h3>Selected Edges (" << numValues
+      stream << "<h3>Selected Links (" << numValues
              << ( 100 < numValues ? ", showing first 100" : "" )
              << ")</h3><ul>";
       for( int index = 0; index < numValues && index < 100; index++ )
@@ -243,7 +244,7 @@ void ovQMainWindowSelectionCommand::Execute(
       }
       stream << "</ul>";
 
-      if( 100 < numValues ) stream << "<p>List cropped at 100 edges</p>";
+      if( 100 < numValues ) stream << "<p>List cropped at 100 links</p>";
     }
 
     this->ui->graphSelectTextEdit->setHtml( QString( stream.str().c_str() ) );
@@ -1098,7 +1099,7 @@ void ovQMainWindow::ApplySessionToState()
   this->SetAssociationVertexColor( this->Session->GetAssociationVertexColor() );
   vtkSmartPointer< ovSearchPhrase > textPhrase = vtkSmartPointer< ovSearchPhrase >::New();
   textPhrase->Parse( this->Session->GetTextSearchPhrase() );
-  this->SetTextSearchPhrase( textPhrase );
+  this->SetTextSearchPhrase( textPhrase, this->Session->GetTextSearchNarrow() );
   vtkSmartPointer< ovSearchPhrase > authorPhrase = vtkSmartPointer< ovSearchPhrase >::New();
   authorPhrase->Parse( this->Session->GetAuthorSearchPhrase() );
   this->SetAuthorSearchPhrase( authorPhrase );
@@ -1151,6 +1152,8 @@ void ovQMainWindow::ApplyStateToSession()
   ovSearchPhrase *phrase = this->RestrictGraphFilter->GetTextSearchPhrase();
   this->Session->SetTextSearchPhrase(
     NULL == phrase ? "" : this->RestrictGraphFilter->GetTextSearchPhrase()->ToString() );
+  this->Session->SetTextSearchNarrow(
+    this->RestrictGraphFilter->GetTextSearchNarrow() );
   phrase = this->RestrictGraphFilter->GetAuthorSearchPhrase();
   this->Session->SetAuthorSearchPhrase(
     NULL == phrase ? "" : this->RestrictGraphFilter->GetAuthorSearchPhrase()->ToString() );
@@ -1312,7 +1315,7 @@ void ovQMainWindow::slotAuthorVertexColorPushButtonClicked()
 {
   QColor color = QColorDialog::getColor(
     this->ui->authorVertexColorPushButton->palette().color( QPalette::Active, QPalette::Button ),
-    this, "Select author vertex color" );
+    this, "Select author node color" );
 
   if( color.isValid() )
   {
@@ -1352,7 +1355,7 @@ void ovQMainWindow::slotAssociationVertexColorPushButtonClicked()
 {
   QColor color = QColorDialog::getColor(
     this->ui->associationVertexColorPushButton->palette().color( QPalette::Active, QPalette::Button ),
-    this, "Select association vertex color" );
+    this, "Select association node color" );
 
   if( color.isValid() )
   {
@@ -1384,13 +1387,17 @@ void ovQMainWindow::slotEdgeSizeSliderValueChanged( int value )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::SetTextSearchPhrase( ovSearchPhrase *phrase )
+void ovQMainWindow::SetTextSearchPhrase( ovSearchPhrase *phrase, bool narrow )
 {
   // update the GUI
-  this->ui->textSearchLabel->setText( phrase ? phrase->ToString().c_str() : "(none set)" );
+  ovString text = phrase
+                ? phrase->ToString() + ( narrow ? " (narrow)" : " (broad)" )
+                : "(none set)";
+  this->ui->textSearchLabel->setText( text.c_str() );
   
   // update the graph
   this->RestrictGraphFilter->SetTextSearchPhrase( phrase );
+  this->RestrictGraphFilter->SetTextSearchNarrow( narrow );
   this->RestrictGraphFilter->Modified();
   this->RenderGraph( true );
 }
@@ -1410,19 +1417,20 @@ void ovQMainWindow::SetAuthorSearchPhrase( ovSearchPhrase *phrase )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotSetTextSearchPushButtonClicked()
 {
-  ovQSearchDialog dialog( this, true );
+  ovQTextSearchDialog dialog( this, true );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select text search" ) );
   
   ovSearchPhrase *phrase = this->RestrictGraphFilter->GetTextSearchPhrase();
   dialog.setSearchPhrase( phrase );
+  dialog.setNarrow( this->RestrictGraphFilter->GetTextSearchNarrow() );
   
   if( QDialog::Accepted == dialog.exec() )
   {
     // update the text search from the dialog
     vtkSmartPointer< ovSearchPhrase > phrase = vtkSmartPointer< ovSearchPhrase >::New();
     dialog.getSearchPhrase( phrase );
-    this->SetTextSearchPhrase( phrase );
+    this->SetTextSearchPhrase( phrase, dialog.isNarrow() );
   }
 }
 
@@ -1435,7 +1443,7 @@ void ovQMainWindow::slotClearTextSearchPushButtonClicked()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::slotSetAuthorSearchPushButtonClicked()
 {
-  ovQSearchDialog dialog( this, false );
+  ovQAuthorSearchDialog dialog( this, false );
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select author search" ) );
   
@@ -2011,7 +2019,7 @@ void ovQMainWindow::RenderGraph( bool resetCamera )
   this->setCursor( Qt::ArrowCursor );
   this->ui->graphLayoutWidget->setCursor( Qt::CrossCursor );
   char buffer[512];
-  sprintf( buffer, "Processing time: %0.2fs    Number of vertices: %d     Number of edges: %d",
+  sprintf( buffer, "Processing time: %0.2fs    Number of nodes: %d     Number of links: %d",
     static_cast< double >( end - start ) / CLOCKS_PER_SEC,
     static_cast< int >( this->RestrictGraphFilter->GetOutput()->GetNumberOfVertices() ),
     static_cast< int >( this->RestrictGraphFilter->GetOutput()->GetNumberOfEdges() ) );

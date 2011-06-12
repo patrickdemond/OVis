@@ -70,6 +70,7 @@ void ovSessionWriter::WriteData()
     rgba = input->GetAssociationVertexColor();
     this->WriteColor( "AssociationVertexColor", rgba );
     this->Write( "TextSearchPhrase", input->GetTextSearchPhrase() );
+    this->Write( "TextSearchNarrow", input->GetTextSearchNarrow() );
     this->Write( "AuthorSearchPhrase", input->GetAuthorSearchPhrase() );
     this->Write( "StartDateRestriction", input->GetStartDateRestriction() );
     this->Write( "EndDateRestriction", input->GetEndDateRestriction() );
