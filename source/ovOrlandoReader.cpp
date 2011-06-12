@@ -200,6 +200,7 @@ int ovOrlandoReader::ProcessRequest(
       double numEntries = 0, progress;
 
       bool inDiv0 = false, inDiv1 = false, inDiv2 = false, inP = false, inP2 = false;
+      bool inDate = false, inBibcit = false, inHeading = false, inScholarnote = false;
       ovString div0Content, div1Content, div2Content, pContent, p2Content;
       ovIntVector div0Vertices, div1Vertices, div2Vertices, pVertices, p2Vertices;
 
@@ -235,7 +236,7 @@ int ovOrlandoReader::ProcessRequest(
             
             // get the pedigree (author's name) from this node's id attribute
             const char *pedigree =
-              ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "id" ) );
+              ( char* )( xmlTextReaderGetAttribute( this->Reader, BAD_CAST "standard" ) );
 
             // create a new vertex using the Id (author name) as the pedigree
             vtkSmartPointer< vtkVariantArray > array = vtkSmartPointer< vtkVariantArray >::New();
@@ -288,6 +289,12 @@ int ovOrlandoReader::ProcessRequest(
               
               if( 0 < content.length() )
               {
+                // format text from certain tags
+                if( inDate ) content = content + " ";
+                else if( inBibcit ) content = " (" + content + ") ";
+                else if( inHeading ) content = content + ". ";
+                else if( inScholarnote ) content = " " + content + " ";
+
                 // add to author content
                 authorContent.append( content );
                 
@@ -316,9 +323,20 @@ int ovOrlandoReader::ProcessRequest(
                   if( inP ) inP2 = true;
                   else inP = true;
                 }
-                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV2" ) ) inDiv2 = true;
-                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV1" ) ) inDiv1 = true;
-                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV0" ) ) inDiv0 = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV2" ) )
+                  inDiv2 = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV1" ) )
+                  inDiv1 = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DIV0" ) )
+                  inDiv0 = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+                  inDate = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "BIBCIT" ) )
+                  inBibcit = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "HEADING" ) )
+                  inHeading = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "SCHOLARNOTE" ) )
+                  inScholarnote = true;
               }
               else if( this->CurrentNode.IsClosingElement() )
               {
@@ -390,6 +408,14 @@ int ovOrlandoReader::ProcessRequest(
                   inDiv0 = false;
                   div0Content = "";
                 }
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "DATE" ) )
+                  inDate = false;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "BIBCIT" ) )
+                  inBibcit = false;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "HEADING" ) )
+                  inHeading = false;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "SCHOLARNOTE" ) )
+                  inScholarnote = false;
               }
             }
 
