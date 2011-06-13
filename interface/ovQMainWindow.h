@@ -154,6 +154,7 @@ protected:
   vtkSmartPointer< vtkCornerAnnotation > BottomAnnotation;
   vtkSmartPointer< ovOrlandoReader > OrlandoReader;
   vtkSmartPointer< ovRestrictGraphFilter > RestrictGraphFilter;
+  vtkSmartPointer< ovRestrictGraphFilter > SelectGraphFilter;
   vtkSmartPointer< ovQMainWindowProgressCommand > ProgressObserver;
   vtkSmartPointer< ovQMainWindowSelectionCommand > SelectionObserver;
 

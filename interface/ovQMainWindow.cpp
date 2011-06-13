@@ -557,7 +557,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->RestrictGraphFilter->AddObserver( vtkCommand::ProgressEvent, this->ProgressObserver );
   this->RestrictGraphFilter->SetInput( this->OrlandoReader->GetOutput() );
   this->SelectionObserver->Graph = this->RestrictGraphFilter->GetOutput();
-  
+
   // set up the display property widgets
   QObject::connect(
     this->ui->writersCheckBox, SIGNAL( stateChanged( int ) ),
@@ -1447,7 +1447,7 @@ void ovQMainWindow::slotSetAuthorSearchPushButtonClicked()
   dialog.setModal( true );
   dialog.setWindowTitle( tr( "Select author search" ) );
   
-  ovSearchPhrase *phrase = this->RestrictGraphFilter->GetTextSearchPhrase();
+  ovSearchPhrase *phrase = this->RestrictGraphFilter->GetAuthorSearchPhrase();
   dialog.setSearchPhrase( phrase );
   
   if( QDialog::Accepted == dialog.exec() )

@@ -146,8 +146,10 @@ bool ovSearchPhrase::Find( ovString content, ovString stemmedContent ) const
     // if the previous term is a match and we're OR-ing the next term then we're done
     if( true == match && !term->andLogic ) break;
     
-    found = vtkstd::string::npos != content.find( term->term );
-    if( term->stemming && !found ) found = vtkstd::string::npos != stemmedContent.find( term->term ); 
+    found = vtkstd::string::npos != content.find( vtksys::SystemTools::LowerCase( term->term ) );
+    if( term->stemming && !found )
+      found = vtkstd::string::npos != stemmedContent.find(
+        vtksys::SystemTools::LowerCase( term->term ) );
 
     bool thisMatch = ( found && !term->notLogic ) || ( !found && term->notLogic );
     match = first // if this is the first term
