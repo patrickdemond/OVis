@@ -25,6 +25,7 @@ CONFIGURE_FILE( ${PROJECT_SOURCE_DIR}/ovUtilities.h.in
 # Set up headers and source
 SET( OVIS_SOURCE
   ovis.cpp
+  source/ovGraphLayoutView.cpp
   source/ovOrlandoReader.cpp
   source/ovOrlandoTagInfo.cpp
   source/ovRestrictGraphFilter.cpp

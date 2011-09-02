@@ -32,7 +32,6 @@
 #include "vtkGlyphSource2D.h"
 #include "vtkGraph.h"
 #include "vtkGraphLayoutStrategy.h"
-#include "vtkGraphLayoutView.h"
 #include "vtkIdTypeArray.h"
 #include "vtkInteractorStyleRubberBand2D.h"
 #include "vtkLookupTable.h"
@@ -57,6 +56,7 @@
 #include "ovQDateSpanDialog.h"
 #include "ovQTextSearchDialog.h"
 #include "ovQAuthorSearchDialog.h"
+#include "source/ovGraphLayoutView.h"
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
 #include "source/ovRestrictGraphFilter.h"
@@ -146,6 +146,7 @@ void ovQMainWindowSelectionCommand::Execute(
     vtkAnnotationLink *link = vtkAnnotationLink::SafeDownCast( caller );
     if( NULL == link ) return;
     
+    int numValues = 0;
     vtkSelectionNode *node0, *node1;
     vtkIdTypeArray *edgeIds, *vertexIds;
 
@@ -164,8 +165,8 @@ void ovQMainWindowSelectionCommand::Execute(
       vertexIds = vtkIdTypeArray::SafeDownCast( node0->GetSelectionList() );
     }
     
+    // now create a text-list of what is selected
     ovTagVector *tags = ovOrlandoTagInfo::GetInfo()->GetTags();
-
     vtkStringArray *labelArray = 
       vtkStringArray::SafeDownCast(
         this->Graph->GetVertexData()->GetAbstractArray( "label" ) );
@@ -192,7 +193,7 @@ void ovQMainWindowSelectionCommand::Execute(
     vtkstd::ostringstream stream;
     
     // reset the label array to all empty strings
-    int numValues = labelArray->GetNumberOfValues();
+    numValues = labelArray->GetNumberOfValues();
     for( int index = 0; index < numValues; index++ ) labelArray->SetValue( index, "" );
 
     numValues = vertexIds->GetNumberOfTuples();
@@ -468,7 +469,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->ProgressObserver->ui = this->ui;
 
   // set up the graph layout view
-  this->GraphLayoutView = vtkSmartPointer< vtkGraphLayoutView >::New();
+  this->GraphLayoutView = vtkSmartPointer< ovGraphLayoutView >::New();
   this->GraphLayoutView->SetLayoutStrategy( this->CurrentLayoutStrategy.c_str() );
   this->GraphLayoutView->GetLayoutStrategy()->AddObserver(
     vtkCommand::ProgressEvent, this->ProgressObserver );
@@ -1113,13 +1114,13 @@ void ovQMainWindow::ApplySessionToState()
   camera->SetClippingRange( this->Session->GetCamera()->GetClippingRange() );
   camera->SetParallelScale( this->Session->GetCamera()->GetParallelScale() );
   
+  vtkAnnotationLink *link = this->GraphLayoutView->GetRepresentation()->GetAnnotationLink();
   this->IsLoadingSession = false;
   this->UpdateActiveTags();
-  this->SetSelectedVertexList( this->Session->GetSelectedVertexList() );
-  this->SetSelectedEdgeList( this->Session->GetSelectedEdgeList() );
+  ovGraphLayoutView::SetSelectedVertexList( link, this->Session->GetSelectedVertexList() );
+  ovGraphLayoutView::SetSelectedEdgeList( link, this->Session->GetSelectedEdgeList() );
   this->RenderGraph();
-  this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->InvokeEvent(
-    vtkCommand::AnnotationChangedEvent );
+  link->InvokeEvent( vtkCommand::AnnotationChangedEvent );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1161,8 +1162,9 @@ void ovQMainWindow::ApplyStateToSession()
     this->RestrictGraphFilter->GetStartDate()->ToInt() );
   this->Session->SetEndDateRestriction(
     this->RestrictGraphFilter->GetEndDate()->ToInt() );
-  this->GetSelectedVertexList( this->Session->GetSelectedVertexList() );
-  this->GetSelectedEdgeList( this->Session->GetSelectedEdgeList() );
+  vtkAnnotationLink *link = this->GraphLayoutView->GetRepresentation()->GetAnnotationLink();
+  ovGraphLayoutView::GetSelectedVertexList( link, this->Session->GetSelectedVertexList() );
+  ovGraphLayoutView::GetSelectedEdgeList( link, this->Session->GetSelectedEdgeList() );
   this->GetTagList( this->Session->GetTagList() );
   vtkCamera *camera = this->GraphLayoutView->GetRenderer()->GetActiveCamera();
   this->Session->GetCamera()->SetPosition( camera->GetPosition() );
@@ -1703,95 +1705,6 @@ void ovQMainWindow::slotTagTreeItemDoubleClicked( QTreeWidgetItem* item, int col
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::GetSelectedVertexList( ovIntVector *ids )
-{
-  if( NULL == ids ) return;
-  ids->clear();
-
-  vtkSelection *selection =
-    this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->GetCurrentSelection();
-  
-  if( 2 != selection->GetNumberOfNodes() ) return;
-
-  // there will be two nodes, one are vertices and the other are edges
-  vtkSelectionNode *node = selection->GetNode( 0 );
-  vtkIdTypeArray *array = vtkSelectionNode::VERTEX == node->GetFieldType()
-        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
-        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
-
-  int numValues = array->GetNumberOfTuples();
-  if( 0 < numValues )
-    for( int index = 0; index < numValues; index++ )
-      ids->push_back( array->GetValue( index ) );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::SetSelectedVertexList( ovIntVector *ids )
-{
-  if( NULL == ids ) return;
-  vtkAnnotationLink *annotation = this->GraphLayoutView->GetRepresentation()->GetAnnotationLink();
-  vtkSelection *selection = annotation->GetCurrentSelection();
-  
-  if( 2 != selection->GetNumberOfNodes() ) return;
-
-  // there will be two nodes, one are vertices and the other are edges
-  vtkSelectionNode *node = selection->GetNode( 0 );
-  vtkIdTypeArray *array = vtkSelectionNode::VERTEX == node->GetFieldType()
-        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
-        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
-
-  array->Initialize();
-  for( ovIntVector::iterator it = ids->begin(); it != ids->end(); ++it )
-    array->InsertNextValue( *it );
-}
-  
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::GetSelectedEdgeList( ovIntVector *ids )
-{
-  if( NULL == ids ) return;
-  ids->clear();
-
-  vtkSelection *selection =
-    this->GraphLayoutView->GetRepresentation()->GetAnnotationLink()->GetCurrentSelection();
-  
-  if( 2 != selection->GetNumberOfNodes() ) return;
-
-  // there will be two nodes, one are vertices and the other are edges
-  vtkSelectionNode *node = selection->GetNode( 0 );
-  vtkIdTypeArray *array = vtkSelectionNode::EDGE == node->GetFieldType()
-        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
-        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
-
-  int numValues = array->GetNumberOfTuples();
-  if( 0 < numValues )
-    for( int index = 0; index < numValues; index++ )
-      ids->push_back( array->GetValue( index ) );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::SetSelectedEdgeList( ovIntVector *ids )
-{
-  if( NULL == ids ) return;
-  
-  vtkAnnotationLink *annotation = this->GraphLayoutView->GetRepresentation()->GetAnnotationLink();
-  vtkSelection *selection = annotation->GetCurrentSelection();
-  
-  if( 2 != selection->GetNumberOfNodes() ) return;
-
-  // there will be two nodes, one are vertices and the other are edges
-  vtkSelectionNode *node = selection->GetNode( 0 );
-  vtkIdTypeArray *array = vtkSelectionNode::EDGE == node->GetFieldType()
-        ? vtkIdTypeArray::SafeDownCast( node->GetSelectionList() )
-        : vtkIdTypeArray::SafeDownCast( selection->GetNode( 1 )->GetSelectionList() );
-
-  array->Initialize();
-  for( ovIntVector::iterator it = ids->begin(); it != ids->end(); ++it )
-    array->InsertNextValue( *it );
-
-  annotation->Modified();
-}
-  
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void ovQMainWindow::GetTagList( ovTagVector *tags )
 {
