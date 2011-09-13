@@ -40,7 +40,7 @@ public:
   static void SetSelectedEdgeList( vtkAnnotationLink*, ovIntVector* );
 
 protected:
-  ovGraphLayoutView() { this->Processing = false; }
+  ovGraphLayoutView();
   ~ovGraphLayoutView() {}
 
   // Called to process events.  Overrides behavior in vtkGraphLayoutView.
@@ -49,6 +49,8 @@ protected:
   ovIntVector SelectedVertexCache;
   ovIntVector SelectedEdgeCache;
   bool Processing;
+  bool ShiftKeyDown;
+  bool ControlKeyDown;
 
 private:
   ovGraphLayoutView( const ovGraphLayoutView& ); // Not implemented
