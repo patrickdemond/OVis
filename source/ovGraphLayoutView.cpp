@@ -61,129 +61,128 @@ void ovGraphLayoutView::ProcessEvents(
     this->ShiftKeyDown = 0 < iact->GetShiftKey();
     this->ControlKeyDown = 0 < iact->GetControlKey();
   }
-  else if( eventId == vtkCommand::SelectionChangedEvent &&
-           ( this->ShiftKeyDown || this->ControlKeyDown ) &&
-           !this->Processing )
+  else if( eventId == vtkCommand::SelectionChangedEvent && !this->Processing )
   {
-    this->Processing = true;
-
-    // make new arrays for selected vertex and edges for any changes to be stored in
-    vtkSmartPointer< vtkIdTypeArray > newVertexIds = vtkSmartPointer< vtkIdTypeArray >::New();
-    vtkSmartPointer< vtkIdTypeArray > newEdgeIds = vtkSmartPointer< vtkIdTypeArray >::New();
-
     int numValues = 0;
-    vtkIdTypeArray *edgeIds, *vertexIds;
     vtkAnnotationLink *link;
-    ovIntVector newlySelectedVertexVector, newlySelectedEdgeVector;
+    vtkIdTypeArray *edgeIds, *vertexIds;
 
-    // first figure out what has been selected (may need to add nodes/edges if CTRL is down)
-    if( this->ShiftKeyDown )
+    if( this->ShiftKeyDown || this->ControlKeyDown )
     {
-      // do a non-union select
-      vtkSmartPointer< vtkSelection > selection = vtkSmartPointer<vtkSelection>::New();
-      this->GenerateSelection( callData, selection );
-      for( int i = 0; i < this->GetNumberOfRepresentations(); ++i )
-        this->GetRepresentation(i)->Select( this, selection, false );
-    }
-
-    // get the graph's vertex and edge arrays
-    link = this->GetRepresentation()->GetAnnotationLink();
-    
-    vertexIds = ovGraphLayoutView::GetSelectedVertexList( link );
-    numValues = vertexIds->GetNumberOfTuples();
-    for( int index = 0; index < numValues; index++ )
-      newlySelectedVertexVector.push_back( vertexIds->GetValue( index ) );
-
-    edgeIds = ovGraphLayoutView::GetSelectedEdgeList( link );
-    numValues = edgeIds->GetNumberOfTuples();
-    for( int index = 0; index < numValues; index++ )
-      newlySelectedEdgeVector.push_back( edgeIds->GetValue( index ) );
-    
-    // now add connected vertex/edges if the control key is down
-    if( this->ControlKeyDown )
-    {
-      vtkGraph* graph = vtkGraph::SafeDownCast( this->GetRepresentation()->GetInput() );
+      this->Processing = true;
+  
+      // make new arrays for selected vertex and edges for any changes to be stored in
+      vtkSmartPointer< vtkIdTypeArray > newVertexIds = vtkSmartPointer< vtkIdTypeArray >::New();
+      vtkSmartPointer< vtkIdTypeArray > newEdgeIds = vtkSmartPointer< vtkIdTypeArray >::New();
+  
+      ovIntVector newlySelectedVertexVector, newlySelectedEdgeVector;
+  
+      // first figure out what has been selected (may need to add nodes/edges if CTRL is down)
+      if( this->ShiftKeyDown )
+      {
+        // do a non-union select
+        vtkSmartPointer< vtkSelection > selection = vtkSmartPointer<vtkSelection>::New();
+        this->GenerateSelection( callData, selection );
+        for( int i = 0; i < this->GetNumberOfRepresentations(); ++i )
+          this->GetRepresentation(i)->Select( this, selection, false );
+      }
+  
+      // get the graph's vertex and edge arrays
+      link = this->GetRepresentation()->GetAnnotationLink();
       
-      if( NULL != graph )
+      vertexIds = ovGraphLayoutView::GetSelectedVertexList( link );
+      numValues = vertexIds->GetNumberOfTuples();
+      for( int index = 0; index < numValues; index++ )
+        newlySelectedVertexVector.push_back( vertexIds->GetValue( index ) );
+  
+      edgeIds = ovGraphLayoutView::GetSelectedEdgeList( link );
+      numValues = edgeIds->GetNumberOfTuples();
+      for( int index = 0; index < numValues; index++ )
+        newlySelectedEdgeVector.push_back( edgeIds->GetValue( index ) );
+      
+      // now add connected vertex/edges if the control key is down
+      if( this->ControlKeyDown )
       {
-        if( !newlySelectedVertexVector.empty() )
-        { // add all edges connected to each vertex
-          vtkSmartPointer< vtkOutEdgeIterator > outEdgeIt;
-          vtkSmartPointer< vtkInEdgeIterator > inEdgeIt;
-
-          for( ovIntVector::iterator sIt = newlySelectedVertexVector.begin();
-               sIt != newlySelectedVertexVector.end(); ++sIt )
-          {
-            outEdgeIt = vtkSmartPointer< vtkOutEdgeIterator >::New();
-            graph->GetOutEdges( *sIt, outEdgeIt );
-            while( outEdgeIt->HasNext() ) newlySelectedEdgeVector.push_back( outEdgeIt->Next().Id ); 
-
-            inEdgeIt = vtkSmartPointer< vtkInEdgeIterator >::New();
-            graph->GetInEdges( *sIt, inEdgeIt );
-            while( inEdgeIt->HasNext() ) newlySelectedEdgeVector.push_back( inEdgeIt->Next().Id );
-          }
-        }
-        else if( !newlySelectedEdgeVector.empty() )
+        vtkGraph* graph = vtkGraph::SafeDownCast( this->GetRepresentation()->GetInput() );
+        
+        if( NULL != graph )
         {
-          for( ovIntVector::iterator sIt = newlySelectedEdgeVector.begin();
-               sIt != newlySelectedEdgeVector.end(); ++sIt )
+          if( !newlySelectedVertexVector.empty() )
+          { // add all edges connected to each vertex
+            vtkSmartPointer< vtkOutEdgeIterator > outEdgeIt;
+            vtkSmartPointer< vtkInEdgeIterator > inEdgeIt;
+  
+            for( ovIntVector::iterator sIt = newlySelectedVertexVector.begin();
+                 sIt != newlySelectedVertexVector.end(); ++sIt )
+            {
+              outEdgeIt = vtkSmartPointer< vtkOutEdgeIterator >::New();
+              graph->GetOutEdges( *sIt, outEdgeIt );
+              while( outEdgeIt->HasNext() ) newlySelectedEdgeVector.push_back( outEdgeIt->Next().Id ); 
+  
+              inEdgeIt = vtkSmartPointer< vtkInEdgeIterator >::New();
+              graph->GetInEdges( *sIt, inEdgeIt );
+              while( inEdgeIt->HasNext() ) newlySelectedEdgeVector.push_back( inEdgeIt->Next().Id );
+            }
+          }
+          else if( !newlySelectedEdgeVector.empty() )
           {
-            newlySelectedVertexVector.push_back( graph->GetSourceVertex( *sIt ) );
-            newlySelectedVertexVector.push_back( graph->GetTargetVertex( *sIt ) );
+            for( ovIntVector::iterator sIt = newlySelectedEdgeVector.begin();
+                 sIt != newlySelectedEdgeVector.end(); ++sIt )
+            {
+              newlySelectedVertexVector.push_back( graph->GetSourceVertex( *sIt ) );
+              newlySelectedVertexVector.push_back( graph->GetTargetVertex( *sIt ) );
+            }
           }
         }
       }
-    }
-    
-    //unsigned int* data = reinterpret_cast<unsigned int*>( callData );
-    //if( data[4] == vtkInteractorStyleRubberBand2D::SELECT_UNION )
-    
-    // now add or replace the selection
-    if( !this->ShiftKeyDown ) // replace old selection
-    {
-      // easy to do, just copy the newly selected vectors
-      for( ovIntVector::iterator sIt = newlySelectedVertexVector.begin();
-           sIt != newlySelectedVertexVector.end(); ++sIt )
-        newVertexIds->InsertNextValue( *sIt );
-      for( ovIntVector::iterator sIt = newlySelectedEdgeVector.begin();
-           sIt != newlySelectedEdgeVector.end(); ++sIt )
-        newEdgeIds->InsertNextValue( *sIt );
-    }
-    else // the shift key is down, add/remove to/from old selection
-    {
-      // add any ids in the selection which are not in the cache
-      for( ovIntVector::iterator sIt = newlySelectedVertexVector.begin();
-           sIt != newlySelectedVertexVector.end(); ++sIt )
+      
+      //unsigned int* data = reinterpret_cast<unsigned int*>( callData );
+      //if( data[4] == vtkInteractorStyleRubberBand2D::SELECT_UNION )
+      
+      // now add or replace the selection
+      if( !this->ShiftKeyDown ) // replace old selection
       {
-        bool found = false;
-        for( ovIntVector::iterator cIt = this->SelectedVertexCache.begin();
-             cIt != this->SelectedVertexCache.end(); ++cIt )
-        {
-          if( *sIt == *cIt ) found = true;
-          if( found ) break;
-        }
-    
-        if( !found ) newVertexIds->InsertNextValue( *sIt );
+        // easy to do, just copy the newly selected vectors
+        for( ovIntVector::iterator sIt = newlySelectedVertexVector.begin();
+             sIt != newlySelectedVertexVector.end(); ++sIt )
+          newVertexIds->InsertNextValue( *sIt );
+        for( ovIntVector::iterator sIt = newlySelectedEdgeVector.begin();
+             sIt != newlySelectedEdgeVector.end(); ++sIt )
+          newEdgeIds->InsertNextValue( *sIt );
       }
-    
-      // now add any ids in the cache which are not in the selection
-      for( ovIntVector::iterator cIt = this->SelectedVertexCache.begin();
-           cIt != this->SelectedVertexCache.end(); ++cIt )
+      else // the shift key is down, add/remove to/from old selection
       {
-        bool found = false;
+        // add any ids in the selection which are not in the cache
         for( ovIntVector::iterator sIt = newlySelectedVertexVector.begin();
              sIt != newlySelectedVertexVector.end(); ++sIt )
         {
-          if( *sIt == *cIt ) found = true;
-          if( found ) break;
-        }
-    
-        if( !found ) newVertexIds->InsertNextValue( *cIt );
-      }
+          bool found = false;
+          for( ovIntVector::iterator cIt = this->SelectedVertexCache.begin();
+               cIt != this->SelectedVertexCache.end(); ++cIt )
+          {
+            if( *sIt == *cIt ) found = true;
+            if( found ) break;
+          }
       
-      // go through the non-union selected edge ids and invert whether they are in the cache
-      if( !this->ControlKeyDown )
-      {
+          if( !found ) newVertexIds->InsertNextValue( *sIt );
+        }
+      
+        // now add any ids in the cache which are not in the selection
+        for( ovIntVector::iterator cIt = this->SelectedVertexCache.begin();
+             cIt != this->SelectedVertexCache.end(); ++cIt )
+        {
+          bool found = false;
+          for( ovIntVector::iterator sIt = newlySelectedVertexVector.begin();
+               sIt != newlySelectedVertexVector.end(); ++sIt )
+          {
+            if( *sIt == *cIt ) found = true;
+            if( found ) break;
+          }
+      
+          if( !found ) newVertexIds->InsertNextValue( *cIt );
+        }
+        
+        // go through the non-union selected edge ids and invert whether they are in the cache
         for( ovIntVector::iterator sIt = newlySelectedEdgeVector.begin();
              sIt != newlySelectedEdgeVector.end(); ++sIt )
         {
@@ -197,29 +196,31 @@ void ovGraphLayoutView::ProcessEvents(
       
           if( !found ) newEdgeIds->InsertNextValue( *sIt );
         }
-      }
-    
-      // now add any ids in the cache which are not in the selection
-      for( ovIntVector::iterator cIt = this->SelectedEdgeCache.begin();
-           cIt != this->SelectedEdgeCache.end(); ++cIt )
-      {
-        bool found = false;
-        for( ovIntVector::iterator sIt = newlySelectedEdgeVector.begin();
-             sIt != newlySelectedEdgeVector.end(); ++sIt )
+      
+        // now add any ids in the cache which are not in the selection
+        for( ovIntVector::iterator cIt = this->SelectedEdgeCache.begin();
+             cIt != this->SelectedEdgeCache.end(); ++cIt )
         {
-          if( *sIt == *cIt ) found = true;
-          if( found ) break;
+          bool found = false;
+          for( ovIntVector::iterator sIt = newlySelectedEdgeVector.begin();
+               sIt != newlySelectedEdgeVector.end(); ++sIt )
+          {
+            if( *sIt == *cIt ) found = true;
+            if( found ) break;
+          }
+          
+          if( !found ) newEdgeIds->InsertNextValue( *cIt );
         }
-        
-        if( !found ) newEdgeIds->InsertNextValue( *cIt );
       }
+      
+      // this is a hack to make sure everything gets updated
+      vertexIds->DeepCopy( newVertexIds );
+      edgeIds->DeepCopy( newEdgeIds );
+      int tempData[] = { 1, 1, 1, 1, 1 };
+      this->Superclass::ProcessEvents( caller, eventId, &tempData );
+
+      this->Processing = false;
     }
-    
-    // this is a hack to make sure everything gets updated
-    vertexIds->DeepCopy( newVertexIds );
-    edgeIds->DeepCopy( newEdgeIds );
-    int tempData[] = { 1, 1, 1, 1, 1 };
-    this->Superclass::ProcessEvents( caller, eventId, &tempData );
 
     // now cache the selected ids
     link = this->GetRepresentation()->GetAnnotationLink();
@@ -237,8 +238,6 @@ void ovGraphLayoutView::ProcessEvents(
     if( 0 < numValues )
       for( int index = 0; index < numValues; index++ )
         this->SelectedEdgeCache.push_back( edgeIds->GetValue( index ) );
-
-    this->Processing = false;
   }
 }
 
