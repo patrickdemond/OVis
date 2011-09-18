@@ -110,6 +110,11 @@ public:
   // Set/get the edge size
   vtkGetMacro( EdgeSize, int );
   vtkSetMacro( EdgeSize, int );
+
+  // Description:
+  // Set/get the edge size
+  vtkGetMacro( FadingFactor, int );
+  vtkSetMacro( FadingFactor, int );
   
   // Description:
   // Set/get the author vertices color
@@ -185,6 +190,7 @@ protected:
   bool IncludeIBRType;
   int VertexSize;
   int EdgeSize;
+  int FadingFactor;
   double AuthorVertexColor[4];
   double AssociationVertexColor[4];
   ovString TextSearchPhrase;

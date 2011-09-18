@@ -97,6 +97,7 @@ public slots:
   virtual void slotIBRTypeCheckBoxStateChanged( int );
   virtual void slotVertexSizeSliderValueChanged( int );
   virtual void slotEdgeSizeSliderValueChanged( int );
+  virtual void slotFadingFactorSliderValueChanged( int );
   virtual void slotAuthorVertexColorPushButtonClicked();
   virtual void slotAssociationVertexColorPushButtonClicked();
   virtual void slotSetTextSearchPushButtonClicked();
@@ -135,6 +136,7 @@ protected:
   virtual void SetLayoutStrategy( const ovString& );
   virtual void SetVertexSize( int );
   virtual void SetEdgeSize( int );
+  virtual void SetFadingFactor( int );
   virtual void SetAuthorVertexColor( double rgba[4] );
   virtual void SetAssociationVertexColor( double rgba[4] );
   virtual void SetTextSearchPhrase( ovSearchPhrase*, bool narrow = false );

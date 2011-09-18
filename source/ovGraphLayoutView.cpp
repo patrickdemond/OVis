@@ -9,6 +9,7 @@
 =========================================================================*/
 #include "ovGraphLayoutView.h"
 
+#include "ovRenderedGraphRepresentation.h"
 #include "ovUtilities.h"
 
 #include "vtkAnnotationLink.h"
@@ -38,9 +39,24 @@ ovGraphLayoutView::ovGraphLayoutView()
   this->ShiftKeyDown = false;
   this->ControlKeyDown = false;
   
+  /*
+  vtkSmartPointer< ovRenderedGraphRepresentation > rep = 
+    vtkSmartPointer< ovRenderedGraphRepresentation >::New();
+  this->SetRepresentation( rep );
+  */
+
   // watch for key press and releases
   this->GetInteractorStyle()->AddObserver( vtkCommand::KeyPressEvent, this->GetObserver() );
   this->GetInteractorStyle()->AddObserver( vtkCommand::KeyReleaseEvent, this->GetObserver() );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+vtkDataRepresentation* ovGraphLayoutView::CreateDefaultRepresentation(
+  vtkAlgorithmOutput* port)
+{
+  ovRenderedGraphRepresentation* rep = ovRenderedGraphRepresentation::New();
+  rep->SetInputConnection(port);
+  return rep;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
