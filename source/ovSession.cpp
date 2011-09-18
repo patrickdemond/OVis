@@ -45,6 +45,7 @@ ovSession::ovSession()
   this->IncludeIBRType = true;
   this->VertexSize = 0;
   this->EdgeSize = 0;
+  this->FadingFactor = 0;
   this->TextSearchPhrase = "";
   this->TextSearchNarrow = false;
   this->AuthorSearchPhrase = "";
@@ -181,6 +182,7 @@ bool ovSession::operator == ( const ovSession &rhs ) const
       this->IncludeIBRType == rhs.IncludeIBRType &&
       this->VertexSize == rhs.VertexSize &&
       this->EdgeSize == rhs.EdgeSize &&
+      this->FadingFactor == rhs.FadingFactor &&
       this->AuthorVertexColor[0] == rhs.AuthorVertexColor[0] &&
       this->AuthorVertexColor[1] == rhs.AuthorVertexColor[1] &&
       this->AuthorVertexColor[2] == rhs.AuthorVertexColor[2] &&
@@ -238,6 +240,7 @@ void ovSession::DeepCopy( ovSession *copy )
   this->IncludeIBRType = copy->IncludeIBRType;
   this->VertexSize = copy->VertexSize;
   this->EdgeSize = copy->EdgeSize;
+  this->FadingFactor = copy->FadingFactor;
   this->TextSearchPhrase = copy->TextSearchPhrase;
   this->TextSearchNarrow = copy->TextSearchNarrow;
   this->AuthorSearchPhrase = copy->AuthorSearchPhrase;
@@ -296,6 +299,7 @@ void ovSession::PrintSelf( ostream &os, vtkIndent indent )
   os << indent << "IncludeIBRType = " << ( this->IncludeIBRType ? "true" : "false" ) << endl;
   os << indent << "VertexSize = " << this->VertexSize << "" << endl;
   os << indent << "EdgeSize = " << this->EdgeSize << "" << endl;
+  os << indent << "FadingFactor = " << this->FadingFactor << "" << endl;
   os << indent << "AuthorVertexColor[4] = " << this->AuthorVertexColor[0] << ", "
                << this->AuthorVertexColor[1] << ", "
                << this->AuthorVertexColor[2] << ", "

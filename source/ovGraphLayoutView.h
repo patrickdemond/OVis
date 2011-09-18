@@ -42,7 +42,10 @@ public:
 protected:
   ovGraphLayoutView();
   ~ovGraphLayoutView() {}
-
+  
+  // Description:
+  // Overrides behavior in vtkView to create a vtkRenderedGraphRepresentation
+  virtual vtkDataRepresentation* CreateDefaultRepresentation(vtkAlgorithmOutput* conn);
   // Called to process events.  Overrides behavior in vtkGraphLayoutView.
   virtual void ProcessEvents(vtkObject* caller, unsigned long eventId, void* callData);
   

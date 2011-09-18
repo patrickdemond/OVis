@@ -205,6 +205,12 @@ int ovSessionReader::ProcessRequest(
           output->SetEdgeSize( intVal );
         }
         // --------------------------------------------------------------------------
+        else if( 0 == xmlStrcmp( BAD_CAST "FadingFactor", this->CurrentNode.Name ) )
+        {
+          this->ReadInt( intVal );
+          output->SetFadingFactor( intVal );
+        }
+        // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "AuthorVertexColor", this->CurrentNode.Name ) )
         {
           double rgba[] = { 0, 0, 0, 0 };

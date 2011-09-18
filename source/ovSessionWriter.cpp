@@ -65,6 +65,7 @@ void ovSessionWriter::WriteData()
     this->Write( "IncludeIBRType", input->GetIncludeIBRType() );
     this->Write( "VertexSize", input->GetVertexSize() );
     this->Write( "EdgeSize", input->GetEdgeSize() );
+    this->Write( "FadingFactor", input->GetFadingFactor() );
     rgba = input->GetAuthorVertexColor();
     this->WriteColor( "AuthorVertexColor", rgba );
     rgba = input->GetAssociationVertexColor();

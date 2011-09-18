@@ -12,7 +12,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1440</width>
+    <width>1450</width>
     <height>900</height>
    </rect>
   </property>
@@ -473,7 +473,7 @@
               </item>
              </layout>
             </item>
-            <item row="5" column="0">
+            <item row="6" column="0">
              <widget class="QLabel" name="label_4">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -492,7 +492,7 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
+            <item row="6" column="1">
              <layout class="QHBoxLayout" name="horizontalLayout_4">
               <property name="spacing">
                <number>0</number>
@@ -525,7 +525,7 @@
               </item>
              </layout>
             </item>
-            <item row="6" column="0">
+            <item row="7" column="0">
              <widget class="QLabel" name="label_5">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -544,7 +544,7 @@
               </property>
              </widget>
             </item>
-            <item row="7" column="0">
+            <item row="8" column="0">
              <layout class="QHBoxLayout" name="horizontalLayout_5">
               <property name="spacing">
                <number>0</number>
@@ -589,7 +589,7 @@
               </item>
              </layout>
             </item>
-            <item row="6" column="1">
+            <item row="7" column="1">
              <layout class="QHBoxLayout" name="horizontalLayout_10">
               <item>
                <widget class="QLabel" name="label_6">
@@ -625,7 +625,7 @@
               </item>
              </layout>
             </item>
-            <item row="7" column="1">
+            <item row="8" column="1">
              <layout class="QHBoxLayout" name="horizontalLayout_11">
               <item>
                <widget class="QLabel" name="label_7">
@@ -660,6 +660,38 @@
                </widget>
               </item>
              </layout>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="fadingFactorLabel">
+              <property name="text">
+               <string>Fading Factor:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QSlider" name="fadingFactorSlider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="singleStep">
+               <number>1</number>
+              </property>
+              <property name="pageStep">
+               <number>10</number>
+              </property>
+              <property name="value">
+               <number>50</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="tickPosition">
+               <enum>QSlider::TicksAbove</enum>
+              </property>
+              <property name="tickInterval">
+               <number>10</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -1045,7 +1077,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1440</width>
+     <width>1450</width>
      <height>27</height>
     </rect>
    </property>
@@ -1082,14 +1114,6 @@
      <addaction name="actionSetVertexStyleToHookedArrow"/>
      <addaction name="actionSetVertexStyleToEdgeArrow"/>
     </widget>
-    <widget class="QMenu" name="menuSet_Background">
-     <property name="title">
-      <string>Set Background</string>
-     </property>
-     <addaction name="actionSetBackgroundSolid"/>
-     <addaction name="actionSetBackgroundTop"/>
-     <addaction name="actionSetBackgroundBottom"/>
-    </widget>
     <widget class="QMenu" name="menuSet_Layout_Strategy">
      <property name="title">
       <string>Set Layout Strategy</string>
@@ -1120,7 +1144,7 @@
     </widget>
     <addaction name="actionReCenterGraph"/>
     <addaction name="separator"/>
-    <addaction name="menuSet_Background"/>
+    <addaction name="actionSetBackgroundSolid"/>
     <addaction name="menuViewSetVertexStyle"/>
     <addaction name="menuSet_Layout_Strategy"/>
     <addaction name="menuSetSnapshotMagnification"/>
@@ -1319,7 +1343,7 @@
   </action>
   <action name="actionSetBackgroundSolid">
    <property name="text">
-    <string>Set Solid Color</string>
+    <string>Set Background Color</string>
    </property>
    <property name="statusTip">
     <string>Set the background to a single solid color</string>

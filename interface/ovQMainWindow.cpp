@@ -37,7 +37,6 @@
 #include "vtkLookupTable.h"
 #include "vtkMath.h"
 #include "vtkPNGWriter.h"
-#include "vtkRenderedGraphRepresentation.h"
 #include "vtkRenderer.h"
 #include "vtkRendererCollection.h"
 #include "vtkRenderWindow.h"
@@ -56,9 +55,11 @@
 #include "ovQDateSpanDialog.h"
 #include "ovQTextSearchDialog.h"
 #include "ovQAuthorSearchDialog.h"
+#include "source/ovApplyColors.h"
 #include "source/ovGraphLayoutView.h"
 #include "source/ovOrlandoReader.h"
 #include "source/ovOrlandoTagInfo.h"
+#include "source/ovRenderedGraphRepresentation.h"
 #include "source/ovRestrictGraphFilter.h"
 #include "source/ovSearchPhrase.h"
 #include "source/ovSession.h"
@@ -484,7 +485,7 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   this->GraphLayoutView->ColorEdgesOn();
   this->GraphLayoutView->SetScalingArrayName( "size" );
   this->GraphLayoutView->ScaledGlyphsOff();
-  vtkRenderedGraphRepresentation* rep = vtkRenderedGraphRepresentation::SafeDownCast(
+  ovRenderedGraphRepresentation* rep = ovRenderedGraphRepresentation::SafeDownCast(
     this->GraphLayoutView->GetRepresentation() );
   rep->SetVertexHoverArrayName( "pedigree" );
   this->GraphLayoutView->SetInteractor( this->ui->graphLayoutWidget->GetInteractor() );
@@ -497,10 +498,12 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   // add an observer to watch for graph node/edge selection
   rep->GetAnnotationLink()->AddObserver(
     vtkCommand::AnnotationChangedEvent, this->SelectionObserver );
-
+  
+  rep->GetApplyColors()->SetFadingFactor(
+    static_cast< double >( this->ui->fadingFactorSlider->value() ) / 100.0 );
   this->GraphLayoutViewTheme = vtkSmartPointer< vtkViewTheme >::New();
-  this->GraphLayoutViewTheme->SetBackgroundColor( 0.7, 0.7, 0.7 );
-  this->GraphLayoutViewTheme->SetBackgroundColor2( 0.9, 0.9, 0.9 );
+  this->GraphLayoutViewTheme->SetBackgroundColor( 0.0, 0.0, 0.0 );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( 0.0, 0.0, 0.0 );
   this->GraphLayoutViewTheme->SetPointSize( this->ui->vertexSizeSlider->value() );
   this->GraphLayoutViewTheme->SetLineWidth( this->ui->edgeSizeSlider->value() );
   this->GraphLayoutViewTheme->ScalePointLookupTableOff();
@@ -587,6 +590,9 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->edgeSizeSlider, SIGNAL( valueChanged( int ) ),
     this, SLOT( slotEdgeSizeSliderValueChanged( int ) ) );
+  QObject::connect(
+    this->ui->fadingFactorSlider, SIGNAL( valueChanged( int ) ),
+    this, SLOT( slotFadingFactorSliderValueChanged( int ) ) );
   QObject::connect(
     this->ui->authorVertexColorPushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotAuthorVertexColorPushButtonClicked() ) );
@@ -1096,6 +1102,7 @@ void ovQMainWindow::ApplySessionToState()
   this->RestrictGraphFilter->SetIncludeIBRType( this->Session->GetIncludeIBRType() );
   this->SetVertexSize( this->Session->GetVertexSize() ); 
   this->SetEdgeSize( this->Session->GetEdgeSize() ); 
+  this->SetFadingFactor( this->Session->GetFadingFactor() ); 
   this->SetAuthorVertexColor( this->Session->GetAuthorVertexColor() );
   this->SetAssociationVertexColor( this->Session->GetAssociationVertexColor() );
   vtkSmartPointer< ovSearchPhrase > textPhrase = vtkSmartPointer< ovSearchPhrase >::New();
@@ -1146,6 +1153,10 @@ void ovQMainWindow::ApplyStateToSession()
     this->GraphLayoutViewTheme->GetPointSize() );
   this->Session->SetEdgeSize(
     this->GraphLayoutViewTheme->GetLineWidth() );
+  ovRenderedGraphRepresentation* rep = ovRenderedGraphRepresentation::SafeDownCast(
+    this->GraphLayoutView->GetRepresentation() );
+  this->Session->SetFadingFactor( static_cast< int >(
+    rep->GetApplyColors()->GetFadingFactor() * 100 ) );
   vtkLookupTable *lut = vtkLookupTable::SafeDownCast(
     this->GraphLayoutViewTheme->GetPointLookupTable() );
   this->Session->SetAuthorVertexColor( lut->GetTableValue( 1 ) );
@@ -1290,6 +1301,22 @@ void ovQMainWindow::SetVertexSize( int value )
 void ovQMainWindow::slotVertexSizeSliderValueChanged( int value )
 {
   this->SetVertexSize( value );
+  this->GraphLayoutView->Render();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::SetFadingFactor( int value )
+{
+  ovRenderedGraphRepresentation* rep = ovRenderedGraphRepresentation::SafeDownCast(
+    this->GraphLayoutView->GetRepresentation() );
+  rep->GetApplyColors()->SetFadingFactor( static_cast< double >( value ) / 100.0 );
+  this->ui->fadingFactorSlider->setValue( value );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotFadingFactorSliderValueChanged( int value )
+{
+  this->SetFadingFactor( value );
   this->GraphLayoutView->Render();
 }
 
