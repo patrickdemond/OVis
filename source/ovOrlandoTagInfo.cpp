@@ -153,6 +153,8 @@ ovOrlandoTagInfo* ovOrlandoTagInfo::GetInfo()
     ovOrlandoTagInfo::Instance->Add(
       "BIOGRAPHY", "POLITICS", "Politics", false );
     ovOrlandoTagInfo::Instance->Add(
+      "POLITICS", "POLITICALAFFILIATION", "Political Affiliation", false );
+    ovOrlandoTagInfo::Instance->Add(
       "BIOGRAPHY", "SIGNIFICANTACTIVITY", "Significant Activity (see also occupation)", false );
     ovOrlandoTagInfo::Instance->Add(
       "BIOGRAPHY", "VIOLENCE", "Violence", false );
@@ -213,8 +215,6 @@ ovOrlandoTagInfo* ovOrlandoTagInfo::GetInfo()
     ovOrlandoTagInfo::Instance->Add(
       "PRODUCTION", "PNONSURVIVAL", "Non-Survival", false );
     ovOrlandoTagInfo::Instance->Add(
-      "PRODUCTION", "POLITICALAFFILIATION", "Political Affiliation", false );
-    ovOrlandoTagInfo::Instance->Add(
       "PRODUCTION", "PPERFORMANCE", "Performance", false );
     ovOrlandoTagInfo::Instance->Add(
       "PRODUCTION", "PPERIODICALPUBLICATION", "Periodical Publication", false );
@@ -273,8 +273,6 @@ ovOrlandoTagInfo* ovOrlandoTagInfo::GetInfo()
     ovOrlandoTagInfo::Instance->Add(
       "TEXTUALFEATURES", "TINTERTEXTUALITY", "Intertextuality", false );
     ovOrlandoTagInfo::Instance->Add(
-      "TEXTUALFEATURES", "TITLE", "Title", false );
-    ovOrlandoTagInfo::Instance->Add(
       "TEXTUALFEATURES", "TMOTIF", "Motif", false );
     ovOrlandoTagInfo::Instance->Add(
       "TEXTUALFEATURES", "TPLOT", "Plot", false );
@@ -306,6 +304,8 @@ ovOrlandoTagInfo* ovOrlandoTagInfo::GetInfo()
       "General", "QUOTE", "Quote", false );
     ovOrlandoTagInfo::Instance->Add(
       "General", "SCHOLARNOTE", "Scholar Note", false );
+    ovOrlandoTagInfo::Instance->Add(
+      "General", "TITLE", "Title", false );
   }
 
   return ovOrlandoTagInfo::Instance;
