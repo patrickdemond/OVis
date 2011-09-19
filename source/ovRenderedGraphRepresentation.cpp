@@ -37,6 +37,9 @@ ovRenderedGraphRepresentation::ovRenderedGraphRepresentation()
   this->SetVertexColorArrayName( this->VertexColorArrayNameInternal );
   this->VertexMapper->SelectColorArray( "vtkApplyColors color" );
   this->EdgeMapper->SelectColorArray( "vtkApplyColors color" );
+  
+  // re-create the outline actor (so that it is unlinked and doesn't show)
+  this->OutlineActor = vtkSmartPointer< vtkActor >::New();
 
   vtkSmartPointer<vtkViewTheme> theme = vtkSmartPointer<vtkViewTheme>::New();
   this->ApplyViewTheme( theme );
