@@ -48,10 +48,8 @@ void ovSessionWriter::WriteData()
     if( 0 > xmlTextWriterWriteAttribute( this->Writer, BAD_CAST "Version", BAD_CAST "1.0.0" ) ) throw( e );
 
     this->Write( "DataFile", input->GetDataFile() );
-    rgba = input->GetBackgroundColor1();
-    this->WriteColor( "BackgroundColor1", rgba );
-    rgba = input->GetBackgroundColor2();
-    this->WriteColor( "BackgroundColor2", rgba );
+    rgba = input->GetBackgroundColor();
+    this->WriteColor( "BackgroundColor", rgba );
     this->Write( "CustomAnnotationText", input->GetCustomAnnotationText() );
     this->Write( "ShowAnnotation", input->GetShowAnnotation() );
     this->Write( "VertexStyle", input->GetVertexStyle() );

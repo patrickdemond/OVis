@@ -295,12 +295,6 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
     this->ui->actionSetBackgroundSolid, SIGNAL( triggered() ),
     this, SLOT( slotSetBackgroundSolid() ) );
   QObject::connect(
-    this->ui->actionSetBackgroundTop, SIGNAL( triggered() ),
-    this, SLOT( slotSetBackgroundTop() ) );
-  QObject::connect(
-    this->ui->actionSetBackgroundBottom, SIGNAL( triggered() ),
-    this, SLOT( slotSetBackgroundBottom() ) );
-  QObject::connect(
     this->ui->actionShowAnnotation, SIGNAL( triggered() ),
     this, SLOT( slotShowAnnotation() ) );
   QObject::connect(
@@ -906,59 +900,25 @@ void ovQMainWindow::slotSetBackgroundSolid()
   rgba[1] = c.greenF();
   rgba[2] = c.blueF();
   rgba[3] = c.alphaF();
-
-  // set the annotation color
-  double average = ( rgba[0] + rgba[1] + rgba[2] ) / 3.0;
-  double annotation = average > 0.5 ? 0.0 : 1.0;
-  this->TopAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
-  this->BottomAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
-
-  this->GraphLayoutViewTheme->SetBackgroundColor( rgba );
-  this->GraphLayoutViewTheme->SetBackgroundColor2( rgba );
-  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
-  this->GraphLayoutView->Render();
+  this->SetBackgroundColor( rgba );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotSetBackgroundTop()
+void ovQMainWindow::SetBackgroundColor( double rgba[4] )
 {
-  double rgba[4];
-  this->GraphLayoutViewTheme->GetBackgroundColor2( rgba );
-  QColor c( 255. * rgba[0], 255. * rgba[1], 255. * rgba[2], 255 );
-  c = QColorDialog::getColor( c, this );
-  rgba[0] = c.redF();
-  rgba[1] = c.greenF();
-  rgba[2] = c.blueF();
-  rgba[3] = c.alphaF();
-
   // set the annotation color
-  double average = ( rgba[0] + rgba[1] + rgba[2] ) / 3.0;
+  double average = ( rgba[0] + rgba[1] + rgba[2] ) / 3.0 * rgba[3];
   double annotation = average > 0.5 ? 0.0 : 1.0;
   this->TopAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
-
-  this->GraphLayoutViewTheme->SetBackgroundColor2( rgba );
-  this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
-  this->GraphLayoutView->Render();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void ovQMainWindow::slotSetBackgroundBottom()
-{
-  double rgba[4];
-  this->GraphLayoutViewTheme->GetBackgroundColor( rgba );
-  QColor c( 255. * rgba[0], 255. * rgba[1], 255. * rgba[2], 255 );
-  c = QColorDialog::getColor( c, this );
-  rgba[0] = c.redF();
-  rgba[1] = c.greenF();
-  rgba[2] = c.blueF();
-  rgba[3] = c.alphaF();
-
-  // set the annotation color
-  double average = ( rgba[0] + rgba[1] + rgba[2] ) / 3.0;
-  double annotation = average > 0.5 ? 0.0 : 1.0;
   this->BottomAnnotation->GetTextProperty()->SetColor( annotation, annotation, annotation );
-
+  ovRenderedGraphRepresentation* rep = ovRenderedGraphRepresentation::SafeDownCast(
+    this->GraphLayoutView->GetRepresentation() );
+  this->GraphLayoutViewTheme->GetPointTextProperty()->SetColor( annotation, annotation, annotation );
+  this->GraphLayoutViewTheme->GetCellTextProperty()->SetColor( annotation, annotation, annotation );
+  
+  // set the background
   this->GraphLayoutViewTheme->SetBackgroundColor( rgba );
+  this->GraphLayoutViewTheme->SetBackgroundColor2( rgba );
   this->GraphLayoutView->ApplyViewTheme( this->GraphLayoutViewTheme );
   this->GraphLayoutView->Render();
 }
@@ -1083,10 +1043,7 @@ void ovQMainWindow::ApplySessionToState()
     this->CurrentDataFileName = this->Session->GetDataFile();
     this->LoadData();
   }
-  this->GraphLayoutViewTheme->SetBackgroundColor(
-    this->Session->GetBackgroundColor1() );
-  this->GraphLayoutViewTheme->SetBackgroundColor2(
-    this->Session->GetBackgroundColor2() );
+  this->SetBackgroundColor( this->Session->GetBackgroundColor() );
   this->CustomAnnotationText = this->Session->GetCustomAnnotationText();
   this->TopAnnotation->SetVisibility( this->Session->GetShowAnnotation() );
   this->BottomAnnotation->SetVisibility( this->Session->GetShowAnnotation() );
@@ -1134,10 +1091,7 @@ void ovQMainWindow::ApplySessionToState()
 void ovQMainWindow::ApplyStateToSession()
 {
   this->Session->SetDataFile( this->CurrentDataFileName );
-  this->Session->SetBackgroundColor1(
-    this->GraphLayoutViewTheme->GetBackgroundColor() );
-  this->Session->SetBackgroundColor2(
-    this->GraphLayoutViewTheme->GetBackgroundColor2() );
+  this->Session->SetBackgroundColor( this->GraphLayoutViewTheme->GetBackgroundColor() );
   this->Session->SetCustomAnnotationText( this->CustomAnnotationText );
   this->Session->SetShowAnnotation( this->TopAnnotation->GetVisibility() );
   this->Session->SetVertexStyle( this->GraphLayoutView->GetGlyphType() );
