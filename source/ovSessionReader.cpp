@@ -113,18 +113,11 @@ int ovSessionReader::ProcessRequest(
           output->SetDataFile( string );
         }
         // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "BackgroundColor1", this->CurrentNode.Name ) )
+        else if( 0 == xmlStrcmp( BAD_CAST "BackgroundColor", this->CurrentNode.Name ) )
         {
           double rgba[] = { 0, 0, 0, 0 };
           this->ReadColor( rgba );
-          output->SetBackgroundColor1( rgba );
-        }
-        // --------------------------------------------------------------------------
-        else if( 0 == xmlStrcmp( BAD_CAST "BackgroundColor2", this->CurrentNode.Name ) )
-        {
-          double rgba[] = { 0, 0, 0, 0 };
-          this->ReadColor( rgba );
-          output->SetBackgroundColor2( rgba );
+          output->SetBackgroundColor( rgba );
         }
         // --------------------------------------------------------------------------
         else if( 0 == xmlStrcmp( BAD_CAST "CustomAnnotationText", this->CurrentNode.Name ) )

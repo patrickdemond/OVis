@@ -27,8 +27,7 @@ ovSession::ovSession()
   this->DataFile = "";
   for( int i = 0; i < 4; ++i )
   {
-    this->BackgroundColor1[i] = 0;
-    this->BackgroundColor2[i] = 0;
+    this->BackgroundColor[i] = 0;
     this->AuthorVertexColor[i] = 0;
     this->AssociationVertexColor[i] = 0;
   }
@@ -161,14 +160,10 @@ void ovSession::SetEndDateRestriction( const ovDate &date )
 bool ovSession::operator == ( const ovSession &rhs ) const
 {
   if( this->DataFile == rhs.DataFile &&
-      this->BackgroundColor1[0] == rhs.BackgroundColor1[0] &&
-      this->BackgroundColor1[1] == rhs.BackgroundColor1[1] &&
-      this->BackgroundColor1[2] == rhs.BackgroundColor1[2] &&
-      this->BackgroundColor1[3] == rhs.BackgroundColor1[3] &&
-      this->BackgroundColor2[0] == rhs.BackgroundColor2[0] &&
-      this->BackgroundColor2[1] == rhs.BackgroundColor2[1] &&
-      this->BackgroundColor2[2] == rhs.BackgroundColor2[2] &&
-      this->BackgroundColor2[3] == rhs.BackgroundColor2[3] &&
+      this->BackgroundColor[0] == rhs.BackgroundColor[0] &&
+      this->BackgroundColor[1] == rhs.BackgroundColor[1] &&
+      this->BackgroundColor[2] == rhs.BackgroundColor[2] &&
+      this->BackgroundColor[3] == rhs.BackgroundColor[3] &&
       this->CustomAnnotationText == rhs.CustomAnnotationText &&
       this->ShowAnnotation == rhs.ShowAnnotation &&
       this->VertexStyle == rhs.VertexStyle &&
@@ -249,8 +244,7 @@ void ovSession::DeepCopy( ovSession *copy )
 
   for( int i = 0; i < 4; ++i )
   {
-    this->BackgroundColor1[i] = copy->BackgroundColor1[i];
-    this->BackgroundColor2[i] = copy->BackgroundColor2[i];
+    this->BackgroundColor[i] = copy->BackgroundColor[i];
     this->AuthorVertexColor[i] = copy->AuthorVertexColor[i];
     this->AssociationVertexColor[i] = copy->AssociationVertexColor[i];
   }
@@ -278,14 +272,10 @@ void ovSession::PrintSelf( ostream &os, vtkIndent indent )
 
   ovString date;
   os << indent << "DataFile = \"" << this->DataFile << "\"" << endl;
-  os << indent << "BackgroundColor1[4] = " << this->BackgroundColor1[0] << ", "
-               << this->BackgroundColor1[1] << ", "
-               << this->BackgroundColor1[2] << ", "
-               << this->BackgroundColor1[3] << endl;
-  os << indent << "BackgroundColor2[4] = " << this->BackgroundColor2[0] << ", "
-               << this->BackgroundColor2[1] << ", "
-               << this->BackgroundColor2[2] << ", "
-               << this->BackgroundColor2[3] << endl;
+  os << indent << "BackgroundColor[4] = " << this->BackgroundColor[0] << ", "
+               << this->BackgroundColor[1] << ", "
+               << this->BackgroundColor[2] << ", "
+               << this->BackgroundColor[3] << endl;
   os << indent << "CustomAnnotationText = \"" << this->CustomAnnotationText << "\"" << endl;
   os << indent << "ShowAnnotation = " << ( this->ShowAnnotation ? "true" : "false" ) << endl;
   os << indent << "VertexStyle = " << this->VertexStyle << "" << endl;

@@ -41,8 +41,6 @@ public slots:
   virtual void slotTakeScreenshot();
   virtual void slotReCenterGraph();
   virtual void slotSetBackgroundSolid();
-  virtual void slotSetBackgroundTop();
-  virtual void slotSetBackgroundBottom();
   virtual void slotSetAnnotation();
   virtual void slotShowAnnotation();
 
@@ -132,6 +130,7 @@ protected:
   virtual void SetTagList( ovTagVector* );
   virtual void GetActiveTags( vtkStringArray* );
   virtual void UpdateActiveTags();
+  virtual void SetBackgroundColor( double rgba[4] );
   virtual void SetVertexStyle( int );
   virtual void SetLayoutStrategy( const ovString& );
   virtual void SetVertexSize( int );

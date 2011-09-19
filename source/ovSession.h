@@ -43,15 +43,10 @@ public:
   virtual void SetDataFile( const ovString& );
 
   // Description:
-  // Set/get the first background color
-  vtkGetVector4Macro( BackgroundColor1, double );
-  vtkSetVector4Macro( BackgroundColor1, double );
+  // Set/get the background color
+  vtkGetVector4Macro( BackgroundColor, double );
+  vtkSetVector4Macro( BackgroundColor, double );
 
-  // Description:
-  // Set/get the second background color
-  vtkGetVector4Macro( BackgroundColor2, double );
-  vtkSetVector4Macro( BackgroundColor2, double );
-  
   // Description:
   // Set/get the text search phrase
   virtual ovString GetCustomAnnotationText() { return this->CustomAnnotationText; }
@@ -175,8 +170,7 @@ protected:
   virtual void SetCamera( vtkCamera* );
 
   ovString DataFile;
-  double BackgroundColor1[4];
-  double BackgroundColor2[4];
+  double BackgroundColor[4];
   ovString CustomAnnotationText;
   bool ShowAnnotation;
   int VertexStyle;
