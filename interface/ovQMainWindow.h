@@ -86,6 +86,8 @@ public slots:
   virtual void slotSaveSession();
   virtual void slotSaveSessionAs();
 
+  virtual void slotAbout();
+
   virtual void slotWritersCheckBoxStateChanged( int );
   virtual void slotOthersCheckBoxStateChanged( int );
   virtual void slotFemaleCheckBoxStateChanged( int );
