@@ -1,3 +1,13 @@
+/*=========================================================================
+
+  Program:  ovis (OrlandoVision)
+  Module:   ovQMainWindow.h
+  Language: C++
+
+  Author: Patrick Emond <emondpd@mcmaster.ca>
+
+=========================================================================*/
+
 #ifndef __ovQMainWindow_h
 #define __ovQMainWindow_h
 
@@ -85,6 +95,8 @@ public slots:
   virtual void slotReloadSession();
   virtual void slotSaveSession();
   virtual void slotSaveSessionAs();
+
+  virtual void slotAbout();
 
   virtual void slotWritersCheckBoxStateChanged( int );
   virtual void slotOthersCheckBoxStateChanged( int );

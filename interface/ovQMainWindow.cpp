@@ -52,6 +52,7 @@
 #include "vtkDataSetAttributes.h"
 #include "vtkVariantArray.h"
 
+#include "ovQAboutDialog.h"
 #include "ovQDateSpanDialog.h"
 #include "ovQTextSearchDialog.h"
 #include "ovQAuthorSearchDialog.h"
@@ -458,6 +459,11 @@ ovQMainWindow::ovQMainWindow( QWidget* parent )
   QObject::connect(
     this->ui->actionSaveSessionAs, SIGNAL( triggered() ),
     this, SLOT( slotSaveSessionAs() ) );
+
+  // connect the help menu items
+  QObject::connect(
+    this->ui->actionAbout, SIGNAL( triggered() ),
+    this, SLOT( slotAbout() ) );
 
   // set up the observer to update the progress bar
   this->ProgressObserver = vtkSmartPointer< ovQMainWindowProgressCommand >::New();
@@ -1137,6 +1143,15 @@ void ovQMainWindow::ApplyStateToSession()
   this->Session->GetCamera()->SetViewUp( camera->GetViewUp() );
   this->Session->GetCamera()->SetClippingRange( camera->GetClippingRange() );
   this->Session->GetCamera()->SetParallelScale( camera->GetParallelScale() );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void ovQMainWindow::slotAbout()
+{
+  ovQAboutDialog dialog( this );
+  dialog.setModal( true );
+  dialog.setWindowTitle( tr( "About OVis" ) );
+  dialog.exec();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

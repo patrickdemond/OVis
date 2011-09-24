@@ -22,6 +22,10 @@ FIND_PACKAGE( LibXml2 REQUIRED )
 CONFIGURE_FILE( ${PROJECT_SOURCE_DIR}/ovUtilities.h.in
                 ${PROJECT_BINARY_DIR}/ovUtilities.h @ONLY IMMEDIATE )
 
+# Copy the readme file to build
+CONFIGURE_FILE( ${PROJECT_SOURCE_DIR}/readme.md
+                ${PROJECT_BINARY_DIR}/readme.md COPYONLY )
+
 # Set up headers and source
 SET( OVIS_SOURCE
   ovis.cpp
@@ -37,7 +41,7 @@ SET( OVIS_SOURCE
   source/ovSessionWriter.cpp
   source/ovXMLReader.cpp
   source/ovXMLWriter.cpp
-  interface/ovQDateDialog.cpp
+  interface/ovQAboutDialog.cpp
   interface/ovQDateSpanDialog.cpp
   interface/ovQMainWindow.cpp
   interface/ovQTextSearchDialog.cpp
@@ -51,7 +55,7 @@ SET_SOURCE_FILES_PROPERTIES(
 )
 
 SET( OVIS_UIS
-  interface/ovQDateDialog.ui
+  interface/ovQAboutDialog.ui
   interface/ovQDateSpanDialog.ui
   interface/ovQMainWindow.ui
   interface/ovQTextSearchDialog.ui
@@ -59,7 +63,7 @@ SET( OVIS_UIS
 )
 
 SET( OVIS_HEADERS
-  interface/ovQDateDialog.h
+  interface/ovQAboutDialog.h
   interface/ovQDateSpanDialog.h
   interface/ovQMainWindow.h
   interface/ovQTextSearchDialog.h
