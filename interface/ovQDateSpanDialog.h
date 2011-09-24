@@ -1,3 +1,13 @@
+/*=========================================================================
+
+  Program:  ovis (OrlandoVision)
+  Module:   ovQDateSpanDialog.h
+  Language: C++
+
+  Author: Patrick Emond <emondpd@mcmaster.ca>
+
+=========================================================================*/
+
 #ifndef __ovQDateSpanDialog_h
 #define __ovQDateSpanDialog_h
 

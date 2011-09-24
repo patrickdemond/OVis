@@ -42,7 +42,6 @@ SET( OVIS_SOURCE
   source/ovXMLReader.cpp
   source/ovXMLWriter.cpp
   interface/ovQAboutDialog.cpp
-  interface/ovQDateDialog.cpp
   interface/ovQDateSpanDialog.cpp
   interface/ovQMainWindow.cpp
   interface/ovQTextSearchDialog.cpp
@@ -57,7 +56,6 @@ SET_SOURCE_FILES_PROPERTIES(
 
 SET( OVIS_UIS
   interface/ovQAboutDialog.ui
-  interface/ovQDateDialog.ui
   interface/ovQDateSpanDialog.ui
   interface/ovQMainWindow.ui
   interface/ovQTextSearchDialog.ui
@@ -66,7 +64,6 @@ SET( OVIS_UIS
 
 SET( OVIS_HEADERS
   interface/ovQAboutDialog.h
-  interface/ovQDateDialog.h
   interface/ovQDateSpanDialog.h
   interface/ovQMainWindow.h
   interface/ovQTextSearchDialog.h

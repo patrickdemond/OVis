@@ -1,3 +1,13 @@
+/*=========================================================================
+
+  Program:  ovis (OrlandoVision)
+  Module:   ovQMainWindow.h
+  Language: C++
+
+  Author: Patrick Emond <emondpd@mcmaster.ca>
+
+=========================================================================*/
+
 #ifndef __ovQMainWindow_h
 #define __ovQMainWindow_h
 

@@ -1,3 +1,13 @@
+/*=========================================================================
+
+  Program:  ovis (OrlandoVision)
+  Module:   ovQTextSearchDialog.h
+  Language: C++
+
+  Author: Patrick Emond <emondpd@mcmaster.ca>
+
+=========================================================================*/
+
 #ifndef __ovQTextSearchDialog_h
 #define __ovQTextSearchDialog_h
 

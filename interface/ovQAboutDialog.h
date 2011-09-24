@@ -1,3 +1,13 @@
+/*=========================================================================
+
+  Program:  ovis (OrlandoVision)
+  Module:   ovQAboutDialog.h
+  Language: C++
+
+  Author: Patrick Emond <emondpd@mcmaster.ca>
+
+=========================================================================*/
+
 #ifndef __ovQAboutDialog_h
 #define __ovQAboutDialog_h
 
