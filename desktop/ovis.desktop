@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OVis
+GenericName=Orlando data visualizer
+Comment=Orlando project visualization applications
+Exec=ovis %u
+TryExec=ovis
+Icon=orlando-tree
+Categories=Viewer;DataVisualization;History;Literature;Qt;
+StartupNotify=true
