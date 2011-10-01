@@ -314,4 +314,54 @@ inline ovString stemWords( ovString words )
   return output;
 }
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+inline ovString encode_entities( ovString str )
+{
+  ovString subs[] = {
+    "¡", "¢", "£", "¤", "¥", "¦", "§",
+    "¨", "©", "ª", "«", "¬", "®", "¯",
+    "°", "±", "²", "³", "´", "µ", "¶",
+    "·", "¸", "¹", "º", "»", "¼", "½",
+    "¾", "¿", "×", "÷", "À", "Á", "Â",
+    "Ã", "Ä", "Å", "Æ", "Ç", "È", "É",
+    "Ê", "Ë", "Ì", "Í", "Î", "Ï", "Ð",
+    "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "Ø",
+    "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
+    "à", "á", "â", "ã", "ä", "å", "æ",
+    "ç", "è", "é", "ê", "ë", "ì", "í",
+    "î", "ï", "ð", "ñ", "ò", "ó", "ô",
+    "õ", "ö", "ø", "ù", "ú", "û", "ü",
+    "ý", "þ", "ÿ" };
+
+  ovString reps[] = {
+    "&iexcl;", "&cent;", "&pound;", "&curren;", "&yen;", "&brvbar;", "&sect;",
+    "&uml;", "&copy;", "&ordf;", "&laquo;", "&not;", "&reg;", "&macr;",
+    "&deg;", "&plusmn;", "&sup2;", "&sup3;", "&acute;", "&micro;", "&para;",
+    "&middot;", "&cedil;", "&sup1;", "&ordm;", "&raquo;", "&frac14;", "&frac12;",
+    "&frac34;", "&iquest;", "&times;", "&divide;", "&Agrave;", "&Aacute;", "&Acirc;",
+    "&Atilde;", "&Auml;", "&Aring;", "&AElig;", "&Ccedil;", "&Egrave;", "&Eacute;",
+    "&Ecirc;", "&Euml;", "&Igrave;", "&Iacute;", "&Icirc;", "&Iuml;", "&ETH;",
+    "&Ntilde;", "&Ograve;", "&Oacute;", "&Ocirc;", "&Otilde;", "&Ouml;", "&Oslash;",
+    "&Ugrave;", "&Uacute;", "&Ucirc;", "&Uuml;", "&Yacute;", "&THORN;", "&szlig;",
+    "&agrave;", "&aacute;", "&acirc;", "&atilde;", "&auml;", "&aring;", "&aelig;",
+    "&ccedil;", "&egrave;", "&eacute;", "&ecirc;", "&euml;", "&igrave;", "&iacute;",
+    "&icirc;", "&iuml;", "&eth;", "&ntilde;", "&ograve;", "&oacute;", "&ocirc;",
+    "&otilde;", "&ouml;", "&oslash;", "&ugrave;", "&uacute;", "&ucirc;", "&uuml;",
+    "&yacute;", "&thorn;", "&yuml;" };
+  
+  size_t found;
+  for( int j = 0; j < 15; j++ )
+  {
+    do
+    {
+      found = str.find( subs[j] );
+      if( found != ovString::npos )
+      str.replace( found,subs[j].length(), reps[j] );
+    } while( found != ovString::npos );
+  }
+  return str;
+}
+
+
+
 #endif // __vtkUtilities_h
