@@ -200,6 +200,7 @@ int ovOrlandoReader::ProcessRequest(
       double numEntries = 0, progress;
 
       bool inDiv0 = false, inDiv1 = false, inDiv2 = false, inP = false, inP2 = false;
+      bool startQuote = false, endQuote = false;
       bool inDate = false, inBibcit = false, inHeading = false, inScholarnote = false;
       ovString div0Content, div1Content, div2Content, pContent, p2Content;
       ovIntVector div0Vertices, div1Vertices, div2Vertices, pVertices, p2Vertices;
@@ -293,6 +294,16 @@ int ovOrlandoReader::ProcessRequest(
                 if( inDate ) content = content + " ";
                 else if( inBibcit ) content = " (" + content + ") ";
                 else if( inHeading ) content = content + ". ";
+                else if( startQuote )
+                {
+                  content = " \"" + content;
+                  startQuote = false;
+                }
+                else if( endQuote )
+                {
+                  content = "\" " + content;
+                  endQuote = false;
+                }
                 else if( inScholarnote ) content = " " + content + " ";
 
                 // add to author content
@@ -335,6 +346,8 @@ int ovOrlandoReader::ProcessRequest(
                   inBibcit = true;
                 else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "HEADING" ) )
                   inHeading = true;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "QUOTE" ) )
+                  startQuote = true;
                 else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "SCHOLARNOTE" ) )
                   inScholarnote = true;
               }
@@ -414,6 +427,8 @@ int ovOrlandoReader::ProcessRequest(
                   inBibcit = false;
                 else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "HEADING" ) )
                   inHeading = false;
+                else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "QUOTE" ) )
+                  endQuote = true;
                 else if( 0 == xmlStrcmp( this->CurrentNode.Name, BAD_CAST "SCHOLARNOTE" ) )
                   inScholarnote = false;
               }

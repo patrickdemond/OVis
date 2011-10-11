@@ -1087,6 +1087,22 @@
     </property>
     <addaction name="actionOpenData"/>
     <addaction name="actionTakeScreenshot"/>
+    <widget class="QMenu" name="menuSetScreenshotMagnification">
+     <property name="title">
+      <string>Screenshot Magnification</string>
+     </property>
+     <addaction name="actionMag1"/>
+     <addaction name="actionMag2"/>
+     <addaction name="actionMag3"/>
+     <addaction name="actionMag4"/>
+     <addaction name="actionMag5"/>
+     <addaction name="actionMag6"/>
+     <addaction name="actionMag7"/>
+     <addaction name="actionMag8"/>
+     <addaction name="actionMag9"/>
+     <addaction name="actionMag10"/>
+    </widget>
+    <addaction name="menuSetScreenshotMagnification"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -1098,7 +1114,7 @@
       <string>Select the node style</string>
      </property>
      <property name="title">
-      <string>Set Node Style</string>
+      <string>Node Style</string>
      </property>
      <addaction name="actionSetVertexStyleToNone"/>
      <addaction name="actionSetVertexStyleToVertex"/>
@@ -1116,7 +1132,7 @@
     </widget>
     <widget class="QMenu" name="menuSet_Layout_Strategy">
      <property name="title">
-      <string>Set Layout Strategy</string>
+      <string>Layout Strategy</string>
      </property>
      <addaction name="actionSetLayoutStrategyToRandom"/>
      <addaction name="actionSetLayoutStrategyToForceDirected"/>
@@ -1127,27 +1143,11 @@
      <addaction name="actionSetLayoutStrategyToCircular"/>
      <addaction name="actionSetLayoutStrategyToSpanTree"/>
     </widget>
-    <widget class="QMenu" name="menuSetSnapshotMagnification">
-     <property name="title">
-      <string>Set Snapshot Magnification</string>
-     </property>
-     <addaction name="actionMag1"/>
-     <addaction name="actionMag2"/>
-     <addaction name="actionMag3"/>
-     <addaction name="actionMag4"/>
-     <addaction name="actionMag5"/>
-     <addaction name="actionMag6"/>
-     <addaction name="actionMag7"/>
-     <addaction name="actionMag8"/>
-     <addaction name="actionMag9"/>
-     <addaction name="actionMag10"/>
-    </widget>
     <addaction name="actionReCenterGraph"/>
     <addaction name="separator"/>
     <addaction name="actionSetBackgroundSolid"/>
     <addaction name="menuViewSetVertexStyle"/>
     <addaction name="menuSet_Layout_Strategy"/>
-    <addaction name="menuSetSnapshotMagnification"/>
     <addaction name="actionSetAnnotation"/>
     <addaction name="actionShowAnnotation"/>
    </widget>
@@ -1340,30 +1340,12 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="actionViewSetBackground2">
-   <property name="text">
-    <string>Set Background #2</string>
-   </property>
-   <property name="statusTip">
-    <string>Set the top background color</string>
-   </property>
-  </action>
   <action name="actionSetBackgroundSolid">
    <property name="text">
-    <string>Set Background Color</string>
+    <string>Background Color</string>
    </property>
    <property name="statusTip">
     <string>Set the background to a single solid color</string>
-   </property>
-  </action>
-  <action name="actionSetBackgroundTop">
-   <property name="text">
-    <string>Set Top Gradient</string>
-   </property>
-  </action>
-  <action name="actionSetBackgroundBottom">
-   <property name="text">
-    <string>Set Bottom Gradient</string>
    </property>
   </action>
   <action name="actionSetLayoutStrategyToRandom">
